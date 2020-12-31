@@ -1,6 +1,9 @@
+import json
+import os
 from typing import Any, Dict, List
 
 from pydantic import BaseModel
+from utils.files import remove_path
 
 
 class Package(BaseModel):
@@ -13,10 +16,6 @@ class Manifest(BaseModel):
     packages: Dict[str, Package] = {}
     file_map: Dict[str, List[str]] = {}
 
-    def dict(self, *args, **kwargs) -> Dict[str, Any]:
-        self.update_file_map()
-        return super().dict(*args, **kwargs)
-
     def update_file_map(self) -> None:
         file_map: Dict[str, List[str]] = {}
         for name, package in self.packages.items():
@@ -25,4 +24,22 @@ class Manifest(BaseModel):
                     file_map[file] = [name]
                 else:
                     file_map[file].append(name)
+        for file in self.file_map:
+            if file not in file_map:
+                remove_path(file)
         self.file_map = file_map
+
+    def write_json(self, path: str) -> None:
+        self.update_file_map()
+        with open(path, "w") as fp:
+            fp.write(self.json())
+
+    @staticmethod
+    def from_path(path: str) -> None:
+        if os.path.exists(path):
+            with open(path, "r") as fp:
+                raw = json.load(fp)
+                manifest = Manifest(**raw)
+        else:
+            manifest = Manifest()
+        return manifest

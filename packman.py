@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import sys
@@ -18,7 +17,6 @@ from models.package_source import PackageVersion
 from utils.cache import Cache
 from utils.files import remove_path, temp_path
 from utils.operation import Operation
-from utils.uninterruptible import uninterruptible
 
 _DEFAULT_CFG_PATH = "cfg"
 
@@ -186,18 +184,12 @@ class InstallCommand(Command):
             for step in cfg.steps:
                 step.execute(package_path, operation=op)
 
-            if os.path.exists(MANIFEST_PATH):
-                with open(MANIFEST_PATH, "r") as fp:
-                    raw = json.load(fp)
-                    manifest = Manifest(**raw)
-            else:
-                manifest = Manifest()
+            manifest = Manifest.from_path(MANIFEST_PATH)
 
             manifest.packages[name] = Package(
                 version=version, files=op.new_paths)
 
-            with open(MANIFEST_PATH, "w") as fp:
-                fp.write(manifest.json())
+            manifest.write_json(MANIFEST_PATH)
 
             logger.success(f"{package} - installed")
 
@@ -210,27 +202,15 @@ class UninstallCommand(Command):
             "package", help="The package to remove")
 
     def execute(self, package: str) -> None:
-        try:
-            with open(MANIFEST_PATH, "r") as fp:
-                raw = json.load(fp)
-                manifest = Manifest(**raw)
-        except FileNotFoundError:
-            raise Exception("manifest not found")
+        manifest = Manifest.from_path(MANIFEST_PATH)
 
         try:
-            manifest_package = manifest.packages[package]
+            del manifest.packages[package]
         except KeyError:
             raise Exception(
                 "package not found; perhaps you didn't install it using this tool?")
 
-        for file in manifest_package.files:
-            if len(manifest.file_map[file]) == 1:
-                remove_path(file)
-
-        del manifest.packages[package]
-
-        with open(MANIFEST_PATH, "w") as fp:
-            fp.write(manifest.json())
+        manifest.write_json(MANIFEST_PATH)
 
         logger.success(f"{package} - uninstalled")
 

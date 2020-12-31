@@ -85,7 +85,7 @@ class GitHubPackageSource(BasePackageSource):
 
         zip_path = operation.download_file(url)
         operation.extract_archive(zip_path)
-        operation.discard(zip_path)
+        operation.remove_file(zip_path)
 
     def get_latest_version(self) -> PackageVersion:
         api = self.get_api()

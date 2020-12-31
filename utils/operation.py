@@ -10,7 +10,7 @@ import patoolib
 import requests
 from loguru import logger
 
-from utils.files import remove_path, temp_dir, temp_path
+from utils.files import remove_file, remove_path, temp_dir, temp_path
 from utils.uninterruptible import uninterruptible
 
 _CHUNK_SIZE = 1024
@@ -53,16 +53,30 @@ class Operation:
         self.last_path = path
         return path
 
+    def backup_file(self, path: str) -> None:
+        backup = self.get_temp_path()
+        logger.debug(f"backing up {path} to {backup}")
+        shutil.copy2(path, backup)
+        self.backups[path] = backup
+
+    def should_backup_file(self, path: str) -> bool:
+        return path not in self.temp_paths and path not in self.backups and os.path.exists(path)
+
     def copy_file(self, src: str, dest: str) -> None:
-        if dest not in self.temp_paths and dest not in self.backups and os.path.exists(dest):
-            backup = self.get_temp_path()
-            logger.debug(f"backing up {dest} to {backup}")
-            shutil.copy2(dest, backup)
-            self.backups[dest] = backup
+        if self.should_backup_file(dest):
+            self.backup_file(dest)
 
         logger.debug(f"copying {src} to {dest}")
         shutil.copy2(src, dest)
         self.new_paths.add(dest)
+
+    def remove_file(self, path: str) -> None:
+        if self.should_backup_file(path):
+            self.backup_file(path)
+        logger.debug(f"deleting {path}")
+        remove_file(path)
+        if path in self.temp_paths:
+            self.temp_paths.remove(path)
 
     def download_file(self, url: str, ext: Optional[str] = "") -> str:
         if ext is None:
@@ -91,13 +105,6 @@ class Operation:
         logger.debug(f"extracting {path} to {dir}")
         patoolib.extract_archive(path, outdir=dir, verbosity=-1)
         return dir
-
-    def discard(self, path: str) -> None:
-        logger.debug(f"discarding {path}")
-        if path not in self.temp_paths:
-            return
-        remove_path(path)
-        self.temp_paths.remove(path)
 
     def restore(self) -> bool:
         errors = False

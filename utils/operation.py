@@ -10,7 +10,7 @@ import patoolib
 import requests
 from loguru import logger
 
-from utils.files import remove, temp_dir, temp_path
+from utils.files import remove_path, temp_dir, temp_path
 from utils.uninterruptible import uninterruptible
 
 _CHUNK_SIZE = 1024
@@ -28,7 +28,7 @@ class Operation:
     def close(self) -> None:
         for path in self.temp_paths:
             try:
-                remove(path)
+                remove_path(path)
             except Exception as exc:
                 logger.warning(
                     f"failed to discard temporary path {path}: {exc}")
@@ -96,7 +96,7 @@ class Operation:
         logger.debug(f"discarding {path}")
         if path not in self.temp_paths:
             return
-        remove(path)
+        remove_path(path)
         self.temp_paths.remove(path)
 
     def restore(self) -> bool:
@@ -105,7 +105,7 @@ class Operation:
         for path in self.new_paths:
             logger.debug(f"cleaning up {path}")
             try:
-                remove(path)
+                remove_path(path)
             except Exception as exc:
                 logger.error(f"failed to clean up file: {path}")
                 logger.exception(exc)

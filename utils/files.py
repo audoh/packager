@@ -36,7 +36,11 @@ def is_hidden(path: str) -> bool:
         return os.path.basename(path).startswith(".")
 
 
-def _nt_error_handler(source: Callable[[str], None], path: str, error: Tuple[Type[BaseException], BaseException, TracebackType]) -> None:
+def _nt_error_handler(source: Callable[[str], None], path: str, error: Tuple[Type[OSError], OSError, TracebackType]) -> None:
+    type, _, _ = error
+    if type == FileNotFoundError:
+        return
+
     attributes = win32api.GetFileAttributes(path)
     if (attributes & FILE_ATTRIBUTE_UNWRITEABLE):
         win32api.SetFileAttributes(
@@ -51,11 +55,11 @@ def _nt_error_handler(source: Callable[[str], None], path: str, error: Tuple[Typ
                 return
 
 
-def _noop_error_handler(source: Callable[[str], None], path: str, error: Tuple[Type[BaseException], BaseException, TracebackType]) -> None:
+def _noop_error_handler(source: Callable[[str], None], path: str, error: Tuple[Type[OSError], OSError, TracebackType]) -> None:
     return
 
 
-def remove(path: str) -> None:
+def remove_path(path: str) -> None:
     error_handler = _nt_error_handler if os.name == "nt" else _noop_error_handler
     try:
         if os.path.isdir(path):
@@ -76,4 +80,4 @@ def remove(path: str) -> None:
         ...
     else:
         if not any(siblings):
-            remove(dir)
+            remove_path(dir)

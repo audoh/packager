@@ -16,7 +16,7 @@ from models.configuration import ModConfig
 from models.manifest import Manifest, Package
 from models.package_source import PackageVersion
 from utils.cache import Cache
-from utils.files import remove, temp_path
+from utils.files import remove_path, temp_path
 from utils.operation import Operation
 from utils.uninterruptible import uninterruptible
 
@@ -225,7 +225,7 @@ class UninstallCommand(Command):
 
         for file in manifest_package.files:
             if len(manifest.file_map[file]) == 1:
-                remove(file)
+                remove_path(file)
 
         del manifest.packages[package]
 
@@ -254,7 +254,7 @@ class UpdateCommand(Command):
                     logger.debug(f"copying {src} to {dest}")
                     shutil.copy2(src, dest)
         finally:
-            remove(dir)
+            remove_path(dir)
 
 
 commands = {

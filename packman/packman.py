@@ -177,12 +177,12 @@ def default_packman() -> Packman:
     return _default_packman
 
 
-def install(package: str, version: str) -> None:
-    default_packman().install(package, version)
+def install(package: str, version: str) -> bool:
+    return default_packman().install(package, version)
 
 
-def uninstall(package: str) -> None:
-    default_packman().uninstall(package)
+def uninstall(package: str) -> bool:
+    return default_packman().uninstall(package)
 
 
 def update() -> None:

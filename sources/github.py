@@ -66,7 +66,7 @@ class GitHubPackageSource(BasePackageSource):
         release = api.get_release_by_tag_name(tag=version)
         return _to_version_info(release)
 
-    def fetch_version(self, version: str) -> Operation:
+    def fetch_version(self, version: str, operation: Operation) -> None:
         api = self.get_api()
         release = api.get_release_by_tag_name(tag=version)
         release_id = release["id"]
@@ -83,12 +83,9 @@ class GitHubPackageSource(BasePackageSource):
 
         url = asset["browser_download_url"]
 
-        op = Operation()
-        zip_path = op.download_file(url)
-        op.extract_archive(zip_path)
-        op.discard(zip_path)
-
-        return op
+        zip_path = operation.download_file(url)
+        operation.extract_archive(zip_path)
+        operation.discard(zip_path)
 
     def get_latest_version(self) -> PackageVersion:
         api = self.get_api()

@@ -17,13 +17,12 @@ class Cache:
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def fetch_version(self, version: str) -> Operation:
+    def fetch_version(self, version: str, operation: Operation) -> None:
         cache_path = self.get_path(version, ".zip")
         if not os.path.exists(cache_path):
             raise Exception("not found")
-        op = Operation()
-        op.extract_archive(cache_path)
-        return op
+        operation = Operation()
+        operation.extract_archive(cache_path)
 
     def get_versions(self) -> Iterable[str]:
         self._raise_unsupported_error()

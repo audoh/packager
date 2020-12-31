@@ -20,7 +20,7 @@ class BasePackageSource(BaseModel, ABC):
         ...
 
     @abstractmethod
-    def fetch_version(self, version: str) -> Operation:
+    def fetch_version(self, version: str, operation: Operation) -> None:
         ...
 
     @abstractmethod

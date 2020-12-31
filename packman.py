@@ -136,7 +136,8 @@ class InstallCommand(Command):
 
         cache_source = Cache(name=name)
         try:
-            op = cache_source.fetch_version(version)
+            op = Operation()
+            cache_source.fetch_version(version, operation=op)
         except Exception:
             cache_miss = True
         else:
@@ -147,7 +148,8 @@ class InstallCommand(Command):
             logger.info(f"{package} - downloading...")
             for source in cfg.sources:
                 try:
-                    op = source.fetch_version(version)
+                    op = Operation()
+                    source.fetch_version(version, operation=op)
                 except Exception as exc:
                     logger.error(f"failed to load from source: {source}")
                     logger.exception(exc)

@@ -171,6 +171,9 @@ _default_packman: Optional[Packman] = None
 
 
 def default_packman() -> Packman:
+    """
+    Accessor for the default Packman instance.
+    """
     global _default_packman
     if not _default_packman:
         _default_packman = Packman()

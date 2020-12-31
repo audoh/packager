@@ -110,6 +110,11 @@ class InstallCommand(Command):
         version = version_info.version
         logger.success(f"{package} - resolved version info")
 
+        manifest = Manifest.from_path(MANIFEST_PATH)
+        if name in manifest.packages and manifest.packages[name].version == version:
+            logger.info(f"{package} - already installed")
+            return
+
         cache_source = Cache(name=name)
         op = Operation()
         try:
@@ -161,8 +166,6 @@ class InstallCommand(Command):
             logger.info(f"{package} - installing...")
             for step in cfg.steps:
                 step.execute(package_path, operation=op)
-
-            manifest = Manifest.from_path(MANIFEST_PATH)
 
             manifest.packages[name] = Package(
                 version=version, files=op.new_paths)

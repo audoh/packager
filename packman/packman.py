@@ -24,6 +24,9 @@ class Packman:
         self.git_config_dir = git_config_dir
         self.git_url = git_url
 
+    def manifest(self) -> Manifest:
+        return Manifest.from_path(self.manifest_path)
+
     def install(self, package: str, version: Optional[str] = None) -> bool:
         context = package
 
@@ -50,7 +53,7 @@ class Packman:
         version = version_info.version
         logger.success(f"{context} - resolved info for version {version}")
 
-        manifest = Manifest.from_path(self.manifest_path)
+        manifest = self.manifest()
         if package in manifest.packages and manifest.packages[package].version == version:
             logger.info(f"{context} - already installed")
             return False
@@ -117,7 +120,7 @@ class Packman:
         return True
 
     def uninstall(self, package: str) -> bool:
-        manifest = Manifest.from_path(self.manifest_path)
+        manifest = self.manifest()
 
         try:
             del manifest.packages[package]

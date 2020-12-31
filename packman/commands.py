@@ -6,7 +6,6 @@ from typing import Any, List, Optional
 from loguru import logger
 
 import packman.packman as packman
-from packman.models.manifest import Manifest
 
 
 class Command(ABC):
@@ -46,6 +45,16 @@ class VersionListCommand(Command):
             print(version)
 
 
+class InstalledPackageListCommand(Command):
+    help = "Lists installed packages"
+
+    def execute(self) -> None:
+        width = 30
+        manifest = packman.default_packman().manifest()
+        for name, info in manifest.packages.items():
+            print(f"{name.ljust(width)} {info.version}")
+
+
 class InstallCommand(Command):
     help = "Installs or updates one or more packages using the current local configuration"
 
@@ -55,8 +64,7 @@ class InstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = Manifest.from_path(
-                packman.default_packman().manifest_path)
+            manifest = packman.default_packman().manifest()
             packages = manifest.packages.keys()
         for package in packages:
             at_idx = package.find("@")
@@ -77,8 +85,7 @@ class UninstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = Manifest.from_path(
-                packman.default_packman().manifest_path)
+            manifest = packman.default_packman().manifest()
             packages = manifest.packages.keys()
         for package in packages:
             uninstalled = packman.uninstall(package=package)

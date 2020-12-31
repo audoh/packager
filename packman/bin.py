@@ -2,13 +2,14 @@
 import sys
 from argparse import ArgumentParser
 
-from packman.commands import (InstallCommand, PackageListCommand,
-                              UninstallCommand, UpdateCommand,
-                              VersionListCommand)
+from packman.commands import (InstallCommand, InstalledPackageListCommand,
+                              PackageListCommand, UninstallCommand,
+                              UpdateCommand, VersionListCommand)
 
 commands = {
     "install": InstallCommand(),
     "uninstall": UninstallCommand(),
+    "list": InstalledPackageListCommand(),
     "update": UpdateCommand(),
     "packages": PackageListCommand(),
     "versions": VersionListCommand(),

@@ -4,7 +4,6 @@ from argparse import ArgumentParser
 from typing import Any, List, Optional
 
 import packman.packman as packman
-from packman.config import CFG_PATH, MANIFEST_PATH, REPO_CFG_PATH, REPO_URL
 from packman.models.manifest import Manifest
 
 
@@ -54,7 +53,8 @@ class InstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = Manifest.from_path(MANIFEST_PATH)
+            manifest = Manifest.from_path(
+                packman.default_packman().manifest_path)
             packages = manifest.packages.keys()
         for package in packages:
             packman.install(package=package)
@@ -69,7 +69,8 @@ class UninstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = Manifest.from_path(MANIFEST_PATH)
+            manifest = Manifest.from_path(
+                packman.default_packman().manifest_path)
             packages = manifest.packages.keys()
         for package in packages:
             packman.uninstall(package=package)

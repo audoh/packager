@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 import tempfile
 from types import TracebackType
 from typing import Callable, Optional, Tuple, Type
@@ -55,12 +56,17 @@ def _noop_error_handler(source: Callable[[str], None], path: str, error: Tuple[T
 
 
 def remove(path: str) -> None:
+    error_handler = _nt_error_handler if os.name == "nt" else _noop_error_handler
     try:
         if os.path.isdir(path):
             shutil.rmtree(
-                path, onerror=_nt_error_handler if os.name == "nt" else _noop_error_handler)
+                path, onerror=error_handler)
         else:
-            os.remove(path)
+            try:
+                os.remove(path)
+            except OSError:
+                error_handler(os.remove, path, sys.exc_info())
+
     except FileNotFoundError:
         ...
     dir = os.path.dirname(path)

@@ -1,16 +1,12 @@
 import hashlib
 import os
 import shutil
-import tempfile
 from typing import Iterable
 
 from models.package_source import PackageVersion
 
+from utils.files import temp_dir
 from utils.operation import Operation
-
-_TEMP_DIR = os.path.join(tempfile.gettempdir(), "packman")
-
-# cache_path = os.path.join(_TEMP_DIR, f"download_{hashlib.md5(bytes(url, 'utf-8')).hexdigest()}")
 
 
 class Cache:
@@ -40,4 +36,4 @@ class Cache:
         key_md5 = hashlib.md5(key_bytes)
         key_md5_str = key_md5.hexdigest()
         file = f"cache_{key_md5_str}{ext}"
-        return os.path.join(_TEMP_DIR, file)
+        return os.path.join(temp_dir(), file)

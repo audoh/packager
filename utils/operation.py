@@ -1,7 +1,6 @@
 import math
 import os
 import shutil
-import tempfile
 from io import FileIO
 from types import TracebackType
 from typing import List, Optional, Set, Tuple, Type
@@ -12,11 +11,10 @@ import patoolib
 import requests
 from loguru import logger
 
-from utils.files import remove
+from utils.files import remove, temp_dir
 from utils.uninterruptible import uninterruptible
 
 _CHUNK_SIZE = 1024
-_TEMP_DIR = os.path.join(tempfile.gettempdir(), "packman")
 
 
 class Operation:
@@ -26,7 +24,7 @@ class Operation:
     backups: List[Tuple[str, str]] = []
 
     def __init__(self):
-        os.makedirs(_TEMP_DIR, exist_ok=True)
+        os.makedirs(temp_dir(), exist_ok=True)
 
     def close(self) -> None:
         for path in self.temp_paths:
@@ -52,7 +50,7 @@ class Operation:
 
     def get_temp_path(self, ext: str = "") -> None:
         name = uuid4()
-        path = os.path.join(_TEMP_DIR, f"{name}{ext}")
+        path = os.path.join(temp_dir(), f"{name}{ext}")
         self.temp_paths.add(path)
         self.last_path = path
         return path

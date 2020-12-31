@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 from types import TracebackType
-from typing import Callable, Tuple, Type
+from typing import Callable, Optional, Tuple, Type
 from uuid import uuid4
 
 import win32api
@@ -13,9 +13,18 @@ FILE_ATTRIBUTE_HIDDEN = win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE
 FILE_ATTRIBUTE_UNWRITEABLE = FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_READONLY
 REMOVE_FUNCS = (os.remove, os.rmdir, os.unlink)
 
+_TEMP_DIR: Optional[str] = None
+
+
+def temp_dir() -> str:
+    global _TEMP_DIR
+    if _TEMP_DIR is None:
+        _TEMP_DIR = os.path.join(tempfile.gettempdir(), "packman")
+    return _TEMP_DIR
+
 
 def temp_path() -> str:
-    return os.path.join(tempfile.tempdir, "packman", str(uuid4()))
+    return os.path.join(temp_dir(), str(uuid4()))
 
 
 def is_hidden(path: str) -> bool:

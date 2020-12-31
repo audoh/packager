@@ -59,17 +59,23 @@ def _noop_error_handler(source: Callable[[str], None], path: str, error: Tuple[T
     return
 
 
+_error_handler = _nt_error_handler if os.name == "nt" else _noop_error_handler
+
+
+def remove_file(path: str) -> None:
+    try:
+        os.remove(path)
+    except OSError:
+        _error_handler(os.remove, path, sys.exc_info())
+
+
 def remove_path(path: str) -> None:
-    error_handler = _nt_error_handler if os.name == "nt" else _noop_error_handler
     try:
         if os.path.isdir(path):
             shutil.rmtree(
-                path, onerror=error_handler)
+                path, onerror=_error_handler)
         else:
-            try:
-                os.remove(path)
-            except OSError:
-                error_handler(os.remove, path, sys.exc_info())
+            remove_file(path)
 
     except FileNotFoundError:
         ...

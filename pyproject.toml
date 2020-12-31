@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "pkger"
+version = "0.1.0"
+description = ""
+authors = ["Ashleigh Udoh <mail@audoh.co.uk>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+PyYAML = "^5.3.1"
+pydantic = "^1.7.3"
+requests = "^2.25.1"
+patool = "^1.12"
+loguru = "^0.5.3"
+GitPython = "^3.1.11"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^1.5.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

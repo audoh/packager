@@ -1,0 +1,12 @@
+name: Ferram Aerospace Research
+description: Realistic aerodynamics
+sources:
+  - type: github
+    repository: dkavolis/Ferram-Aerospace-Research
+steps:
+  - action: copy_folder
+    name: GameData
+    to: ./GameData
+  - action: copy_folder
+    name: Ships
+    to: ./Ships

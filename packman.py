@@ -26,25 +26,12 @@ REPO_URL = os.environ.get("PACKMAN_GIT_URL",
                           "https://github.com/audoh/packman.git")
 REPO_CFG_PATH = os.environ.get("PACKMAN_GIT_CONFIG_FILE", _DEFAULT_CFG_PATH)
 
-_config_cache: Dict[str, ModConfig] = {}
-
-
-def load_config(path: str) -> ModConfig:
-    key = os.path.relpath(path, CFG_PATH)
-    if key in _config_cache:
-        return _config_cache[key]
-    with open(path, "r") as fp:
-        raw = yaml.load(fp, Loader=yaml.SafeLoader)
-        cfg = ModConfig(**raw)
-        _config_cache[key] = cfg
-        return cfg
-
 
 def load_configs() -> Iterable[Tuple[str, ModConfig]]:
     for root, _, files in os.walk(CFG_PATH):
         for file in files:
             path = os.path.join(root, file)
-            yield os.path.relpath(path, CFG_PATH), load_config(path)
+            yield os.path.relpath(path, CFG_PATH), ModConfig.from_path(path)
 
 
 class Command(ABC):

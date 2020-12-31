@@ -1,5 +1,7 @@
+import os
 from typing import Any, Dict, List
 
+import yaml
 from pydantic import BaseModel
 from pydantic.class_validators import validator
 from pydantic.decorator import validate_arguments
@@ -8,6 +10,8 @@ from pydantic.main import Extra
 
 from models.install_step import BaseInstallStep, InstallStep
 from models.package_source import BasePackageSource, PackageSource
+
+_cache: Dict[str, "ModConfig"] = {}
 
 
 class ModConfig(BaseModel):
@@ -28,3 +32,13 @@ class ModConfig(BaseModel):
 
     class Config:
         extra = Extra.forbid
+
+    @staticmethod
+    def from_path(path: str) -> "ModConfig":
+        if path in _cache:
+            return _cache[path]
+        with open(path, "r") as fp:
+            raw = yaml.load(fp, Loader=yaml.SafeLoader)
+            cfg = ModConfig(**raw)
+            _cache[path] = cfg
+            return cfg

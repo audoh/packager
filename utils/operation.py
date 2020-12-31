@@ -26,7 +26,7 @@ class Operation:
     def __init__(self):
         os.makedirs(_TEMP_DIR, exist_ok=True)
 
-    def __del__(self):
+    def close(self) -> None:
         for path in self.temp_paths:
             try:
                 remove(path)
@@ -34,6 +34,15 @@ class Operation:
                 logger.warning(
                     f"failed to discard temporary path {path}: {exc}")
                 continue
+
+    def __del__(self) -> None:
+        self.close()
+
+    def __enter__(self) -> "Operation":
+        return self
+
+    def __exit__(self) -> None:
+        self.close()
 
     def get_temp_path(self, ext: str = "") -> None:
         name = uuid4()

@@ -13,6 +13,7 @@ import requests
 from loguru import logger
 
 from utils.files import remove
+from utils.uninterruptible import uninterruptible
 
 _CHUNK_SIZE = 1024
 _TEMP_DIR = os.path.join(tempfile.gettempdir(), "packman")
@@ -46,7 +47,8 @@ class Operation:
         if exception_type is None:
             self.close()
         else:
-            self.abort()
+            with uninterruptible():
+                self.abort()
 
     def get_temp_path(self, ext: str = "") -> None:
         name = uuid4()

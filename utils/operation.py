@@ -3,7 +3,8 @@ import os
 import shutil
 import tempfile
 from io import FileIO
-from typing import List, Optional, Set, Tuple
+from types import TracebackType
+from typing import List, Optional, Set, Tuple, Type
 from urllib import parse as urlparse
 from uuid import uuid4
 
@@ -41,8 +42,11 @@ class Operation:
     def __enter__(self) -> "Operation":
         return self
 
-    def __exit__(self) -> None:
-        self.close()
+    def __exit__(self, exception_type: Type, exception_value: BaseException, traceback: TracebackType) -> None:
+        if exception_type is None:
+            self.close()
+        else:
+            self.abort()
 
     def get_temp_path(self, ext: str = "") -> None:
         name = uuid4()
@@ -125,6 +129,7 @@ class Operation:
         """
         Shorthand for restore and close.
         """
+        logger.debug("aborting operation")
         errors = self.restore()
         self.close()
         return errors

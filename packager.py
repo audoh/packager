@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import sys
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
@@ -19,10 +20,13 @@ from utils.files import remove, temp_path
 from utils.operation import Operation
 from utils.uninterruptible import uninterruptible
 
-CFG_PATH = os.environ.get("PACKAGER_CONFIG_FILE", "cfg")
+_DEFAULT_CFG_PATH = "cfg"
+
+CFG_PATH = os.environ.get("PACKAGER_CONFIG_FILE", _DEFAULT_CFG_PATH)
 MANIFEST_PATH = os.environ.get("PACKAGER_MANIFEST_FILE", "packager.json")
-REPO_URL = os.environ.get("PACKAGER_REPOSITORY",
+REPO_URL = os.environ.get("PACKAGER_GIT_URL",
                           "https://github.com/audoh/packager.git")
+REPO_CFG_PATH = os.environ.get("PACKAGER_GIT_CONFIG_FILE", _DEFAULT_CFG_PATH)
 
 _config_cache: Dict[str, ModConfig] = {}
 
@@ -241,7 +245,17 @@ class UpdateCommand(Command):
         dir = temp_path()
         os.makedirs(dir)
         try:
-            repo = Repo.clone_from(url=REPO_URL, to_path=dir, depth=1)
+            logger.debug(
+                f"retrieving config files from {REPO_URL}/{REPO_CFG_PATH}")
+            Repo.clone_from(url=REPO_URL, to_path=dir, depth=1)
+            cfg_path = os.path.join(dir, REPO_CFG_PATH)
+            for root, _, files in os.walk(cfg_path):
+                for file in files:
+                    src = os.path.join(root, file)
+                    src_relpath = os.path.relpath(src, cfg_path)
+                    dest = os.path.join(CFG_PATH, src_relpath)
+                    logger.debug(f"copying {src} to {dest}")
+                    shutil.copy2(src, dest)
         finally:
             remove(dir)
 

@@ -6,14 +6,14 @@ from packman.utils.files import remove_path
 from pydantic import BaseModel
 
 
-class Package(BaseModel):
+class ManifestPackage(BaseModel):
     version: str
     files: List[str]
 
 
 class Manifest(BaseModel):
     version = 1
-    packages: Dict[str, Package] = {}
+    packages: Dict[str, ManifestPackage] = {}
     file_map: Dict[str, List[str]] = {}
 
     def update_file_map(self) -> None:

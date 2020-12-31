@@ -9,8 +9,8 @@ import packman.sources
 import packman.steps
 from packman.config import (DEFAULT_CONFIG_PATH, DEFAULT_GIT_URL,
                             DEFAULT_MANIFEST_PATH, DEFAULT_REPO_CONFIG_PATH)
-from packman.models.configuration import ModConfig
-from packman.models.manifest import Manifest, Package
+from packman.models.configuration import Package
+from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
 from packman.utils.files import remove_path, temp_path
@@ -28,7 +28,7 @@ class Packman:
         context = package
 
         path = os.path.join(self.config_dir, f"{package}.yml")
-        cfg = ModConfig.from_path(path)
+        cfg = Package.from_path(path)
         op: Operation
 
         version_info: Optional[PackageVersion] = None
@@ -107,7 +107,7 @@ class Packman:
             for step in cfg.steps:
                 step.execute(package_path, operation=op)
 
-            manifest.packages[package] = Package(
+            manifest.packages[package] = ManifestPackage(
                 version=version, files=op.new_paths)
 
             manifest.write_json(self.manifest_path)
@@ -149,7 +149,7 @@ class Packman:
 
     def versions(self, package: str) -> Iterable[str]:
         path = os.path.join(self.config_dir, f"{package}.yml")
-        cfg = ModConfig.from_path(path)
+        cfg = Package.from_path(path)
         versions: Set[str] = set()
         for source in cfg.sources:
             for version in source.get_versions():
@@ -157,11 +157,11 @@ class Packman:
                     versions.add(version)
                     yield version
 
-    def packages(self) -> Iterable[ModConfig]:
+    def packages(self) -> Iterable[Package]:
         for root, _, files in os.walk(self.config_dir):
             for file in files:
                 path = os.path.join(root, file)
-                yield os.path.relpath(path, self.config_dir), ModConfig.from_path(path)
+                yield os.path.relpath(path, self.config_dir), Package.from_path(path)
 
 
 _default_packman: Optional[Packman] = None
@@ -193,5 +193,5 @@ def versions(package: str) -> Iterable[str]:
     yield from default_packman().versions(package)
 
 
-def packages() -> Iterable[ModConfig]:
+def packages() -> Iterable[Package]:
     yield from default_packman().packages()

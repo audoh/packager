@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 from typing import Any, List, Optional
 
+from loguru import logger
+
 import packman.packman as packman
 from packman.models.manifest import Manifest
 
@@ -57,7 +59,13 @@ class InstallCommand(Command):
                 packman.default_packman().manifest_path)
             packages = manifest.packages.keys()
         for package in packages:
-            packman.install(package=package)
+            at_idx = package.find("@")
+            if at_idx != -1:
+                name, version = package.split("@")
+            else:
+                name = package
+                version = None
+            packman.install(package=name, version=version)
 
 
 class UninstallCommand(Command):
@@ -73,7 +81,10 @@ class UninstallCommand(Command):
                 packman.default_packman().manifest_path)
             packages = manifest.packages.keys()
         for package in packages:
-            packman.uninstall(package=package)
+            uninstalled = packman.uninstall(package=package)
+            if not uninstalled:
+                logger.error(
+                    f"package {package} not uninstalled; perhaps you didn't install it using this tool?")
 
 
 class UpdateCommand(Command):

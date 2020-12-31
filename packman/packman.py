@@ -24,20 +24,15 @@ class Packman:
         self.git_config_dir = git_config_dir
         self.git_url = git_url
 
-    def install(self, package: str) -> None:
-        at_idx = package.find("@")
-        if at_idx != -1:
-            name, version = package.split("@")
-        else:
-            name = package
-            version = None
+    def install(self, package: str, version: Optional[str] = None) -> bool:
+        context = package
 
-        path = os.path.join(self.config_dir, f"{name.lower()}.yml")
+        path = os.path.join(self.config_dir, f"{package}.yml")
         cfg = ModConfig.from_path(path)
         op: Operation
 
         version_info: Optional[PackageVersion] = None
-        logger.info(f"{package} - resolving version info...",)
+        logger.info(f"{context} - resolving version info...",)
         for source in cfg.sources:
             try:
                 if version:
@@ -51,16 +46,16 @@ class Packman:
             else:
                 break
         if not version_info:
-            raise Exception(f"failed to resolve version info")
+            raise Exception(f"failed to resolve info for version: {version}")
         version = version_info.version
-        logger.success(f"{package} - resolved info for version {version}")
+        logger.success(f"{context} - resolved info for version {version}")
 
         manifest = Manifest.from_path(self.manifest_path)
-        if name in manifest.packages and manifest.packages[name].version == version:
-            logger.info(f"{package} - already installed")
-            return
+        if package in manifest.packages and manifest.packages[package].version == version:
+            logger.info(f"{context} - already installed")
+            return False
 
-        cache_source = Cache(name=name)
+        cache_source = Cache(name=package)
         op = Operation()
         try:
             cache_source.fetch_version(version, operation=op)
@@ -69,11 +64,11 @@ class Packman:
             op = None
             cache_miss = True
         else:
-            logger.info(f"{package} - retrieved from cache")
+            logger.info(f"{context} - retrieved from cache")
             cache_miss = False
 
         if cache_miss:
-            logger.info(f"{package} - downloading...")
+            logger.info(f"{context} - downloading...")
             for source in cfg.sources:
                 op = Operation()
                 try:
@@ -86,11 +81,11 @@ class Packman:
                     op = None
                     continue
                 else:
-                    logger.success(f"{package} - downloaded")
+                    logger.success(f"{context} - downloaded")
                     break
 
         if not op:
-            raise Exception(f"no available sources for {package}")
+            raise Exception(f"no available sources for {context}")
 
         with op:
             package_path = op.last_path
@@ -98,39 +93,41 @@ class Packman:
                 raise Exception("no package found")
 
             if cache_miss:
-                logger.info(f"{package} - updating cache...")
+                logger.info(f"{context} - updating cache...")
                 try:
                     cache_source.add_package(
                         version_info=version_info, package_path=package_path)
                 except Exception as exc:
-                    logger.error(f"{package} - failed to update cache")
+                    logger.error(f"{context} - failed to update cache")
                     logger.exception(exc)
                 else:
-                    logger.success(f"{package} - cache updated")
+                    logger.success(f"{context} - cache updated")
 
-            logger.info(f"{package} - installing...")
+            logger.info(f"{context} - installing...")
             for step in cfg.steps:
                 step.execute(package_path, operation=op)
 
-            manifest.packages[name] = Package(
+            manifest.packages[package] = Package(
                 version=version, files=op.new_paths)
 
             manifest.write_json(self.manifest_path)
 
-            logger.success(f"{package} - installed")
+            logger.success(f"{context} - installed")
 
-    def uninstall(self, package: str) -> None:
+        return True
+
+    def uninstall(self, package: str) -> bool:
         manifest = Manifest.from_path(self.manifest_path)
 
         try:
             del manifest.packages[package]
         except KeyError:
-            raise Exception(
-                "package not found; perhaps you didn't install it using this tool?")
+            return False
 
         manifest.write_json(self.manifest_path)
 
         logger.success(f"{package} - uninstalled")
+        return True
 
     def update(self) -> None:
         dir = temp_path()
@@ -151,7 +148,7 @@ class Packman:
             remove_path(dir)
 
     def versions(self, package: str) -> Iterable[str]:
-        path = os.path.join(self.config_dir, f"{package.lower()}.yml")
+        path = os.path.join(self.config_dir, f"{package}.yml")
         cfg = ModConfig.from_path(path)
         versions: Set[str] = set()
         for source in cfg.sources:
@@ -180,8 +177,8 @@ def default_packman() -> Packman:
     return _default_packman
 
 
-def install(package: str) -> None:
-    default_packman().install(package)
+def install(package: str, version: str) -> None:
+    default_packman().install(package, version)
 
 
 def uninstall(package: str) -> None:

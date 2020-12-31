@@ -69,11 +69,11 @@ class VersionListCommand(Command):
 
 
 class InstallCommand(Command):
-    help = "Installs one or more packages using the current local configuration"
+    help = "Installs or updates one or more packages using the current local configuration"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "packages", help="Package name and version reference", nargs="*")
+            "packages", help="The package or packages to install, by name or in package@version format; if none specified, all packages will be updated to their latest versions", nargs="*")
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
@@ -179,11 +179,11 @@ class InstallCommand(Command):
 
 
 class UninstallCommand(Command):
-    help = "Uninstalls a package previously installed using this tool"
+    help = "Uninstalls one or more packages previously installed using this tool"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "packages", help="The packages to remove", nargs="*")
+            "packages", help="Names of the package or packages to remove; if none specified, all packages will be removed", nargs="*")
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:

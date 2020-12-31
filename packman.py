@@ -22,11 +22,11 @@ from utils.uninterruptible import uninterruptible
 
 _DEFAULT_CFG_PATH = "cfg"
 
-CFG_PATH = os.environ.get("PACKAGER_CONFIG_FILE", _DEFAULT_CFG_PATH)
-MANIFEST_PATH = os.environ.get("PACKAGER_MANIFEST_FILE", "packager.json")
-REPO_URL = os.environ.get("PACKAGER_GIT_URL",
-                          "https://github.com/audoh/packager.git")
-REPO_CFG_PATH = os.environ.get("PACKAGER_GIT_CONFIG_FILE", _DEFAULT_CFG_PATH)
+CFG_PATH = os.environ.get("PACKMAN_CONFIG_FILE", _DEFAULT_CFG_PATH)
+MANIFEST_PATH = os.environ.get("PACKMAN_MANIFEST_FILE", "packman.json")
+REPO_URL = os.environ.get("PACKMAN_GIT_URL",
+                          "https://github.com/audoh/packman.git")
+REPO_CFG_PATH = os.environ.get("PACKMAN_GIT_CONFIG_FILE", _DEFAULT_CFG_PATH)
 
 _config_cache: Dict[str, ModConfig] = {}
 

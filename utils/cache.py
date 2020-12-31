@@ -8,7 +8,7 @@ from models.package_source import PackageVersion
 
 from utils.operation import Operation
 
-_TEMP_DIR = os.path.join(tempfile.gettempdir(), "packager")
+_TEMP_DIR = os.path.join(tempfile.gettempdir(), "packman")
 
 # cache_path = os.path.join(_TEMP_DIR, f"download_{hashlib.md5(bytes(url, 'utf-8')).hexdigest()}")
 

@@ -14,7 +14,7 @@ from loguru import logger
 from utils.files import remove
 
 _CHUNK_SIZE = 1024
-_TEMP_DIR = os.path.join(tempfile.gettempdir(), "packager")
+_TEMP_DIR = os.path.join(tempfile.gettempdir(), "packman")
 
 
 class Operation:

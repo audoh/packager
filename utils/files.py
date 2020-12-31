@@ -15,7 +15,7 @@ REMOVE_FUNCS = (os.remove, os.rmdir, os.unlink)
 
 
 def temp_path() -> str:
-    return os.path.join(tempfile.tempdir, "packager", str(uuid4()))
+    return os.path.join(tempfile.tempdir, "packman", str(uuid4()))
 
 
 def is_hidden(path: str) -> bool:

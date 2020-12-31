@@ -1,8 +1,8 @@
 from abc import ABC
 
+from packman.utils.operation import Operation
+from packman.utils.union import DiscriminatedUnion
 from pydantic import BaseModel, Extra
-from utils.operation import Operation
-from utils.union import DiscriminatedUnion
 
 
 class BaseInstallStep(BaseModel, ABC):

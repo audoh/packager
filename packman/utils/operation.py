@@ -9,9 +9,8 @@ from urllib import parse as urlparse
 import patoolib
 import requests
 from loguru import logger
-
-from utils.files import remove_file, remove_path, temp_dir, temp_path
-from utils.uninterruptible import uninterruptible
+from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
+from packman.utils.uninterruptible import uninterruptible
 
 _CHUNK_SIZE = 1024
 

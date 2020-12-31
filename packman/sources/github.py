@@ -2,14 +2,13 @@
 import base64
 import json
 import os
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional
 from urllib import parse as urlparse
 
 import requests
-from loguru import logger
-from models.package_source import (BasePackageSource, PackageVersion,
-                                   package_source)
-from utils.operation import Operation
+from packman.models.package_source import (BasePackageSource, PackageVersion,
+                                           package_source)
+from packman.utils.operation import Operation
 
 _API_URL = "https://api.github.com"
 

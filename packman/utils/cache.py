@@ -3,10 +3,9 @@ import os
 import shutil
 from typing import Iterable
 
-from models.package_source import PackageVersion
-
-from utils.files import temp_dir
-from utils.operation import Operation
+from packman.models.package_source import PackageVersion
+from packman.utils.files import temp_dir
+from packman.utils.operation import Operation
 
 
 class Cache:

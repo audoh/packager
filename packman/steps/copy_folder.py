@@ -2,8 +2,8 @@ import os
 from pathlib import Path, PurePath
 from typing import List, Optional
 
-from models.install_step import BaseInstallStep, install_step
-from utils.operation import Operation
+from packman.models.install_step import BaseInstallStep, install_step
+from packman.utils.operation import Operation
 
 
 @install_step("copy_folder")

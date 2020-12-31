@@ -7,15 +7,15 @@ from typing import Any, Iterable, List, Optional, Set, Tuple
 from git.repo.base import Repo
 from loguru import logger
 
-import sources
-import steps
-from config import CFG_PATH, MANIFEST_PATH, REPO_CFG_PATH, REPO_URL
-from models.configuration import ModConfig
-from models.manifest import Manifest, Package
-from models.package_source import PackageVersion
-from utils.cache import Cache
-from utils.files import remove_path, temp_path
-from utils.operation import Operation
+import packman.sources
+import packman.steps
+from packman.config import CFG_PATH, MANIFEST_PATH, REPO_CFG_PATH, REPO_URL
+from packman.models.configuration import ModConfig
+from packman.models.manifest import Manifest, Package
+from packman.models.package_source import PackageVersion
+from packman.utils.cache import Cache
+from packman.utils.files import remove_path, temp_path
+from packman.utils.operation import Operation
 
 
 def _load_configs() -> Iterable[Tuple[str, ModConfig]]:

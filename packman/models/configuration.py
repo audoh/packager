@@ -1,15 +1,13 @@
-import os
 from typing import Any, Dict, List
 
 import yaml
+from packman.models.install_step import BaseInstallStep, InstallStep
+from packman.models.package_source import BasePackageSource, PackageSource
 from pydantic import BaseModel
 from pydantic.class_validators import validator
 from pydantic.decorator import validate_arguments
 from pydantic.fields import Field
 from pydantic.main import Extra
-
-from models.install_step import BaseInstallStep, InstallStep
-from models.package_source import BasePackageSource, PackageSource
 
 _cache: Dict[str, "ModConfig"] = {}
 

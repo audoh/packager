@@ -116,6 +116,8 @@ class Operation:
         for src, dest in self.backups:
             logger.debug(f"restoring {src} to {dest}")
             try:
+                dest_dir = os.path.dirname(dest)
+                os.makedirs(dest_dir, exist_ok=True)
                 shutil.copy2(src, dest)
             except Exception as exc:
                 logger.error(f"failed to restore file: {dest}")

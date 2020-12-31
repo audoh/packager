@@ -3,7 +3,7 @@ import os
 import shutil
 from io import FileIO
 from types import TracebackType
-from typing import List, Optional, Set, Tuple, Type
+from typing import Dict, Optional, Set, Type
 from urllib import parse as urlparse
 
 import patoolib
@@ -20,7 +20,7 @@ class Operation:
     new_paths: Set[str] = set()
     temp_paths: Set[str] = set()
     last_path: Optional[str] = None
-    backups: List[Tuple[str, str]] = []
+    backups: Dict[str, str] = {}
 
     def __init__(self):
         os.makedirs(temp_dir(), exist_ok=True)
@@ -54,11 +54,11 @@ class Operation:
         return path
 
     def copy_file(self, src: str, dest: str) -> None:
-        if dest not in self.temp_paths and os.path.exists(dest):
+        if dest not in self.temp_paths and dest not in self.backups and os.path.exists(dest):
             backup = self.get_temp_path()
             logger.debug(f"backing up {dest} to {backup}")
             shutil.copy2(dest, backup)
-            self.backups.append((backup, dest))
+            self.backups[dest] = backup
 
         logger.debug(f"copying {src} to {dest}")
         shutil.copy2(src, dest)
@@ -111,7 +111,7 @@ class Operation:
                 logger.exception(exc)
                 errors = True
 
-        for src, dest in self.backups:
+        for dest, src in self.backups.items():
             logger.debug(f"restoring {src} to {dest}")
             try:
                 dest_dir = os.path.dirname(dest)

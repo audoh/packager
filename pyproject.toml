@@ -13,6 +13,7 @@ requests = "^2.25.1"
 patool = "^1.12"
 loguru = "^0.5.3"
 GitPython = "^3.1.11"
+pywin32 = "^300"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.4"

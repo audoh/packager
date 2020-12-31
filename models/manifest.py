@@ -10,7 +10,7 @@ class Package(BaseModel):
 
 class Manifest(BaseModel):
     version = 1
-    packages: Dict[str, Package] = []
+    packages: Dict[str, Package] = {}
     file_map: Dict[str, List[str]] = {}
 
     def dict(self, *args, **kwargs) -> Dict[str, Any]:

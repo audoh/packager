@@ -11,7 +11,7 @@ import patoolib
 import requests
 from loguru import logger
 
-from utils.remove import remove
+from utils.files import remove
 
 _CHUNK_SIZE = 1024
 _TEMP_DIR = os.path.join(tempfile.gettempdir(), "packager")

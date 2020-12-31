@@ -3,11 +3,10 @@ import os
 import sys
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
-from logging import lastResort
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
-import git
 import yaml
+from git.repo.base import Repo
 from loguru import logger
 
 import sources
@@ -16,12 +15,14 @@ from models.configuration import ModConfig
 from models.manifest import Manifest, Package
 from models.package_source import PackageVersion
 from utils.cache import Cache
+from utils.files import remove, temp_path
 from utils.operation import Operation
-from utils.remove import remove
 from utils.uninterruptible import uninterruptible
 
 CFG_PATH = os.environ.get("PACKAGER_CONFIG_FILE", "cfg")
-MANIFEST_PATH = "packager.json"
+MANIFEST_PATH = os.environ.get("PACKAGER_MANIFEST_FILE", "packager.json")
+REPO_URL = os.environ.get("PACKAGER_REPOSITORY",
+                          "https://github.com/audoh/packager.git")
 
 _config_cache: Dict[str, ModConfig] = {}
 
@@ -237,12 +238,18 @@ class UpdateCommand(Command):
     help = "Updates the configuration from the configured remote source"
 
     def execute(self) -> None:
-        raise NotImplementedError
+        dir = temp_path()
+        os.makedirs(dir)
+        try:
+            repo = Repo.clone_from(url=REPO_URL, to_path=dir, depth=1)
+        finally:
+            remove(dir)
 
 
 commands = {
     "install": InstallCommand(),
     "uninstall": UninstallCommand(),
+    "update": UpdateCommand(),
     "packages": PackageListCommand(),
     "versions": VersionListCommand(),
 }

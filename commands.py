@@ -73,9 +73,12 @@ class InstallCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "packages", help="Package name and version reference", nargs="+")
+            "packages", help="Package name and version reference", nargs="*")
 
-    def execute(self, packages: List[str]) -> None:
+    def execute(self, packages: Optional[List[str]] = None) -> None:
+        if not packages:
+            manifest = Manifest.from_path(MANIFEST_PATH)
+            packages = manifest.packages.keys()
         for package in packages:
             self.execute_package(package)
 
@@ -108,7 +111,7 @@ class InstallCommand(Command):
         if not version_info:
             raise Exception(f"failed to resolve version info")
         version = version_info.version
-        logger.success(f"{package} - resolved version info")
+        logger.success(f"{package} - resolved info for version {version}")
 
         manifest = Manifest.from_path(MANIFEST_PATH)
         if name in manifest.packages and manifest.packages[name].version == version:

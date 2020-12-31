@@ -183,9 +183,16 @@ class UninstallCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "package", help="The package to remove")
+            "packages", help="The packages to remove", nargs="*")
 
-    def execute(self, package: str) -> None:
+    def execute(self, packages: Optional[List[str]] = None) -> None:
+        if not packages:
+            manifest = Manifest.from_path(MANIFEST_PATH)
+            packages = manifest.packages.keys()
+        for package in packages:
+            self.execute_package(package)
+
+    def execute_package(self, package: str) -> None:
         manifest = Manifest.from_path(MANIFEST_PATH)
 
         try:

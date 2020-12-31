@@ -35,7 +35,7 @@ class Manifest(BaseModel):
             fp.write(self.json())
 
     @staticmethod
-    def from_path(path: str) -> None:
+    def from_path(path: str) -> "Manifest":
         if os.path.exists(path):
             with open(path, "r") as fp:
                 raw = json.load(fp)

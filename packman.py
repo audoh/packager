@@ -113,7 +113,7 @@ class InstallCommand(Command):
 
         path = os.path.join(CFG_PATH, f"{name.lower()}.yml")
         cfg = load_config(path)
-        op: Operation = None
+        op: Operation
 
         version_info: Optional[PackageVersion] = None
         logger.info(f"{package} - resolving version info...",)
@@ -135,10 +135,12 @@ class InstallCommand(Command):
         logger.success(f"{package} - resolved version info")
 
         cache_source = Cache(name=name)
+        op = Operation()
         try:
-            op = Operation()
             cache_source.fetch_version(version, operation=op)
         except Exception:
+            op.abort()
+            op = None
             cache_miss = True
         else:
             logger.info(f"{package} - retrieved from cache")
@@ -147,12 +149,15 @@ class InstallCommand(Command):
         if cache_miss:
             logger.info(f"{package} - downloading...")
             for source in cfg.sources:
+                op = Operation()
                 try:
-                    op = Operation()
                     source.fetch_version(version, operation=op)
                 except Exception as exc:
                     logger.error(f"failed to load from source: {source}")
                     logger.exception(exc)
+
+                    op.abort()
+                    op = None
                     continue
                 else:
                     logger.success(f"{package} - downloaded")

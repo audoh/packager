@@ -120,3 +120,11 @@ class Operation:
                 continue
 
         return errors
+
+    def abort(self) -> bool:
+        """
+        Shorthand for restore and close.
+        """
+        errors = self.restore()
+        self.close()
+        return errors

@@ -21,7 +21,6 @@ class Cache:
         cache_path = self.get_path(version, ".zip")
         if not os.path.exists(cache_path):
             raise Exception("not found")
-        operation = Operation()
         operation.extract_archive(cache_path)
 
     def get_versions(self) -> Iterable[str]:

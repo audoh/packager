@@ -166,50 +166,52 @@ class InstallCommand(Command):
         if not op:
             raise Exception(f"no available sources for {package}")
 
-        package_path = op.last_path
-        if not package_path:
-            raise Exception("no package found")
+        with op:
+            package_path = op.last_path
+            if not package_path:
+                raise Exception("no package found")
 
-        if cache_miss:
-            logger.info(f"{package} - updating cache...")
+            if cache_miss:
+                logger.info(f"{package} - updating cache...")
+                try:
+                    cache_source.add_package(
+                        version_info=version_info, package_path=package_path)
+                except Exception as exc:
+                    logger.error(f"{package} - failed to update cache")
+                    logger.exception(exc)
+                else:
+                    logger.success(f"{package} - cache updated")
+
+            logger.info(f"{package} - installing...")
             try:
-                cache_source.add_package(
-                    version_info=version_info, package_path=package_path)
-            except Exception as exc:
-                logger.error(f"{package} - failed to update cache")
-                logger.exception(exc)
+                for step in cfg.steps:
+                    step.execute(package_path, operation=op)
+
+                if os.path.exists(MANIFEST_PATH):
+                    with open(MANIFEST_PATH, "r") as fp:
+                        raw = json.load(fp)
+                        manifest = Manifest(**raw)
+                else:
+                    manifest = Manifest()
+
+                manifest.packages[name] = Package(
+                    version=version, files=op.new_paths)
+
+                with open(MANIFEST_PATH, "w") as fp:
+                    fp.write(manifest.json())
+
+            except (Exception, KeyboardInterrupt) as exc:
+                with uninterruptible():
+                    logger.error(
+                        f"{package} - error encountered during installation")
+                    logger.exception(exc)
+                    logger.info(f"{package} - rolling back")
+                    errors = op.restore()
+                    if errors:
+                        logger.warning(
+                            f"{package} - rollback encountered errors")
             else:
-                logger.success(f"{package} - cache updated")
-
-        logger.info(f"{package} - installing...")
-        try:
-            for step in cfg.steps:
-                step.execute(package_path, operation=op)
-
-            if os.path.exists(MANIFEST_PATH):
-                with open(MANIFEST_PATH, "r") as fp:
-                    raw = json.load(fp)
-                    manifest = Manifest(**raw)
-            else:
-                manifest = Manifest()
-
-            manifest.packages[name] = Package(
-                version=version, files=op.new_paths)
-
-            with open(MANIFEST_PATH, "w") as fp:
-                fp.write(manifest.json())
-
-        except (Exception, KeyboardInterrupt) as exc:
-            with uninterruptible():
-                logger.error(
-                    f"{package} - error encountered during installation")
-                logger.exception(exc)
-                logger.info(f"{package} - rolling back")
-                errors = op.restore()
-                if errors:
-                    logger.warning(f"{package} - rollback encountered errors")
-        else:
-            logger.success(f"{package} - installed")
+                logger.success(f"{package} - installed")
 
 
 class UninstallCommand(Command):

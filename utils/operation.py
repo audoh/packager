@@ -5,13 +5,12 @@ from io import FileIO
 from types import TracebackType
 from typing import List, Optional, Set, Tuple, Type
 from urllib import parse as urlparse
-from uuid import uuid4
 
 import patoolib
 import requests
 from loguru import logger
 
-from utils.files import remove, temp_dir
+from utils.files import remove, temp_dir, temp_path
 from utils.uninterruptible import uninterruptible
 
 _CHUNK_SIZE = 1024
@@ -49,8 +48,7 @@ class Operation:
                 self.abort()
 
     def get_temp_path(self, ext: str = "") -> None:
-        name = uuid4()
-        path = os.path.join(temp_dir(), f"{name}{ext}")
+        path = temp_path(ext=ext)
         self.temp_paths.add(path)
         self.last_path = path
         return path

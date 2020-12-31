@@ -23,8 +23,8 @@ def temp_dir() -> str:
     return _TEMP_DIR
 
 
-def temp_path() -> str:
-    return os.path.join(temp_dir(), str(uuid4()))
+def temp_path(ext: str = "") -> str:
+    return os.path.join(temp_dir(), f"{uuid4()}{ext}")
 
 
 def is_hidden(path: str) -> bool:

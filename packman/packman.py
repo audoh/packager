@@ -13,7 +13,7 @@ from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
-from packman.utils.files import remove_path, temp_path
+from packman.utils.files import remove_path, resolve_case, temp_path
 from packman.utils.operation import Operation
 
 
@@ -28,11 +28,16 @@ class Packman:
         return Manifest.from_path(self.manifest_path)
 
     def install(self, package: str, version: Optional[str] = None) -> bool:
-        context = package
+        cfg_path = os.path.join(self.config_dir, f"{package}.yml")
 
-        path = os.path.join(self.config_dir, f"{package}.yml")
-        cfg = Package.from_path(path)
+        # enforce case match for consistency with uninstall and across platforms
+        basename = os.path.basename(resolve_case(cfg_path))
+        if package != basename[:-4]:
+            raise FileNotFoundError(f"no such file or directory: {cfg_path}")
+
         op: Operation
+        cfg = Package.from_path(cfg_path)
+        context = package
 
         version_info: Optional[PackageVersion] = None
         logger.info(f"{context} - resolving version info...",)

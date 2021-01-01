@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import tempfile
+from pathlib import Path
 from types import TracebackType
 from typing import Callable, Optional, Tuple, Type
 from uuid import uuid4
@@ -60,6 +61,38 @@ def _noop_error_handler(source: Callable[[str], None], path: str, error: Tuple[T
 
 
 _error_handler = _nt_error_handler if os.name == "nt" else _noop_error_handler
+
+
+def resolve_case(pathlike: str) -> str:
+    """
+    On case-insensitive file-systems, resolves the given path's casing to match the real file or folder it points to.
+    """
+    path = Path(pathlike)
+
+    if not path.exists():
+        raise FileNotFoundError(f"no such file or directory: {path}")
+
+    parts = []
+    while str(path) not in (path.anchor, "", "."):
+        parent = path.parent
+        child = path.name
+        match: str = ""
+        for file in os.scandir(parent):
+            name = file.name
+            if name == child:
+                match = name
+                break
+            elif name.lower() == child.lower():
+                match = name
+        parts.append(match)
+        path = parent
+
+    anchor = str(path)
+    if os.path.isabs(pathlike) or pathlike.startswith(anchor):
+        parts.append(anchor)
+
+    result = os.path.join(*parts[::-1])
+    return result
 
 
 def remove_file(path: str) -> None:

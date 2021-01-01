@@ -1,3 +1,4 @@
+import filecmp
 import os
 import shutil
 from typing import Iterable, Optional, Set
@@ -165,9 +166,10 @@ class Packman:
         logger.success(f"{package} - uninstalled")
         return True
 
-    def update(self) -> None:
+    def update(self) -> bool:
         dir = temp_path()
         os.makedirs(dir)
+        updated = False
         try:
             logger.debug(
                 f"retrieving config files from {self.git_url}/{self.git_config_dir}")
@@ -178,10 +180,15 @@ class Packman:
                     src = os.path.join(root, file)
                     src_relpath = os.path.relpath(src, cfg_path)
                     dest = os.path.join(self.config_dir, src_relpath)
-                    logger.debug(f"copying {src} to {dest}")
-                    shutil.copy2(src, dest)
+                    if not os.path.exists(dest) or not filecmp.cmp(src, dest):
+                        logger.info(f"updating {dest}")
+                        shutil.copy2(src, dest)
+                        updated = True
         finally:
             remove_path(dir)
+        if not updated:
+            logger.info("no changes")
+        return updated
 
     def versions(self, package: str) -> Iterable[str]:
         path = self.config_path(package)

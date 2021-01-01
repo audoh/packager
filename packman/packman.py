@@ -27,17 +27,26 @@ class Packman:
     def manifest(self) -> Manifest:
         return Manifest.from_path(self.manifest_path)
 
-    def install(self, package: str, version: Optional[str] = None) -> bool:
-        cfg_path = os.path.join(self.config_dir, f"{package}.yml")
+    def config_path(self, package: str) -> str:
+        return os.path.join(self.config_dir, f"{package}.yml")
 
-        # enforce case match for consistency with uninstall and across platforms
+    def install(self, package: str, version: Optional[str] = None) -> bool:
+        cfg_path = self.config_path(package)
+
+        # region Case sensitivity
+
+        # Enforce case for consistency with uninstall() and across platforms
         basename = os.path.basename(resolve_case(cfg_path))
         if package != basename[:-4]:
             raise FileNotFoundError(f"no such file or directory: {cfg_path}")
 
+        # endregion
+
         op: Operation
         cfg = Package.from_path(cfg_path)
         context = package
+
+        # region Versioning
 
         version_info: Optional[PackageVersion] = None
         logger.info(f"{context} - resolving version info...",)
@@ -58,10 +67,16 @@ class Packman:
         version = version_info.version
         logger.success(f"{context} - resolved info for version {version}")
 
+        # endregion
+        # region Early-out
+
         manifest = self.manifest()
         if package in manifest.packages and manifest.packages[package].version == version:
             logger.info(f"{context} - already installed")
             return False
+
+        # endregion
+        # region Cache
 
         cache_source = Cache(name=package)
         op = Operation()
@@ -74,6 +89,9 @@ class Packman:
         else:
             logger.info(f"{context} - retrieved from cache")
             cache_miss = False
+
+        # endregion
+        # region Download
 
         if cache_miss:
             logger.info(f"{context} - downloading...")
@@ -91,6 +109,7 @@ class Packman:
                 else:
                     logger.success(f"{context} - downloaded")
                     break
+        # endregion
 
         if not op:
             raise Exception(f"no available sources for {context}")
@@ -99,6 +118,8 @@ class Packman:
             package_path = op.last_path
             if not package_path:
                 raise Exception("no package found")
+
+            # region Cache update
 
             if cache_miss:
                 logger.info(f"{context} - updating cache...")
@@ -111,15 +132,22 @@ class Packman:
                 else:
                     logger.success(f"{context} - cache updated")
 
+            # endregion
+            # region Installation
+
             logger.info(f"{context} - installing...")
             for step in cfg.steps:
                 step.execute(package_path, operation=op)
+
+            # endregion
+            # region Manifest
 
             manifest.packages[package] = ManifestPackage(
                 version=version, files=op.new_paths)
 
             manifest.write_json(self.manifest_path)
 
+            # endregion
             logger.success(f"{context} - installed")
 
         return True
@@ -156,7 +184,7 @@ class Packman:
             remove_path(dir)
 
     def versions(self, package: str) -> Iterable[str]:
-        path = os.path.join(self.config_dir, f"{package}.yml")
+        path = self.config_path(package)
         cfg = Package.from_path(path)
         versions: Set[str] = set()
         for source in cfg.sources:

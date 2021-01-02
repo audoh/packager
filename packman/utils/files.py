@@ -8,6 +8,7 @@ from types import TracebackType
 from typing import Callable, Optional, Tuple, Type
 from uuid import uuid4
 
+import appdirs
 import win32api
 import win32con
 from loguru import logger
@@ -34,7 +35,8 @@ def temp_path(ext: str = "") -> str:
 def backup_dir() -> str:
     global _BACKUP_DIR
     if _BACKUP_DIR is None:
-        _BACKUP_DIR = "backups"
+        _BACKUP_DIR = os.path.join(
+            appdirs.user_state_dir(appname="packman"), "backups")
     return _BACKUP_DIR
 
 

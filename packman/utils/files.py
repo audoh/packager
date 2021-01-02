@@ -47,6 +47,14 @@ def backup_path(src: str) -> str:
     return os.path.join(backup_dir(), key_md5_str)
 
 
+def checksum(path: str) -> str:
+    hash = hashlib.sha256()
+    with open(path, "rb") as fp:
+        for b in fp:
+            hash.update(b)
+    return f"{hash.name}:{hash.hexdigest()}"
+
+
 def is_hidden(path: str) -> bool:
     if os.name == "nt":
         attribute = win32api.GetFileAttributes(path)

@@ -121,20 +121,28 @@ class VerifyCommand(Command):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "packages", help="Names of the package or packages to verify; if none specified, all packages will be verified", nargs="*")
+        parser.add_argument(
+            "-l", "--list", help="List the specific files which are invalid", action="store_true", dest="list_files"
+        )
 
-    def execute(self, packages: Optional[List[str]] = None) -> None:
+    def execute(self, packages: Optional[List[str]] = None, list_files=False) -> None:
         if not packages:
             manifest = packman.default_packman().manifest()
             if not manifest.packages:
                 logger.info("no packages installed to verify")
                 return
             packages = manifest.packages.keys()
-        invalid_count = 0
+        invalid_files: List[str] = []
         for package in packages:
-            invalid_count += len(list(packman.verify(package=package)))
+            invalid_files += list(packman.verify(package=package))
+        invalid_count = len(invalid_files)
         if invalid_count == 0:
             logger.success("all files are valid")
-        elif invalid_count == 1:
-            logger.warning("1 file is invalid")
         else:
-            logger.warning(f"{invalid_count} files are invalid")
+            if list_files:
+                for file in invalid_files:
+                    print(file)
+            elif invalid_count == 1:
+                logger.warning("1 file is invalid")
+            else:
+                logger.warning(f"{invalid_count} files are invalid")

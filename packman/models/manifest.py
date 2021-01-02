@@ -3,13 +3,18 @@ import os
 import shutil
 from typing import Dict, List
 
-from packman.utils.files import remove_path
+from packman.utils.files import checksum, remove_path
 from pydantic import BaseModel
 
 
 class ManifestPackage(BaseModel):
     version: str
     files: List[str]
+    checksums: Dict[str, str] = {}
+
+    def update_checksums(self) -> None:
+        for file in self.files:
+            self.checksums[file] = checksum(file)
 
 
 class Manifest(BaseModel):
@@ -40,8 +45,13 @@ class Manifest(BaseModel):
                     remove_path(file)
         self.file_map = file_map
 
+    def update_checksums(self) -> None:
+        for package in self.packages.values():
+            package.update_checksums()
+
     def write_json(self, path: str) -> None:
         self.update_file_map()
+        self.update_checksums()
         with open(path, "w") as fp:
             fp.write(self.json(indent=2))
 

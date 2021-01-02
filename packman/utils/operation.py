@@ -59,7 +59,7 @@ class Operation:
         self.backups[path] = backup
 
     def should_backup_file(self, path: str) -> bool:
-        return path not in self.temp_paths and path not in self.backups and os.path.exists(path)
+        return path not in self.temp_paths and path not in self.backups and path not in self.new_paths and os.path.exists(path)
 
     def copy_file(self, src: str, dest: str) -> None:
         if self.should_backup_file(dest):

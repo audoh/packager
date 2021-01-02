@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from typing import Dict, List
 
 from packman.utils.files import remove_path
@@ -15,6 +16,11 @@ class Manifest(BaseModel):
     version = 1
     packages: Dict[str, ManifestPackage] = {}
     file_map: Dict[str, List[str]] = {}
+    original_files: Dict[str, str] = {}
+
+    @property
+    def modified_files(self) -> List[str]:
+        return self.file_map.keys()
 
     def update_file_map(self) -> None:
         file_map: Dict[str, List[str]] = {}
@@ -26,13 +32,18 @@ class Manifest(BaseModel):
                     file_map[file].append(name)
         for file in self.file_map:
             if file not in file_map:
-                remove_path(file)
+                if file in self.original_files:
+                    shutil.copy2(self.original_files[file], file)
+                    remove_path(self.original_files[file])
+                    del self.original_files[file]
+                else:
+                    remove_path(file)
         self.file_map = file_map
 
     def write_json(self, path: str) -> None:
         self.update_file_map()
         with open(path, "w") as fp:
-            fp.write(self.json())
+            fp.write(self.json(indent=2))
 
     @staticmethod
     def from_path(path: str) -> "Manifest":

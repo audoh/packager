@@ -15,7 +15,8 @@ from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
-from packman.utils.files import remove_path, resolve_case, temp_path
+from packman.utils.files import (backup_path, remove_path, resolve_case,
+                                 temp_path)
 from packman.utils.operation import Operation
 
 
@@ -146,6 +147,17 @@ class Packman:
 
             # endregion
             # region Manifest
+
+            modified_files = manifest.modified_files
+            original_files = manifest.original_files
+            for original_path, temp_path in op.backups.items():
+                if original_path not in modified_files and original_path not in original_files:
+                    # commit temporary backup to permanence
+                    logger.debug(f"committing backup for {original_path}")
+                    permanent_path = backup_path(original_path)
+                    os.makedirs(os.path.dirname(permanent_path), exist_ok=True)
+                    shutil.copy2(temp_path, permanent_path)
+                    manifest.original_files[original_path] = permanent_path
 
             manifest.packages[package] = ManifestPackage(
                 version=version, files=op.new_paths)

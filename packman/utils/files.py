@@ -1,3 +1,4 @@
+import hashlib
 import os
 import shutil
 import sys
@@ -16,6 +17,7 @@ FILE_ATTRIBUTE_UNWRITEABLE = FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_REA
 REMOVE_FUNCS = (os.remove, os.rmdir, os.unlink)
 
 _TEMP_DIR: Optional[str] = None
+_BACKUP_DIR: Optional[str] = None
 
 
 def temp_dir() -> str:
@@ -27,6 +29,20 @@ def temp_dir() -> str:
 
 def temp_path(ext: str = "") -> str:
     return os.path.join(temp_dir(), f"{uuid4()}{ext}")
+
+
+def backup_dir() -> str:
+    global _BACKUP_DIR
+    if _BACKUP_DIR is None:
+        _BACKUP_DIR = "backups"
+    return _BACKUP_DIR
+
+
+def backup_path(src: str) -> str:
+    key_bytes = bytes(src, "utf-8")
+    key_md5 = hashlib.md5(key_bytes)
+    key_md5_str = key_md5.hexdigest()
+    return os.path.join(backup_dir(), key_md5_str)
 
 
 def is_hidden(path: str) -> bool:

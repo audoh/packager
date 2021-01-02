@@ -9,7 +9,8 @@ from loguru import logger
 import packman.sources
 import packman.steps
 from packman.config import (DEFAULT_CONFIG_PATH, DEFAULT_GIT_URL,
-                            DEFAULT_MANIFEST_PATH, DEFAULT_REPO_CONFIG_PATH)
+                            DEFAULT_MANIFEST_PATH, DEFAULT_REPO_CONFIG_PATH,
+                            DEFAULT_ROOT_DIR)
 from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
@@ -19,11 +20,12 @@ from packman.utils.operation import Operation
 
 
 class Packman:
-    def __init__(self, config_dir=DEFAULT_CONFIG_PATH, manifest_path=DEFAULT_MANIFEST_PATH, git_config_dir=DEFAULT_REPO_CONFIG_PATH, git_url=DEFAULT_GIT_URL) -> None:
+    def __init__(self, config_dir=DEFAULT_CONFIG_PATH, manifest_path=DEFAULT_MANIFEST_PATH, git_config_dir=DEFAULT_REPO_CONFIG_PATH, git_url=DEFAULT_GIT_URL, root_dir=DEFAULT_ROOT_DIR) -> None:
         self.config_dir = config_dir
         self.manifest_path = manifest_path
         self.git_config_dir = git_config_dir
         self.git_url = git_url
+        self.root_dir = root_dir
 
     def manifest(self) -> Manifest:
         return Manifest.from_path(self.manifest_path)
@@ -138,7 +140,8 @@ class Packman:
 
             logger.info(f"{context} - installing...")
             for step in cfg.steps:
-                step.execute(package_path, operation=op)
+                step.execute(operation=op, package_path=package_path,
+                             root_dir=self.root_dir)
 
             # endregion
             # region Manifest

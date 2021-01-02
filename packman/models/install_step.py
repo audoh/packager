@@ -8,7 +8,7 @@ from pydantic import BaseModel, Extra
 class BaseInstallStep(BaseModel, ABC):
     action: str
 
-    def execute(self, package_path: str, operation: Operation) -> None:
+    def execute(self, operation: Operation, package_path: str, root_dir: str) -> None:
         ...
 
     class Config:

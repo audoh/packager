@@ -13,10 +13,9 @@ class CopyFolderInstallStep(BaseInstallStep):
     exclude: Optional[List[str]] = None
 
     def copy_folder(self, operation: Operation, src: str, dest: str) -> None:
-        name = os.path.basename(src)
         for root, subdirs, files in os.walk(src):
             root_relpath = os.path.relpath(root, src)
-            dest_root = os.path.join(dest, name, root_relpath)
+            dest_root = os.path.join(dest, root_relpath)
             Path(dest_root).mkdir(parents=True, exist_ok=True)
             for file in files:
                 file_src = os.path.join(root, file)
@@ -28,11 +27,12 @@ class CopyFolderInstallStep(BaseInstallStep):
                 file_dest = os.path.join(dest_root, file)
                 operation.copy_file(file_src, file_dest)
 
-    def execute(self, package_path: str, operation: Operation) -> None:
+    def execute(self, operation: Operation, package_path: str, root_dir: str) -> None:
         for root, subdirs, files in os.walk(package_path):
             for subdir in subdirs:
                 if subdir == self.name:
-                    path = os.path.join(root, subdir)
-                    self.copy_folder(operation, path, ".")
+                    src = os.path.join(root, subdir)
+                    dest = os.path.join(root_dir, self.to)
+                    self.copy_folder(operation, src, dest)
                     return
         raise Exception(f"folder not found: {self.name}")

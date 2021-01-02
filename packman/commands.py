@@ -5,7 +5,7 @@ from typing import Any, List, Optional
 
 from loguru import logger
 
-import packman.packman as packman
+import packman.manager as packman
 
 
 class Command(ABC):

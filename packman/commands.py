@@ -101,7 +101,7 @@ class UninstallCommand(Command):
         for package in packages:
             uninstalled = packman.uninstall(package=package)
             if not uninstalled:
-                logger.error(
+                logger.warning(
                     f"package {package} not uninstalled; perhaps you didn't install it using this tool?")
 
 

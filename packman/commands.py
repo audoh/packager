@@ -61,11 +61,19 @@ class InstallCommand(Command):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "packages", help="The package or packages to install, by name or in package@version format; if none specified, all packages will be updated to their latest versions", nargs="*")
+        parser.add_argument(
+            "-f", "--force", help="Forces re-installation when the package version is already installed", action="store_true"
+        )
 
-    def execute(self, packages: Optional[List[str]] = None) -> None:
+    def execute(self, packages: Optional[List[str]] = None, force=False) -> None:
         if not packages:
             manifest = packman.default_packman().manifest()
+            if not manifest.packages:
+                logger.info("no packages installed to update")
+                return
             packages = manifest.packages.keys()
+
+        changed = True
         for package in packages:
             at_idx = package.find("@")
             if at_idx != -1:
@@ -73,7 +81,10 @@ class InstallCommand(Command):
             else:
                 name = package
                 version = None
-            packman.install(package=name, version=version)
+            if not packman.install(package=name, version=version, force=force):
+                changed = False
+        if not changed:
+            logger.info("use -f to force installation")
 
 
 class UninstallCommand(Command):

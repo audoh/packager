@@ -34,7 +34,7 @@ class Packman:
     def config_path(self, package: str) -> str:
         return os.path.join(self.config_dir, f"{package}.yml")
 
-    def install(self, package: str, version: Optional[str] = None) -> bool:
+    def install(self, package: str, version: Optional[str] = None, force=False) -> bool:
         cfg_path = self.config_path(package)
 
         # region Case sensitivity
@@ -76,8 +76,11 @@ class Packman:
 
         manifest = self.manifest()
         if package in manifest.packages and manifest.packages[package].version == version:
-            logger.info(f"{context} - already installed")
-            return False
+            if force:
+                logger.info(f"{context} - reinstalling")
+            else:
+                logger.info(f"{context} - already installed")
+                return False
 
         # endregion
         # region Cache
@@ -236,16 +239,16 @@ def default_packman() -> Packman:
     return _default_packman
 
 
-def install(package: str, version: str) -> bool:
-    return default_packman().install(package, version)
+def install(package: str, version: Optional[str] = None, force: bool = False) -> bool:
+    return default_packman().install(package, version=version, force=force)
 
 
 def uninstall(package: str) -> bool:
     return default_packman().uninstall(package)
 
 
-def update() -> None:
-    default_packman().update()
+def update() -> bool:
+    return default_packman().update()
 
 
 def versions(package: str) -> Iterable[str]:

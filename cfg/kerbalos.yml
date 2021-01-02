@@ -5,4 +5,4 @@ sources:
 steps:
   - action: copy_folder
     name: GameData
-    to: ./GameData
+    to: GameData

@@ -6,7 +6,7 @@ sources:
 steps:
   - action: copy_folder
     name: GameData
-    to: ./GameData
+    to: GameData
   - action: copy_folder
     name: Ships
-    to: ./Ships
+    to: Ships

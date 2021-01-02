@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from packman.utils.files import remove_path
 from pydantic import BaseModel

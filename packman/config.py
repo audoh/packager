@@ -1,6 +1,6 @@
 import os
 
-_DEFAULT_CFG_PATH = "cfg"
+_DEFAULT_CFG_PATH = "configs/ksp"
 
 _dir = os.path.dirname(__file__)
 _dir_to_root = ".."

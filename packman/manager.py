@@ -15,8 +15,8 @@ from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
-from packman.utils.files import (backup_path, remove_path, resolve_case,
-                                 temp_path)
+from packman.utils.files import (backup_path, checksum, remove_path,
+                                 resolve_case, temp_path)
 from packman.utils.operation import Operation
 
 
@@ -33,6 +33,13 @@ class Packman:
 
     def config_path(self, package: str) -> str:
         return os.path.join(self.config_dir, f"{package}.yml")
+
+    def verify(self, package: str) -> Iterable[str]:
+        manifest = self.manifest()
+        package = manifest.packages[package]
+        for file in package.checksums:
+            if checksum(file) != package.checksums[file]:
+                yield file
 
     def install(self, package: str, version: Optional[str] = None, force=False) -> bool:
         cfg_path = self.config_path(package)
@@ -257,3 +264,7 @@ def versions(package: str) -> Iterable[str]:
 
 def packages() -> Iterable[Package]:
     yield from default_packman().packages()
+
+
+def verify(package: str) -> Iterable[str]:
+    yield from default_packman().verify(package)

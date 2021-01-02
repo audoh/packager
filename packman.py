@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 from packman.commands import (InstallCommand, InstalledPackageListCommand,
                               PackageListCommand, UninstallCommand,
-                              UpdateCommand, VersionListCommand)
+                              UpdateCommand, VerifyCommand, VersionListCommand)
 
 commands = {
     "install": InstallCommand(),
@@ -13,6 +13,7 @@ commands = {
     "update": UpdateCommand(),
     "packages": PackageListCommand(),
     "versions": VersionListCommand(),
+    "verify": VerifyCommand()
 }
 
 

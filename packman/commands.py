@@ -97,6 +97,9 @@ class UninstallCommand(Command):
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
             manifest = packman.default_packman().manifest()
+            if not manifest.packages:
+                logger.info("no packages installed to remove")
+                return
             packages = manifest.packages.keys()
         for package in packages:
             uninstalled = packman.uninstall(package=package)
@@ -110,3 +113,28 @@ class UpdateCommand(Command):
 
     def execute(self) -> None:
         packman.update()
+
+
+class VerifyCommand(Command):
+    help = "Verifies that the files of one or more packages have not changed since installation"
+
+    def configure_parser(self, parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "packages", help="Names of the package or packages to verify; if none specified, all packages will be verified", nargs="*")
+
+    def execute(self, packages: Optional[List[str]] = None) -> None:
+        if not packages:
+            manifest = packman.default_packman().manifest()
+            if not manifest.packages:
+                logger.info("no packages installed to verify")
+                return
+            packages = manifest.packages.keys()
+        invalid_count = 0
+        for package in packages:
+            invalid_count += len(list(packman.verify(package=package)))
+        if invalid_count == 0:
+            logger.success("all files are valid")
+        elif invalid_count == 1:
+            logger.warning("1 file is invalid")
+        else:
+            logger.warning(f"{invalid_count} files are invalid")

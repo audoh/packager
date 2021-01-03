@@ -230,7 +230,8 @@ class Packman:
         for root, _, files in os.walk(self.config_dir):
             for file in files:
                 path = os.path.join(root, file)
-                name = path[:path.rindex(os.extsep)]
+                relpath = os.path.relpath(path, self.config_dir)
+                name = relpath[:relpath.rindex(os.extsep)]
                 yield name, Package.from_path(path)
 
 

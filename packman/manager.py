@@ -31,37 +31,38 @@ class Packman:
     def manifest(self) -> Manifest:
         return Manifest.from_path(self.manifest_path)
 
-    def config_path(self, package: str) -> str:
+    def package_path(self, package: str) -> str:
         return os.path.join(self.config_dir, f"{package}.yml")
 
-    def verify(self, package: str) -> Iterable[str]:
+    def verify(self, name: str) -> Iterable[str]:
         manifest = self.manifest()
-        package = manifest.packages[package]
+        package = manifest.packages[name]
         for file in package.checksums:
             if checksum(file) != package.checksums[file]:
+                logger.warning(f"checksum mismatch: {file}")
                 yield file
 
-    def install(self, package: str, version: Optional[str] = None, force=False) -> bool:
-        cfg_path = self.config_path(package)
+    def install(self, name: str, version: Optional[str] = None, force=False) -> bool:
+        cfg_path = self.package_path(name)
 
         # region Case sensitivity
 
         # Enforce case for consistency with uninstall() and across platforms
         basename = os.path.basename(resolve_case(cfg_path))
-        if package != basename[:-4]:
+        if name != basename[:-4]:
             raise FileNotFoundError(f"no such file or directory: {cfg_path}")
 
         # endregion
 
         op: Operation
-        cfg = Package.from_path(cfg_path)
-        context = package
+        package = self.package(name)
+        context = name
 
         # region Versioning
 
         version_info: Optional[PackageVersion] = None
         logger.info(f"{context} - resolving version info...",)
-        for source in cfg.sources:
+        for source in package.sources:
             try:
                 if version:
                     version_info = source.get_version(version)
@@ -82,7 +83,7 @@ class Packman:
         # region Early-out
 
         manifest = self.manifest()
-        if package in manifest.packages and manifest.packages[package].version == version:
+        if name in manifest.packages and manifest.packages[name].version == version:
             if force:
                 logger.info(f"{context} - reinstalling")
             else:
@@ -92,7 +93,7 @@ class Packman:
         # endregion
         # region Cache
 
-        cache_source = Cache(name=package)
+        cache_source = Cache(name=name)
         op = Operation()
         try:
             cache_source.fetch_version(version, operation=op)
@@ -109,7 +110,7 @@ class Packman:
 
         if cache_miss:
             logger.info(f"{context} - downloading...")
-            for source in cfg.sources:
+            for source in package.sources:
                 op = Operation()
                 try:
                     source.fetch_version(version, operation=op)
@@ -151,7 +152,7 @@ class Packman:
             # We don't need to uninstall first - files that are unreplaced (i.e. no longer included in package) are deleted/restored as part of manifest.write_json()
 
             logger.info(f"{context} - installing...")
-            for step in cfg.steps:
+            for step in package.steps:
                 step.execute(operation=op, package_path=package_path,
                              root_dir=self.root_dir)
 
@@ -169,7 +170,7 @@ class Packman:
                     shutil.copy2(temp_path, permanent_path)
                     manifest.original_files[original_path] = permanent_path
 
-            manifest.packages[package] = ManifestPackage(
+            manifest.packages[name] = ManifestPackage(
                 version=version, files=op.new_paths)
 
             manifest.write_json(self.manifest_path)
@@ -179,17 +180,17 @@ class Packman:
 
         return True
 
-    def uninstall(self, package: str) -> bool:
+    def uninstall(self, name: str) -> bool:
         manifest = self.manifest()
 
         try:
-            del manifest.packages[package]
+            del manifest.packages[name]
         except KeyError:
             return False
 
         manifest.write_json(self.manifest_path)
 
-        logger.success(f"{package} - uninstalled")
+        logger.success(f"{name} - uninstalled")
         return True
 
     def update(self) -> bool:
@@ -216,15 +217,24 @@ class Packman:
             logger.info("no changes")
         return updated
 
-    def versions(self, package: str) -> Iterable[str]:
-        path = self.config_path(package)
-        cfg = Package.from_path(path)
+    def versions(self, name: str) -> Iterable[str]:
+        package = self.package(name)
         versions: Set[str] = set()
-        for source in cfg.sources:
+        for source in package.sources:
             for version in source.get_versions():
                 if version not in versions:
                     versions.add(version)
                     yield version
+
+    def package(self, name: str) -> Package:
+        path = self.package_path(name)
+
+        # Enforce case for consistency with uninstall() and across platforms
+        basename = os.path.basename(resolve_case(path))
+        if name != basename[:-4]:
+            raise FileNotFoundError(f"no such file or directory: {path}")
+
+        return Package.from_path(path)
 
     def packages(self) -> Iterable[Tuple[str, Package]]:
         for root, _, files in os.walk(self.config_dir):

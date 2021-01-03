@@ -1,7 +1,7 @@
 import filecmp
 import os
 import shutil
-from typing import Iterable, Optional, Set
+from typing import Iterable, Optional, Set, Tuple
 
 from git.repo.base import Repo
 from loguru import logger
@@ -226,11 +226,12 @@ class Packman:
                     versions.add(version)
                     yield version
 
-    def packages(self) -> Iterable[Package]:
+    def packages(self) -> Iterable[Tuple[str, Package]]:
         for root, _, files in os.walk(self.config_dir):
             for file in files:
                 path = os.path.join(root, file)
-                yield os.path.relpath(path, self.config_dir), Package.from_path(path)
+                name = path[:path.rindex(os.extsep)]
+                yield name, Package.from_path(path)
 
 
 _default_packman: Optional[Packman] = None
@@ -262,7 +263,7 @@ def versions(package: str) -> Iterable[str]:
     yield from default_packman().versions(package)
 
 
-def packages() -> Iterable[Package]:
+def packages() -> Iterable[Tuple[str, Package]]:
     yield from default_packman().packages()
 
 

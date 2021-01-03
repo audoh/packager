@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 from typing import Any, List, Optional
@@ -28,10 +29,35 @@ class PackageListCommand(Command):
 
     def execute(self) -> None:
         width = 30
-        for path, config in packman.packages():
-            name = path[:path.rindex(os.extsep)]
+        for name, config in packman.packages():
             print(
                 f"{name.ljust(width)} {config.name.ljust(width)} {config.description}")
+
+
+_DEFAULT_EXPORT_FILE = "packman-export"
+_DEFAULT_EXPORT_FORMAT = "json"
+
+
+def _default_export_path(format: Optional[str] = None) -> str:
+    if format is None:
+        format = _DEFAULT_EXPORT_FORMAT
+
+    if format == "json":
+        return f"{_DEFAULT_EXPORT_FILE}.json"
+
+    raise Exception(f"unknown format: {format}")
+
+
+def _infer_export_format(path: str) -> str:
+    name = os.path.basename(path)
+    ext_idx = name.rfind(os.path.extsep)
+    if ext_idx <= 0:
+        return _DEFAULT_EXPORT_FORMAT
+    ext = name[ext_idx:]
+    if ext == ".json":
+        return "json"
+    if ext == ".zip":
+        return "zip"
 
 
 class ExportCommand(Command):
@@ -39,14 +65,26 @@ class ExportCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "-o", "--output", help="The file to export", dest="output_path", default="packman-export.json")
+            "-o", "--output", help="The file to export", dest="output_path")
+        parser.add_argument(
+            "--format", help="The format to use", dest="output_path")
 
-    def execute(self, output_path: str) -> None:
+    def execute(self, output_path: Optional[str] = None, format: Optional[str] = None) -> None:
+        if not output_path:
+            output_path = _default_export_path(format=format)
+        if not format:
+            format = _infer_export_format(output_path)
+
         manifest = packman.default_packman().manifest()
-        versions = {package_name: package.version for package_name,
-                    package in manifest.packages.items()}
-        with open(output_path, "w") as fp:
-            json.dump(versions, fp)
+        if format == "json":
+            versions = {package_name: package.version for package_name,
+                        package in manifest.packages.items()}
+            with open(output_path, "w") as fp:
+                json.dump(versions, fp)
+        elif format == "zip":
+            raise NotImplementedError("TODO")  # TODO
+        else:
+            raise Exception(f"unknown format: {format}")
 
 
 class ImportCommand(Command):
@@ -54,13 +92,20 @@ class ImportCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "-i", "--input", help="The file to import", dest="input_path", default="packman-export.json")
+            "-i", "--input", help="The file to import", dest="input_path", default=f"{_DEFAULT_EXPORT_FILE}.json")
 
     def execute(self, input_path: str) -> None:
-        with open(input_path, "r") as fp:
-            versions = json.load(fp)
-            for package, version in versions.items():
-                packman.install(package=package, version=version)
+        format = _infer_export_format(input_path)
+
+        if format == "json":
+            with open(input_path, "r") as fp:
+                versions = json.load(fp)
+                for package, version in versions.items():
+                    packman.install(package=package, version=version)
+        elif format == "zip":
+            raise NotImplementedError("TODO")  # TODO
+        else:
+            raise Exception(f"unknown format: {format}")
 
 
 class VersionListCommand(Command):

@@ -1,3 +1,4 @@
+import json
 import os
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
@@ -31,6 +32,35 @@ class PackageListCommand(Command):
             name = path[:path.rindex(os.extsep)]
             print(
                 f"{name.ljust(width)} {config.name.ljust(width)} {config.description}")
+
+
+class ExportCommand(Command):
+    help = "Exports installed packages"
+
+    def configure_parser(self, parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "-o", "--output", help="The file to export", dest="output_path", default="packman-export.json")
+
+    def execute(self, output_path: str) -> None:
+        manifest = packman.default_packman().manifest()
+        versions = {package_name: package.version for package_name,
+                    package in manifest.packages.items()}
+        with open(output_path, "w") as fp:
+            json.dump(versions, fp)
+
+
+class ImportCommand(Command):
+    help = "Imports a package export"
+
+    def configure_parser(self, parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "-i", "--input", help="The file to import", dest="input_path", default="packman-export.json")
+
+    def execute(self, input_path: str) -> None:
+        with open(input_path, "r") as fp:
+            versions = json.load(fp)
+            for package, version in versions.items():
+                packman.install(package=package, version=version)
 
 
 class VersionListCommand(Command):

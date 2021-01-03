@@ -2,9 +2,10 @@
 import sys
 from argparse import ArgumentParser
 
-from packman.commands import (InstallCommand, InstalledPackageListCommand,
-                              PackageListCommand, UninstallCommand,
-                              UpdateCommand, VerifyCommand, VersionListCommand)
+from packman.commands import (ExportCommand, ImportCommand, InstallCommand,
+                              InstalledPackageListCommand, PackageListCommand,
+                              UninstallCommand, UpdateCommand, VerifyCommand,
+                              VersionListCommand)
 
 commands = {
     "install": InstallCommand(),
@@ -13,7 +14,9 @@ commands = {
     "update": UpdateCommand(),
     "packages": PackageListCommand(),
     "versions": VersionListCommand(),
-    "verify": VerifyCommand()
+    "verify": VerifyCommand(),
+    "export": ExportCommand(),
+    "import": ImportCommand()
 }
 
 

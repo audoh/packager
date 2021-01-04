@@ -1,6 +1,7 @@
 import tkinter as tk
 from enum import Enum
-from typing import Iterable, List, Tuple
+from re import L
+from typing import Iterable, List, Optional, Tuple
 
 from packman import Packman
 from packman.models.configuration import Package
@@ -28,6 +29,7 @@ class Application(tk.Frame):
         super().__init__(master)
         self.create_widgets()
 
+        self.current_packages: List[Tuple[str, Package]] = []
         self.package_sort = SortKey.DEFAULT
         self.packman = Packman()
         self.refresh_packages()
@@ -44,23 +46,48 @@ class Application(tk.Frame):
 
         self.el_packages = tk.Listbox(self, selectmode="extended")
         self.el_packages.grid(row=1, column=0, columnspan=3, sticky=tk.NSEW)
+        self.el_packages.bind("<<ListboxSelect>>", self.update_buttons_state)
 
         self.el_install = tk.Button(
-            self, text="Install", command=self.install_selected)
+            self, text="Install", command=self.install_selected, state=tk.DISABLED)
         self.el_install.grid(row=2, column=0)
 
         self.el_uninstall = tk.Button(
-            self, text="Uninstall", command=self.uninstall_selected)
+            self, text="Uninstall", command=self.uninstall_selected, state=tk.DISABLED)
         self.el_uninstall.grid(row=2, column=1)
 
         self.el_validate = tk.Button(
-            self, text="Validate", command=self.validate_selected)
+            self, text="Validate", command=self.validate_selected, state=tk.DISABLED)
         self.el_validate.grid(row=2, column=2)
 
         self.el_success = tk.Label(
             self, text="succ", relief=tk.GROOVE, fg="green")
         self.el_error = tk.Label(self, text="fail", relief=tk.GROOVE, fg="red")
         self.el_info = tk.Label(self, text="info", relief=tk.GROOVE)
+
+    def update_buttons_state(self, trigger_event: Optional[tk.Event] = None) -> None:
+        manifest = self.packman.manifest()
+        any_installed = False
+        any_uninstalled = False
+        for name, _ in self.curselection():
+            if name in manifest.packages:
+                any_installed = True
+            else:
+                any_uninstalled = True
+            if any_installed and any_uninstalled:
+                break
+
+        if any_uninstalled:
+            self.el_install.configure(state=tk.NORMAL)
+        else:
+            self.el_install.configure(state=tk.DISABLED)
+
+        if any_installed:
+            self.el_uninstall.configure(state=tk.NORMAL)
+            self.el_validate.configure(state=tk.NORMAL)
+        else:
+            self.el_uninstall.configure(state=tk.DISABLED)
+            self.el_validate.configure(state=tk.DISABLED)
 
     def show_success(self, message: str) -> None:
         self.el_success.configure(text=message)
@@ -81,12 +108,17 @@ class Application(tk.Frame):
 
     def set_packages(self, packages: Iterable[Tuple[str, Package]], sorted=False) -> None:
         self.el_packages.delete(0, tk.END)
+        if not isinstance(packages, list):
+            packages = list(packages)
         if not sorted:
-            if not isinstance(packages, list):
-                packages = list(packages)
             packages.sort(key=self.package_sort.get_key_from_tuple)
-        for name, package in packages:
-            self.el_packages.insert(0, name)
+        self.current_packages = packages
+        self.el_packages.insert(0, *(name for name, _ in packages))
+
+    def curselection(self) -> Iterable[Tuple[str, Package]]:
+        for index in self.el_packages.curselection():
+            index: int
+            yield self.current_packages[index]
 
     def refresh_all_packages(self) -> None:
         self.set_packages(self.packman.packages())
@@ -106,9 +138,7 @@ class Application(tk.Frame):
         self.clear_message()
         succeeded: List[str] = []
         failed: List[str] = []
-        for selection in self.el_packages.curselection():
-            selection: int
-            name = self.el_packages.get(selection)
+        for name, _ in self.curselection():
             success = self.packman.install(name=name)
             if success:
                 succeeded.append(name)
@@ -116,14 +146,13 @@ class Application(tk.Frame):
             else:
                 failed.append(name)
                 self.show_error(f"not installed: {', '.join(failed)}")
+        self.update_buttons_state()
 
     def uninstall_selected(self) -> None:
         self.clear_message()
         succeeded: List[str] = []
         failed: List[str] = []
-        for selection in self.el_packages.curselection():
-            selection: int
-            name = self.el_packages.get(selection)
+        for name, _ in self.curselection():
             success = self.packman.uninstall(name=name)
             if success:
                 succeeded.append(name)
@@ -131,13 +160,12 @@ class Application(tk.Frame):
             else:
                 failed.append(name)
                 self.show_error(f"not uninstalled: {', '.join(failed)}")
+        self.update_buttons_state()
 
     def validate_selected(self) -> None:
         self.clear_message()
         invalid_files: List[str] = []
-        for selection in self.el_packages.curselection():
-            selection: int
-            name = self.el_packages.get(selection)
+        for name, _ in self.curselection():
             for file in self.packman.validate(name=name):
                 invalid_files.append(file)
                 self.show_error(

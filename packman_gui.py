@@ -195,7 +195,8 @@ class Application(tk.Frame):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("Packman")
+    root.title("Packman GUI")
+    root.iconphoto(False, tk.PhotoImage(file="icon.png"))
     root.geometry("1000x1000")
 
     menu = Menu(root)

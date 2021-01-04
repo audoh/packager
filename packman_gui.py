@@ -53,9 +53,9 @@ class Application(tk.Frame):
             self, text="Uninstall", command=self.uninstall_selected)
         self.el_uninstall.grid(row=2, column=1)
 
-        self.el_verify = tk.Button(
-            self, text="Verify", command=self.verify_selected)
-        self.el_verify.grid(row=2, column=2)
+        self.el_validate = tk.Button(
+            self, text="Validate", command=self.validate_selected)
+        self.el_validate.grid(row=2, column=2)
 
         self.el_success = tk.Label(
             self, text="succ", relief=tk.GROOVE, fg="green")
@@ -132,13 +132,13 @@ class Application(tk.Frame):
                 failed.append(name)
                 self.show_error(f"not uninstalled: {', '.join(failed)}")
 
-    def verify_selected(self) -> None:
+    def validate_selected(self) -> None:
         self.clear_message()
         invalid_files: List[str] = []
         for selection in self.el_packages.curselection():
             selection: int
             name = self.el_packages.get(selection)
-            for file in self.packman.verify(name=name):
+            for file in self.packman.validate(name=name):
                 invalid_files.append(file)
                 self.show_error(
                     f"invalid files: {', '.join(invalid_files)}")

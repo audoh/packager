@@ -34,7 +34,7 @@ class Packman:
     def package_path(self, package: str) -> str:
         return os.path.join(self.config_dir, f"{package}.yml")
 
-    def verify(self, name: str) -> Iterable[str]:
+    def validate(self, name: str) -> Iterable[str]:
         manifest = self.manifest()
         package = manifest.packages[name]
         for file in package.checksums:
@@ -278,5 +278,5 @@ def packages() -> Iterable[Tuple[str, Package]]:
     yield from default_packman().packages()
 
 
-def verify(package: str) -> Iterable[str]:
-    yield from default_packman().verify(package)
+def validate(package: str) -> Iterable[str]:
+    yield from default_packman().validate(package)

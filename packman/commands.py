@@ -190,12 +190,12 @@ class UpdateCommand(Command):
         packman.update()
 
 
-class VerifyCommand(Command):
-    help = "Verifies that the files of one or more packages have not changed since installation"
+class ValidateCommand(Command):
+    help = "Validates the files of one or more packages"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "packages", help="Names of the package or packages to verify; if none specified, all packages will be verified", nargs="*")
+            "packages", help="Names of the package or packages to validate; if none specified, all packages will be validated", nargs="*")
         parser.add_argument(
             "-l", "--list", help="List the specific files which are invalid", action="store_true", dest="list_files"
         )
@@ -204,12 +204,12 @@ class VerifyCommand(Command):
         if not packages:
             manifest = packman.default_packman().manifest()
             if not manifest.packages:
-                logger.info("no packages installed to verify")
+                logger.info("no packages installed to validate")
                 return
             packages = manifest.packages.keys()
         invalid_files: List[str] = []
         for package in packages:
-            invalid_files += list(packman.verify(package=package))
+            invalid_files += list(packman.validate(package=package))
         invalid_count = len(invalid_files)
         if invalid_count == 0:
             logger.success("all files are valid")

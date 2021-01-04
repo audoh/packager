@@ -16,12 +16,11 @@ _CHUNK_SIZE = 1024
 
 
 class Operation:
-    new_paths: Set[str] = set()
-    temp_paths: Set[str] = set()
-    last_path: Optional[str] = None
-    backups: Dict[str, str] = {}
-
     def __init__(self):
+        self.new_paths: Set[str] = set()
+        self.temp_paths: Set[str] = set()
+        self.last_path: Optional[str] = None
+        self.backups: Dict[str, str] = {}
         os.makedirs(temp_dir(), exist_ok=True)
 
     def close(self) -> None:

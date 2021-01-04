@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 from enum import Enum
 from re import L
@@ -23,6 +24,17 @@ class SortKey(Enum):
             return package
 
 
+class Menu(tk.Menu):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.create_submenus()
+
+    def create_submenus(self) -> None:
+        file = tk.Menu(self, tearoff=False)
+        file.add_command(label="Exit", command=sys.exit)
+        self.add_cascade(label="File", menu=file)
+
+
 class Application(tk.Frame):
 
     def __init__(self, master=None):
@@ -34,7 +46,7 @@ class Application(tk.Frame):
         self.packman = Packman()
         self.refresh_packages()
 
-    def create_widgets(self):
+    def create_widgets(self) -> None:
         self.filter_installed = tk.BooleanVar(self, value=False)
         self.el_filter_installed = tk.Checkbutton(
             self, text="Installed", variable=self.filter_installed, command=self.refresh_packages)
@@ -186,9 +198,12 @@ if __name__ == "__main__":
     root.title("Packman")
     root.geometry("1000x1000")
 
+    menu = Menu(root)
+    root.config(menu=menu)
+
     app = Application(root)
     root.rowconfigure(0, weight=1)
     root.columnconfigure(0, weight=1)
     app.grid(row=0, column=0)
 
-    app.mainloop()
+    root.mainloop()

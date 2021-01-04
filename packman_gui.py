@@ -1,13 +1,34 @@
 import tkinter as tk
+from enum import Enum
+from typing import Iterable, List, Tuple
 
 from packman import Packman
+from packman.models.configuration import Package
+
+
+class SortKey(Enum):
+    NAME = 0
+    NICE_NAME = 1
+    DEFAULT = NAME
+
+    def get_key_from_tuple(self, tuple: Tuple[str, Package]) -> str:
+        name, package = tuple
+        return self.get_key(name, package)
+
+    def get_key(self, name: str, package: Package) -> str:
+        if self == SortKey.NAME:
+            return name
+        elif self == SortKey.NICE_NAME:
+            return package
 
 
 class Application(tk.Frame):
+
     def __init__(self, master=None):
         super().__init__(master)
         self.create_widgets()
 
+        self.package_sort = SortKey.DEFAULT
         self.packman = Packman()
         self.refresh_packages()
 
@@ -36,16 +57,44 @@ class Application(tk.Frame):
             self, text="Verify", command=self.verify_selected)
         self.el_verify.grid(row=2, column=2)
 
-    def refresh_all_packages(self) -> None:
+        self.el_success = tk.Label(
+            self, text="succ", relief=tk.GROOVE, fg="green")
+        self.el_error = tk.Label(self, text="fail", relief=tk.GROOVE, fg="red")
+        self.el_info = tk.Label(self, text="info", relief=tk.GROOVE)
+
+    def show_success(self, message: str) -> None:
+        self.el_success.configure(text=message)
+        self.el_success.grid(row=3, column=0, columnspan=3, sticky=tk.EW)
+
+    def show_error(self, message: str) -> None:
+        self.el_error.configure(text=message)
+        self.el_error.grid(row=4, column=0, columnspan=3, sticky=tk.EW)
+
+    def show_info(self, message: str) -> None:
+        self.el_info.configure(text=message)
+        self.el_info.grid(row=5, column=0, columnspan=3, sticky=tk.EW)
+
+    def clear_message(self) -> None:
+        self.el_error.grid_forget()
+        self.el_success.grid_forget()
+        self.el_info.grid_forget()
+
+    def set_packages(self, packages: Iterable[Tuple[str, Package]], sorted=False) -> None:
         self.el_packages.delete(0, tk.END)
-        for name, package in self.packman.packages():
+        if not sorted:
+            if not isinstance(packages, list):
+                packages = list(packages)
+            packages.sort(key=self.package_sort.get_key_from_tuple)
+        for name, package in packages:
             self.el_packages.insert(0, name)
+
+    def refresh_all_packages(self) -> None:
+        self.set_packages(self.packman.packages())
 
     def refresh_installed_packages(self) -> None:
         manifest = self.packman.manifest()
-        self.el_packages.delete(0, tk.END)
-        for name in manifest.packages:
-            self.el_packages.insert(0, name)
+        self.set_packages((name, self.packman.package(name))
+                          for name in manifest.packages)
 
     def refresh_packages(self) -> None:
         if self.filter_installed.get():
@@ -54,26 +103,54 @@ class Application(tk.Frame):
             self.refresh_all_packages()
 
     def install_selected(self) -> None:
+        self.clear_message()
+        succeeded: List[str] = []
+        failed: List[str] = []
         for selection in self.el_packages.curselection():
             selection: int
             name = self.el_packages.get(selection)
-            self.packman.install(name=name)
+            success = self.packman.install(name=name)
+            if success:
+                succeeded.append(name)
+                self.show_success(f"installed: {', '.join(succeeded)}")
+            else:
+                failed.append(name)
+                self.show_error(f"not installed: {', '.join(failed)}")
 
     def uninstall_selected(self) -> None:
+        self.clear_message()
+        succeeded: List[str] = []
+        failed: List[str] = []
         for selection in self.el_packages.curselection():
             selection: int
             name = self.el_packages.get(selection)
-            self.packman.uninstall(name=name)
+            success = self.packman.uninstall(name=name)
+            if success:
+                succeeded.append(name)
+                self.show_success(f"uninstalled: {', '.join(succeeded)}")
+            else:
+                failed.append(name)
+                self.show_error(f"not uninstalled: {', '.join(failed)}")
 
     def verify_selected(self) -> None:
+        self.clear_message()
+        invalid_files: List[str] = []
         for selection in self.el_packages.curselection():
             selection: int
             name = self.el_packages.get(selection)
-            self.packman.verify(name=name)
+            for file in self.packman.verify(name=name):
+                invalid_files.append(file)
+                self.show_error(
+                    f"invalid files: {', '.join(invalid_files)}")
+        if not invalid_files:
+            self.show_success("no invalid files")
 
     def update_packman(self) -> None:
+        self.clear_message()
         if self.packman.update():
             self.refresh_packages()
+        else:
+            self.show_info("no changes found")
 
 
 if __name__ == "__main__":

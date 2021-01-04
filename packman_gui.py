@@ -53,24 +53,31 @@ class Application(tk.Frame):
         self.el_filter_installed.grid(row=0, column=0)
 
         self.el_update = tk.Button(self, text="Update",
-                                   command=self.update_packman)
-        self.el_update.grid(row=0, column=2)
+                                   command=self.update_packman, justify=tk.RIGHT)
+        self.el_update.grid(row=0, column=2, sticky=tk.EW)
 
         self.el_packages = tk.Listbox(self, selectmode="extended")
         self.el_packages.grid(row=1, column=0, columnspan=3, sticky=tk.NSEW)
         self.el_packages.bind("<<ListboxSelect>>", self.update_buttons_state)
 
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(1, weight=1)
+
+        button_panel = tk.Frame(self)
+
         self.el_install = tk.Button(
-            self, text="Install", command=self.install_selected, state=tk.DISABLED)
-        self.el_install.grid(row=2, column=0)
+            button_panel, text="Install", command=self.install_selected, state=tk.DISABLED)
+        self.el_install.grid(row=0, column=0, sticky=tk.EW)
 
         self.el_uninstall = tk.Button(
-            self, text="Uninstall", command=self.uninstall_selected, state=tk.DISABLED)
-        self.el_uninstall.grid(row=2, column=1)
+            button_panel, text="Uninstall", command=self.uninstall_selected, state=tk.DISABLED)
+        self.el_uninstall.grid(row=0, column=1, sticky=tk.EW)
 
         self.el_validate = tk.Button(
-            self, text="Validate", command=self.validate_selected, state=tk.DISABLED)
-        self.el_validate.grid(row=2, column=2)
+            button_panel, text="Validate", command=self.validate_selected, state=tk.DISABLED)
+        self.el_validate.grid(row=0, column=2, sticky=tk.EW)
+
+        button_panel.grid(row=2, column=2)
 
         self.el_success = tk.Label(
             self, text="succ", relief=tk.GROOVE, fg="green")
@@ -197,14 +204,12 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title("Packman GUI")
     root.iconphoto(False, tk.PhotoImage(file="icon.png"))
-    root.geometry("1000x1000")
+    root.geometry("500x500")
 
     menu = Menu(root)
     root.config(menu=menu)
 
     app = Application(root)
-    root.rowconfigure(0, weight=1)
-    root.columnconfigure(0, weight=1)
-    app.grid(row=0, column=0)
+    app.pack(fill=tk.BOTH, expand=True)
 
     root.mainloop()

@@ -13,6 +13,7 @@ class ManifestPackage(BaseModel):
     checksums: Dict[str, str] = {}
 
     def update_checksums(self) -> None:
+        self.checksums = {}
         for file in self.files:
             self.checksums[file] = checksum(file)
 

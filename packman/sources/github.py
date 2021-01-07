@@ -2,7 +2,7 @@
 import base64
 import json
 import os
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 from urllib import parse as urlparse
 
 import requests
@@ -65,7 +65,7 @@ class GitHubPackageSource(BasePackageSource):
         release = api.get_release_by_tag_name(tag=version)
         return _to_version_info(release)
 
-    def fetch_version(self, version: str, operation: Operation) -> None:
+    def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda: None) -> None:
         api = self.get_api()
         release = api.get_release_by_tag_name(tag=version)
         release_id = release["id"]

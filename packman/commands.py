@@ -156,7 +156,7 @@ class InstallCommand(Command):
             else:
                 name = package
                 version = None
-            if not packman.install(package=name, version=version, force=force):
+            if not packman.install(package=name, version=version, force=force, on_progress=lambda p: logger.debug(f"{int(p * 100)}%")):
                 changed = False
         if not changed:
             logger.info("use -f to force installation")

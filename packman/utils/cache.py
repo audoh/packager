@@ -1,7 +1,7 @@
 import hashlib
 import os
 import shutil
-from typing import Iterable
+from typing import Callable, Iterable
 
 from packman.models.package_source import PackageVersion
 from packman.utils.files import temp_dir
@@ -12,7 +12,7 @@ class Cache:
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def fetch_version(self, version: str, operation: Operation) -> None:
+    def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda: None) -> None:
         cache_path = self.get_path(version, ".zip")
         if not os.path.exists(cache_path):
             raise Exception("not found")

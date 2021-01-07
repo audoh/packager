@@ -1,7 +1,7 @@
 import filecmp
 import os
 import shutil
-from typing import Iterable, Optional, Set, Tuple
+from typing import Callable, Iterable, Optional, Set, Tuple
 
 from git.repo.base import Repo
 from loguru import logger
@@ -42,7 +42,7 @@ class Packman:
                 logger.warning(f"checksum mismatch: {file}")
                 yield file
 
-    def install(self, name: str, version: Optional[str] = None, force=False) -> bool:
+    def install(self, name: str, version: Optional[str] = None, force=False, on_progress: Callable[[float], None] = lambda: None) -> bool:
         cfg_path = self.package_path(name)
 
         # region Case sensitivity
@@ -58,10 +58,18 @@ class Packman:
         package = self.package(name)
         context = name
 
+        step_count = 2 + len(package.steps)
+        step_mult = 1 / step_count
+        step_no = 0
+
+        def on_step_progress(p):
+            return on_progress((step_no + p) * step_mult)
+        on_progress(0.0)
+
         # region Versioning
 
         version_info: Optional[PackageVersion] = None
-        logger.info(f"{context} - resolving version info...",)
+        logger.info(f"{context} - resolving version info...")
         for source in package.sources:
             try:
                 if version:
@@ -96,7 +104,8 @@ class Packman:
         cache_source = Cache(name=name)
         op = Operation()
         try:
-            cache_source.fetch_version(version, operation=op)
+            cache_source.fetch_version(
+                version, operation=op, on_progress=on_step_progress)
         except Exception:
             op.abort()
             op = None
@@ -113,7 +122,8 @@ class Packman:
             for source in package.sources:
                 op = Operation()
                 try:
-                    source.fetch_version(version, operation=op)
+                    source.fetch_version(
+                        version, operation=op, on_progress=on_step_progress)
                 except Exception as exc:
                     logger.error(f"failed to load from source: {source}")
                     logger.exception(exc)
@@ -153,12 +163,14 @@ class Packman:
 
             logger.info(f"{context} - installing...")
             for step in package.steps:
+                step_no += 1
                 step.execute(operation=op, package_path=package_path,
-                             root_dir=self.root_dir)
+                             root_dir=self.root_dir, on_progress=on_step_progress)
 
             # endregion
             # region Manifest
 
+            step_no += 1
             modified_files = manifest.modified_files
             original_files = manifest.original_files
             for original_path, temp_path in op.backups.items():
@@ -174,6 +186,8 @@ class Packman:
                 version=version, files=op.new_paths)
 
             manifest.write_json(self.manifest_path)
+
+            on_progress(1.0)
 
             # endregion
             logger.success(f"{context} - installed")
@@ -258,8 +272,8 @@ def default_packman() -> Packman:
     return _default_packman
 
 
-def install(package: str, version: Optional[str] = None, force: bool = False) -> bool:
-    return default_packman().install(package, version=version, force=force)
+def install(package: str, version: Optional[str] = None, force: bool = False, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    return default_packman().install(package, version=version, force=force, on_progress=on_progress)
 
 
 def uninstall(package: str) -> bool:

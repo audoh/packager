@@ -1,6 +1,6 @@
 import os
 from pathlib import Path, PurePath
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from packman.models.install_step import BaseInstallStep, install_step
 from packman.utils.operation import Operation
@@ -27,7 +27,7 @@ class CopyFolderInstallStep(BaseInstallStep):
                 file_dest = os.path.join(dest_root, file)
                 operation.copy_file(file_src, file_dest)
 
-    def execute(self, operation: Operation, package_path: str, root_dir: str) -> None:
+    def execute(self, operation: Operation, package_path: str, root_dir: str, on_progress: Callable[[float], None] = lambda: None) -> None:
         for root, subdirs, files in os.walk(package_path):
             for subdir in subdirs:
                 if subdir == self.name:

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional
+from typing import Callable, Iterable, Optional
 
 from packman.utils.operation import Operation
 from packman.utils.union import DiscriminatedUnion
@@ -20,7 +20,7 @@ class BasePackageSource(BaseModel, ABC):
         ...
 
     @abstractmethod
-    def fetch_version(self, version: str, operation: Operation) -> None:
+    def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda: None) -> None:
         ...
 
     @abstractmethod

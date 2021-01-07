@@ -18,6 +18,7 @@ from packman.utils.cache import Cache
 from packman.utils.files import (backup_path, checksum, remove_path,
                                  resolve_case, temp_path)
 from packman.utils.operation import Operation
+from packman.utils.progress import StepProgress
 
 
 class Packman:
@@ -42,7 +43,7 @@ class Packman:
                 logger.warning(f"checksum mismatch: {file}")
                 yield file
 
-    def install(self, name: str, version: Optional[str] = None, force=False, on_progress: Callable[[float], None] = lambda: None) -> bool:
+    def install(self, name: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: Callable[[float], None] = lambda p: None) -> bool:
         cfg_path = self.package_path(name)
 
         # region Case sensitivity
@@ -54,16 +55,13 @@ class Packman:
 
         # endregion
 
-        op: Operation
+        op: Optional[Operation] = None
         package = self.package(name)
         context = name
 
         step_count = 2 + len(package.steps)
-        step_mult = 1 / step_count
-        step_no = 0
-
-        def on_step_progress(p):
-            return on_progress((step_no + p) * step_mult)
+        on_step_progress = StepProgress(
+            step_mult=1 / step_count, on_progress=on_progress)
         on_progress(0.0)
 
         # region Versioning
@@ -102,18 +100,21 @@ class Packman:
         # region Cache
 
         cache_source = Cache(name=name)
-        op = Operation()
-        try:
-            cache_source.fetch_version(
-                version, operation=op, on_progress=on_step_progress)
-        except Exception:
-            op.abort()
-            op = None
+        if no_cache:
             cache_miss = True
         else:
-            on_step_progress(1.0)
-            logger.info(f"{context} - retrieved from cache")
-            cache_miss = False
+            op = Operation()
+            try:
+                cache_source.fetch_version(
+                    version, operation=op, on_progress=on_step_progress)
+            except Exception:
+                op.abort()
+                op = None
+                cache_miss = True
+            else:
+                on_step_progress(1.0)
+                logger.info(f"{context} - retrieved from cache")
+                cache_miss = False
 
         # endregion
         # region Download
@@ -165,7 +166,7 @@ class Packman:
 
             logger.info(f"{context} - installing...")
             for step in package.steps:
-                step_no += 1
+                on_step_progress.step_no += 1
                 step.execute(operation=op, package_path=package_path,
                              root_dir=self.root_dir, on_progress=on_step_progress)
                 on_step_progress(1.0)
@@ -173,7 +174,7 @@ class Packman:
             # endregion
             # region Manifest
 
-            step_no += 1
+            on_step_progress.step_no += 1
             modified_files = manifest.modified_files
             original_files = manifest.original_files
             for original_path, temp_path in op.backups.items():
@@ -275,8 +276,8 @@ def default_packman() -> Packman:
     return _default_packman
 
 
-def install(package: str, version: Optional[str] = None, force: bool = False, on_progress: Callable[[float], None] = lambda p: None) -> bool:
-    return default_packman().install(package, version=version, force=force, on_progress=on_progress)
+def install(package: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    return default_packman().install(package, version=version, force=force, no_cache=no_cache, on_progress=on_progress)
 
 
 def uninstall(package: str) -> bool:

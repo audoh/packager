@@ -139,8 +139,11 @@ class InstallCommand(Command):
         parser.add_argument(
             "-f", "--force", help="Forces re-installation when the package version is already installed", action="store_true"
         )
+        parser.add_argument(
+            "--no-cache", help="Forces re-download when the package version is already downloaded", action="store_true", dest="no_cache"
+        )
 
-    def execute(self, packages: Optional[List[str]] = None, force=False) -> None:
+    def execute(self, packages: Optional[List[str]] = None, force: bool = False, no_cache: bool = False) -> None:
         if not packages:
             manifest = packman.default_packman().manifest()
             if not manifest.packages:
@@ -156,7 +159,7 @@ class InstallCommand(Command):
             else:
                 name = package
                 version = None
-            if not packman.install(package=name, version=version, force=force, on_progress=lambda p: logger.debug(f"{int(p * 100)}%")):
+            if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=lambda p: logger.debug(f"{int(p * 100)}%")):
                 changed = False
         if not changed:
             logger.info("use -f to force installation")

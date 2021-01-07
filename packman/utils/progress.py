@@ -9,3 +9,7 @@ class StepProgress:
 
     def __call__(self, progress: float) -> None:
         self.on_progress((self.step_no + progress) * self.step_mult)
+
+    def advance(self) -> None:
+        self.__call__(1.0)
+        self.step_no += 1

@@ -1,9 +1,10 @@
 import math
 import os
 import shutil
+from datetime import datetime, timedelta
 from io import FileIO
 from types import TracebackType
-from typing import Dict, Optional, Set, Type
+from typing import Callable, Dict, Optional, Set, Type
 from urllib import parse as urlparse
 
 import patoolib
@@ -83,7 +84,9 @@ class Operation:
         if path in self.temp_paths:
             self.temp_paths.remove(path)
 
-    def download_file(self, url: str, ext: Optional[str] = "") -> str:
+    def download_file(self, url: str, ext: Optional[str] = "", on_progress: Callable[[float], None] = lambda p: None) -> str:
+        update_interval = timedelta(milliseconds=400)
+
         if ext is None:
             parsed_url = urlparse.urlparse(url)
             url_path = parsed_url.path
@@ -92,17 +95,22 @@ class Operation:
                 ext = url_path[extsep_idx:]
             else:
                 ext = ""
-        res = requests.get(url)
+        res = requests.get(url, stream=True)
         path = self.get_temp_path(ext=ext)
         logger.debug(f"downloading {url} to {path}")
         with open(path, "bw") as file:
-            size = int(res.headers["content-length"])
-            chunks = math.ceil(size / _CHUNK_SIZE)
+            pending_size = int(res.headers["content-length"])
+            downloaded_size = 0
+            time = datetime.now()
 
             file: FileIO
-            for chunk, i in zip(res.iter_content(chunk_size=_CHUNK_SIZE), range(chunks)):
-                # logger.info(f"{i / chunks}")
+            for chunk in res.iter_content():
+                chunk: bytes
                 file.write(chunk)
+                downloaded_size += len(chunk)
+                if datetime.now() - time >= update_interval:
+                    on_progress(downloaded_size / pending_size)
+                    time = datetime.now()
         return path
 
     def extract_archive(self, path: str) -> str:

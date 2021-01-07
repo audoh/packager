@@ -9,6 +9,7 @@ import requests
 from packman.models.package_source import (BasePackageSource, PackageVersion,
                                            package_source)
 from packman.utils.operation import Operation
+from packman.utils.progress import StepProgress
 
 _API_URL = "https://api.github.com"
 
@@ -65,7 +66,11 @@ class GitHubPackageSource(BasePackageSource):
         release = api.get_release_by_tag_name(tag=version)
         return _to_version_info(release)
 
-    def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda: None) -> None:
+    def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda p: None) -> None:
+        step_count = 1
+        on_step_progress = StepProgress(
+            step_mult=1 / step_count, on_progress=on_progress)
+
         api = self.get_api()
         release = api.get_release_by_tag_name(tag=version)
         release_id = release["id"]
@@ -82,7 +87,7 @@ class GitHubPackageSource(BasePackageSource):
 
         url = asset["browser_download_url"]
 
-        zip_path = operation.download_file(url)
+        zip_path = operation.download_file(url, on_progress=on_step_progress)
         operation.extract_archive(zip_path)
         operation.remove_file(zip_path)
 

@@ -112,7 +112,7 @@ class Packman:
                 op = None
                 cache_miss = True
             else:
-                on_step_progress(1.0)
+                on_step_progress.advance()
                 logger.info(f"{context} - retrieved from cache")
                 cache_miss = False
 
@@ -134,7 +134,7 @@ class Packman:
                     op = None
                     continue
                 else:
-                    on_step_progress(1.0)
+                    on_step_progress.advance()
                     logger.success(f"{context} - downloaded")
                     break
         # endregion
@@ -166,15 +166,13 @@ class Packman:
 
             logger.info(f"{context} - installing...")
             for step in package.steps:
-                on_step_progress.step_no += 1
                 step.execute(operation=op, package_path=package_path,
                              root_dir=self.root_dir, on_progress=on_step_progress)
-                on_step_progress(1.0)
+                on_step_progress.advance()
 
             # endregion
             # region Manifest
 
-            on_step_progress.step_no += 1
             modified_files = manifest.modified_files
             original_files = manifest.original_files
             for original_path, temp_path in op.backups.items():

@@ -172,13 +172,18 @@ class InstallCommand(Command):
 
             on_progress(0.0)
 
-            if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
-                changed = False
-                step_string.error = True
+            try:
+                if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
+                    changed = False
+                    step_string.error = "already installed"
+                    print(step_string)
+                else:
+                    step_string.complete = True
+                    print(step_string)
+            except Exception as exc:
+                step_string.error = str(exc)
                 print(step_string)
-            else:
-                step_string.complete = True
-                print(step_string)
+
         if not changed:
             logger.info("use -f to force installation")
 

@@ -9,7 +9,11 @@ class StepProgress:
         self.on_progress = on_progress
 
     def __call__(self, progress: float) -> None:
-        self.on_progress((self.step_no + progress) * self.step_mult)
+        try:
+            self.on_progress((self.step_no + progress) * self.step_mult)
+        except Exception as exc:
+            # TODO warn limited number of times
+            ...
 
     def advance(self) -> None:
         self.__call__(1.0)
@@ -77,8 +81,8 @@ class StepString:
             self.percent.value = value
 
     def __init__(self, name: str, progress_bar: ProgressBarString = ProgressBarString(), percent: Optional[PercentString] = PercentString(), percent_padding: int = 5, percent_on_right: bool = False) -> None:
-        self.complete = False
-        self.error = False
+        self.complete: bool = False
+        self.error: Optional[str] = None
         self.name = name
         self.percent = percent
         self.progress_bar = progress_bar
@@ -100,4 +104,9 @@ class StepString:
             percent_str = str(self.percent).ljust(self.percent_padding)
             progress_part = f"{percent_str}{self.progress_bar}"
 
-        return f"{self.name} - {progress_part} [{state}]"
+        result = f"{self.name} - {progress_part} [{state}]"
+
+        if self.error:
+            result += f" ({self.error})"
+
+        return result

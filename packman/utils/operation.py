@@ -11,6 +11,7 @@ import patoolib
 import requests
 from loguru import logger
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
+from packman.utils.progress import StepProgress
 from packman.utils.uninterruptible import uninterruptible
 
 _CHUNK_SIZE = 1024
@@ -119,13 +120,18 @@ class Operation:
         patoolib.extract_archive(path, outdir=dir, verbosity=-1)
         return dir
 
-    def restore(self) -> bool:
+    def restore(self, on_progress: Callable[[float], None] = lambda p: None) -> bool:
         errors = False
+
+        step_count = len(self.new_paths) + len(self.backups)
+        progress = StepProgress(step_mult=1/step_count,
+                                on_progress=on_progress)
 
         for path in self.new_paths:
             logger.debug(f"cleaning up {path}")
             try:
                 remove_path(path)
+                progress.advance()
             except Exception as exc:
                 logger.error(f"failed to clean up file: {path}")
                 logger.exception(exc)
@@ -137,6 +143,7 @@ class Operation:
                 dest_dir = os.path.dirname(dest)
                 os.makedirs(dest_dir, exist_ok=True)
                 shutil.copy2(src, dest)
+                progress.advance()
             except Exception as exc:
                 logger.error(f"failed to restore file: {dest}")
                 logger.exception(exc)
@@ -145,11 +152,11 @@ class Operation:
 
         return errors
 
-    def abort(self) -> bool:
+    def abort(self, on_progress: Callable[[float], None] = lambda p: None) -> bool:
         """
         Shorthand for restore and close.
         """
         logger.debug("aborting operation")
-        errors = self.restore()
+        errors = self.restore(on_progress=on_progress)
         self.close()
         return errors

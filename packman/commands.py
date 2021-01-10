@@ -8,6 +8,7 @@ from typing import Any, List, Optional
 from loguru import logger
 
 import packman.manager as packman
+from packman.utils.progress import PercentString, ProgressBarString, StepString
 
 
 class Command(ABC):
@@ -152,6 +153,8 @@ class InstallCommand(Command):
             packages = manifest.packages.keys()
 
         changed = True
+        progress_bar = ProgressBarString()
+        percent = PercentString()
         for package in packages:
             at_idx = package.find("@")
             if at_idx != -1:
@@ -159,8 +162,23 @@ class InstallCommand(Command):
             else:
                 name = package
                 version = None
-            if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=lambda p: logger.debug(f"{int(p * 100)}%")):
+
+            step_string = StepString(
+                f"Installing {name}", progress_bar, percent)
+
+            def on_progress(p: float) -> None:
+                step_string.progress = p
+                print(step_string, end="\r")
+
+            on_progress(0.0)
+
+            if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
                 changed = False
+                step_string.error = True
+                print(step_string)
+            else:
+                step_string.complete = True
+                print(step_string)
         if not changed:
             logger.info("use -f to force installation")
 

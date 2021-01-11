@@ -19,6 +19,10 @@ class StepProgress:
         self.__call__(1.0)
         self.step_no += 1
 
+    def backtrack(self) -> None:
+        self.__call__(0.0)
+        self.step_no -= 1
+
 
 class PercentString:
     def __init__(

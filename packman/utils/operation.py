@@ -18,11 +18,12 @@ _CHUNK_SIZE = 1024
 
 
 class Operation:
-    def __init__(self):
+    def __init__(self, on_restore_progress: Callable[[float], None] = lambda p: None):
         self.new_paths: Set[str] = set()
         self.temp_paths: Set[str] = set()
         self.last_path: Optional[str] = None
         self.backups: Dict[str, str] = {}
+        self.on_restore_progress = on_restore_progress
         os.makedirs(temp_dir(), exist_ok=True)
 
     def close(self) -> None:
@@ -120,7 +121,10 @@ class Operation:
         patoolib.extract_archive(path, outdir=dir, verbosity=-1)
         return dir
 
-    def restore(self, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    def restore(self, on_progress: Optional[Callable[[float], None]] = None) -> bool:
+        if not on_progress:
+            on_progress = self.on_restore_progress
+
         errors = False
 
         step_count = len(self.new_paths) + len(self.backups)
@@ -152,7 +156,7 @@ class Operation:
 
         return errors
 
-    def abort(self, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    def abort(self, on_progress: Optional[Callable[[float], None]] = None) -> bool:
         """
         Shorthand for restore and close.
         """

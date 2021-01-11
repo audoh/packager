@@ -64,6 +64,14 @@ class Packman:
             step_mult=1 / step_count, on_progress=on_progress)
         on_progress(0.0)
 
+        restore_start_p: float = -1.0
+
+        def on_restore_progress(p: float) -> None:
+            nonlocal restore_start_p
+            if restore_start_p < 0.0:
+                restore_start_p = on_step_progress.step_no / step_count
+            on_progress(restore_start_p * (1 - p))
+
         # region Versioning
 
         version_info: Optional[PackageVersion] = None
@@ -103,7 +111,7 @@ class Packman:
         if no_cache:
             cache_miss = True
         else:
-            op = Operation()
+            op = Operation(on_restore_progress=on_restore_progress)
             try:
                 cache_source.fetch_version(
                     version, operation=op, on_progress=on_step_progress)
@@ -122,7 +130,7 @@ class Packman:
         if cache_miss:
             logger.info(f"{context} - downloading...")
             for source in package.sources:
-                op = Operation()
+                op = Operation(on_restore_progress=on_restore_progress)
                 try:
                     source.fetch_version(
                         version, operation=op, on_progress=on_step_progress)

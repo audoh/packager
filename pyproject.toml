@@ -15,6 +15,7 @@ loguru = "^0.5.3"
 GitPython = "^3.1.11"
 pywin32 = "^300"
 appdirs = "^1.4.4"
+colored = "^1.4.2"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.4"

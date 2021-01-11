@@ -8,7 +8,7 @@ from typing import Any, List, Optional
 from loguru import logger
 
 import packman.manager as packman
-from packman.utils.progress import PercentString, ProgressBarString, StepString
+from packman.utils.output import PercentString, ProgressBarString, StepString
 
 
 class Command(ABC):
@@ -152,7 +152,8 @@ class InstallCommand(Command):
                 return
             packages = manifest.packages.keys()
 
-        padlen = max(len(package.split("@")[0]) for package in packages)
+        padlen = 2 + max(len(package.split("@")[0]) for package in packages)
+        print()
 
         changed = True
         progress_bar = ProgressBarString()
@@ -189,6 +190,7 @@ class InstallCommand(Command):
                 step_string.error = str(exc)
                 print(step_string)
 
+        print()
         if not changed:
             logger.info("use -f to force installation")
 

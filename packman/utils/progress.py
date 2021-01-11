@@ -44,7 +44,7 @@ class RestoreProgress:
             nonlocal restore_progress
             if not restore_progress:
                 restore_progress = RestoreProgress(
-                    start_progress=step_progress.step_no, on_progress=on_progress)
+                    start_progress=step_progress.step_no * step_progress.step_mult, on_progress=on_progress)
             restore_progress(p)
         return on_restore_progress
 

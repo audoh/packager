@@ -109,7 +109,13 @@ class StepString:
         if self.percent:
             self.percent.value = value
 
-    def __init__(self, name: str, progress_bar: ProgressBarString = ProgressBarString(), percent: Optional[PercentString] = PercentString(), percent_padding: int = 5, percent_on_right: bool = False) -> None:
+    def __init__(self,
+                 name: str,
+                 progress_bar: ProgressBarString = ProgressBarString(),
+                 percent: Optional[PercentString] = PercentString(),
+                 percent_padding: int = 5,
+                 percent_on_right: bool = False,
+                 separator: str = ": ") -> None:
         self.complete: bool = False
         self.error: Optional[str] = None
         self.name = name
@@ -117,6 +123,7 @@ class StepString:
         self.progress_bar = progress_bar
         self.percent_padding = percent_padding
         self.percent_on_right = percent_on_right
+        self.separator = separator
 
     def __str__(self) -> str:
         if self.error:
@@ -133,7 +140,7 @@ class StepString:
             percent_str = str(self.percent).ljust(self.percent_padding)
             progress_part = f"{percent_str}{self.progress_bar}"
 
-        result = f"{self.name} - {progress_part} [{state}]"
+        result = f"{self.name}{self.separator}{progress_part} [{state}]"
 
         if self.error:
             result += f" ({self.error})"

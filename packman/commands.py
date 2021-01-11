@@ -152,6 +152,8 @@ class InstallCommand(Command):
                 return
             packages = manifest.packages.keys()
 
+        padlen = max(len(package.split("@")[0]) for package in packages)
+
         changed = True
         progress_bar = ProgressBarString()
         percent = PercentString()
@@ -163,8 +165,11 @@ class InstallCommand(Command):
                 name = package
                 version = None
 
+            lendiff = padlen - len(name)
+            padding = lendiff * " "
+
             step_string = StepString(
-                f"Installing {name}", progress_bar, percent)
+                f"{padding}Installing {name}", progress_bar, percent)
 
             def on_progress(p: float) -> None:
                 step_string.progress = p

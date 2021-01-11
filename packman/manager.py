@@ -18,7 +18,7 @@ from packman.utils.cache import Cache
 from packman.utils.files import (backup_path, checksum, remove_path,
                                  resolve_case, temp_path)
 from packman.utils.operation import Operation
-from packman.utils.progress import StepProgress
+from packman.utils.progress import RestoreProgress, StepProgress
 
 
 class Packman:
@@ -63,14 +63,8 @@ class Packman:
         on_step_progress = StepProgress(
             step_mult=1 / step_count, on_progress=on_progress)
         on_progress(0.0)
-
-        restore_start_p: float = -1.0
-
-        def on_restore_progress(p: float) -> None:
-            nonlocal restore_start_p
-            if restore_start_p < 0.0:
-                restore_start_p = on_step_progress.step_no / step_count
-            on_progress(restore_start_p * (1 - p))
+        on_restore_progress = RestoreProgress.step_progress(
+            step_progress=on_step_progress, on_progress=on_progress)
 
         # region Versioning
 

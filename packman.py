@@ -1,6 +1,9 @@
 
+import os
 import sys
 from argparse import ArgumentParser
+
+from loguru import logger
 
 from packman.commands import (ExportCommand, ImportCommand, InstallCommand,
                               InstalledPackageListCommand, PackageListCommand,
@@ -21,6 +24,8 @@ commands = {
 
 
 if __name__ == "__main__":
+    logger.remove()
+    logger.add(sys.stderr, level=os.environ.get("PACKMAN_LOGGING", "CRITICAL"))
     parser = ArgumentParser(
         description="Rudimentary file package management intended for modifications for games such as KSP and RimWorld")
     command_parsers = parser.add_subparsers(

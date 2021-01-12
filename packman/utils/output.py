@@ -1,5 +1,5 @@
 from math import floor
-from typing import Callable, Optional, Tuple
+from typing import List, Optional, Tuple
 
 
 class PercentString:
@@ -143,6 +143,9 @@ class ConsoleOutput:
 
         self._step_string.error = error
         self.write(self._step_string, end="\r")
+
+    def write_table(self, rows: List[List[str]]) -> None:
+        ...  # TODO use for list
 
     def end(self) -> None:
         self._finish_step()

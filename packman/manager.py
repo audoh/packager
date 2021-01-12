@@ -190,7 +190,8 @@ class Packman:
             manifest.packages[name] = ManifestPackage(
                 version=version, files=op.new_paths)
 
-            manifest.write_json(self.manifest_path)
+            manifest.write_json(self.manifest_path,
+                                on_progress=on_step_progress)
 
             on_progress(1.0)
 
@@ -209,7 +210,7 @@ class Packman:
         except KeyError:
             return False
 
-        manifest.write_json(self.manifest_path)
+        manifest.write_json(self.manifest_path, on_progress=on_progress)
         on_progress(1.0)
 
         logger.success(f"{name} - uninstalled")

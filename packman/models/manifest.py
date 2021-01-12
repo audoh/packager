@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 from packman.utils.files import checksum, remove_path
 from pydantic import BaseModel
@@ -50,7 +50,8 @@ class Manifest(BaseModel):
         for package in self.packages.values():
             package.update_checksums()
 
-    def write_json(self, path: str) -> None:
+    def write_json(self, path: str, on_progress: Callable[[float], None] = lambda p: None) -> None:
+        # TODO on_progress
         self.update_file_map()
         self.update_checksums()
         with open(path, "w") as fp:

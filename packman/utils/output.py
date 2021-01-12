@@ -1,5 +1,5 @@
 from math import floor
-from typing import Optional, Tuple
+from typing import Callable, Optional, Tuple
 
 
 class PercentString:

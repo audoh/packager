@@ -163,7 +163,7 @@ class InstallCommand(Command):
                 name = package
                 version = None
 
-            step_name = f"{name}"
+            step_name = name
 
             def on_progress(p: float) -> None:
                 output.write_step_progress(step_name, p)
@@ -199,11 +199,27 @@ class UninstallCommand(Command):
                 logger.info("no packages installed to remove")
                 return
             packages = manifest.packages.keys()
-        for package in packages:
-            uninstalled = packman.uninstall(package=package)
-            if not uninstalled:
-                logger.warning(
-                    f"package {package} not uninstalled; perhaps you didn't install it using this tool?")
+
+        output = ConsoleOutput()
+
+        for name in packages:
+
+            step_name = name
+
+            def on_progress(p: float) -> None:
+                output.write_step_progress(step_name, p)
+
+            on_progress(0.0)
+            try:
+                if not packman.uninstall(package=name, on_progress=on_progress):
+                    output.write_step_error(
+                        step_name, "not uninstalled; perhaps you didn't install it using this tool?")
+                else:
+                    output.write_step_complete(step_name)
+            except Exception as exc:
+                output.write_step_error(step_name, str(exc))
+
+        output.end()
 
 
 class UpdateCommand(Command):

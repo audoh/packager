@@ -199,8 +199,10 @@ class Packman:
 
         return True
 
-    def uninstall(self, name: str) -> bool:
+    def uninstall(self, name: str, on_progress: Callable[[float], None] = lambda p: None) -> bool:
         manifest = self.manifest()
+
+        on_progress(0.0)
 
         try:
             del manifest.packages[name]
@@ -208,6 +210,7 @@ class Packman:
             return False
 
         manifest.write_json(self.manifest_path)
+        on_progress(1.0)
 
         logger.success(f"{name} - uninstalled")
         return True
@@ -281,8 +284,8 @@ def install(package: str, version: Optional[str] = None, force: bool = False, no
     return default_packman().install(package, version=version, force=force, no_cache=no_cache, on_progress=on_progress)
 
 
-def uninstall(package: str) -> bool:
-    return default_packman().uninstall(package)
+def uninstall(package: str, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    return default_packman().uninstall(package, on_progress=on_progress)
 
 
 def update() -> bool:

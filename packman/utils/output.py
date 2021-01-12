@@ -87,7 +87,7 @@ class StepString:
         elif self.complete:
             state = f"✓"
         else:
-            state = " "
+            state = "•"
 
         if self.percent_on_right:
             percent_str = str(self.percent).rjust(self.percent_padding)
@@ -118,6 +118,7 @@ class ConsoleOutput:
         self._step_string.name = ""
         self._step_string.error = None
         self._step_string.progress = 0.0
+        self._step_string.complete = False
 
     def write_step_progress(self, name: str, progress: float) -> None:
         if self._step_string.name != name:

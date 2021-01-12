@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 from typing import Any, List, Optional
@@ -8,11 +7,12 @@ from typing import Any, List, Optional
 from loguru import logger
 
 import packman.manager as packman
-from packman.utils.output import (ConsoleOutput, PercentString,
-                                  ProgressBarString, StepString)
+from packman.utils.output import ConsoleOutput
 
 
 class Command(ABC):
+    output = ConsoleOutput()
+
     @property
     @abstractmethod
     def help(self) -> str:
@@ -30,10 +30,8 @@ class PackageListCommand(Command):
     help = "Lists available packages"
 
     def execute(self) -> None:
-        width = 30
-        for name, config in packman.packages():
-            print(
-                f"{name.ljust(width)} {config.name.ljust(width)} {config.description}")
+        self.output.write_table([[name, config.name, config.description]
+                                 for name, config in packman.packages()])
 
 
 _DEFAULT_EXPORT_FILE = "packman-export"
@@ -119,17 +117,17 @@ class VersionListCommand(Command):
 
     def execute(self, package: str) -> None:
         for version in packman.versions(package):
-            print(version)
+            self.output.write(version)
 
 
 class InstalledPackageListCommand(Command):
     help = "Lists installed packages"
 
     def execute(self) -> None:
-        width = 30
         manifest = packman.default_packman().manifest()
-        for name, info in manifest.packages.items():
-            print(f"{name.ljust(width)} {info.version}")
+        packages = {key: value for key, value in packman.packages()}
+        self.output.write_table(rows=[[name, info.version, packages[name].name, packages[name].description]
+                                      for name, info in manifest.packages.items()])
 
 
 class InstallCommand(Command):
@@ -153,7 +151,7 @@ class InstallCommand(Command):
                 return
             packages = manifest.packages.keys()
 
-        output = ConsoleOutput()
+        output = self.output
         changed = True
         for package in packages:
             at_idx = package.find("@")
@@ -200,8 +198,7 @@ class UninstallCommand(Command):
                 return
             packages = manifest.packages.keys()
 
-        output = ConsoleOutput()
-
+        output = self.output
         for name in packages:
 
             step_name = name
@@ -227,7 +224,7 @@ class UpdateCommand(Command):
 
     def execute(self) -> None:
 
-        output = ConsoleOutput()
+        output = self.output
 
         step_name = "updating..."
 
@@ -271,7 +268,7 @@ class ValidateCommand(Command):
         else:
             if list_files:
                 for file in invalid_files:
-                    print(file)
+                    self.output.write(file)
             elif invalid_count == 1:
                 logger.warning("1 file is invalid")
             else:

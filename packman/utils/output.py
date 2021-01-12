@@ -1,5 +1,5 @@
 from math import floor
-from typing import List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 
 class PercentString:
@@ -145,7 +145,19 @@ class ConsoleOutput:
         self.write(self._step_string, end="\r")
 
     def write_table(self, rows: List[List[str]]) -> None:
-        ...  # TODO use for list
+        self._finish_step()
+
+        columns: Dict[int, int] = {}
+        for row in rows:
+            for cell, column in zip(row, range(len(row))):
+                width = len(cell)
+                if width > columns.get(column, 0):
+                    columns[column] = width
+        for row in rows:
+            for cell, column in zip(row, range(len(row))):
+                width = columns[column]
+                print(cell.ljust(width + 2), end="")
+            print()
 
     def end(self) -> None:
         self._finish_step()

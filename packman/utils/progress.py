@@ -1,11 +1,18 @@
 from typing import Callable, Optional
 
+ProgressCallback = Callable[[float], None]
+progress_noop: ProgressCallback = lambda p: None
+
 
 class StepProgress:
-    def __init__(self, step_mult: float, on_progress: Callable[[float], None]) -> None:
+    def __init__(self, step_mult: float, on_progress: ProgressCallback) -> None:
         self.step_no = 0
         self.step_mult = step_mult
         self.on_progress = on_progress
+
+    @staticmethod
+    def from_step_count(step_count: int, on_progress: ProgressCallback) -> "StepProgress":
+        return StepProgress(step_mult=1/step_count, on_progress=on_progress)
 
     def __call__(self, progress: float) -> None:
         try:
@@ -24,7 +31,7 @@ class StepProgress:
 
 
 class RestoreProgress:
-    def __init__(self, start_progress: float, on_progress: Callable[[float], None]) -> None:
+    def __init__(self, start_progress: float, on_progress: ProgressCallback) -> None:
         self.start_progress = start_progress
         self.on_progress = on_progress
 
@@ -36,7 +43,7 @@ class RestoreProgress:
             ...
 
     @staticmethod
-    def step_progress(step_progress: StepProgress, on_progress: Callable[[float], None]) -> Callable[[float], None]:
+    def step_progress(step_progress: StepProgress, on_progress: ProgressCallback) -> ProgressCallback:
         restore_progress: Optional[RestoreProgress] = None
 
         def on_restore_progress(p: float):

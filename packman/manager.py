@@ -18,11 +18,19 @@ from packman.utils.cache import Cache
 from packman.utils.files import (backup_path, checksum, remove_path,
                                  resolve_case, temp_path)
 from packman.utils.operation import Operation
-from packman.utils.progress import RestoreProgress, StepProgress
+from packman.utils.progress import (ProgressCallback, RestoreProgress,
+                                    StepProgress, progress_noop)
 
 
 class Packman:
-    def __init__(self, config_dir=DEFAULT_CONFIG_PATH, manifest_path=DEFAULT_MANIFEST_PATH, git_config_dir=DEFAULT_REPO_CONFIG_PATH, git_url=DEFAULT_GIT_URL, root_dir=DEFAULT_ROOT_DIR) -> None:
+    def __init__(
+        self,
+        config_dir=DEFAULT_CONFIG_PATH,
+        manifest_path=DEFAULT_MANIFEST_PATH,
+        git_config_dir=DEFAULT_REPO_CONFIG_PATH,
+        git_url=DEFAULT_GIT_URL,
+        root_dir=DEFAULT_ROOT_DIR
+    ) -> None:
         self.config_dir = config_dir
         self.manifest_path = manifest_path
         self.git_config_dir = git_config_dir
@@ -43,7 +51,7 @@ class Packman:
                 logger.warning(f"checksum mismatch: {file}")
                 yield file
 
-    def install(self, name: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    def install(self, name: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: ProgressCallback = progress_noop) -> bool:
         cfg_path = self.package_path(name)
 
         # region Case sensitivity
@@ -59,9 +67,8 @@ class Packman:
         package = self.package(name)
         context = name
 
-        step_count = 2 + len(package.steps)
-        on_step_progress = StepProgress(
-            step_mult=1 / step_count, on_progress=on_progress)
+        on_step_progress = StepProgress.from_step_count(
+            step_count=2 + len(package.steps), on_progress=on_progress)
         on_progress(0.0)
         on_restore_progress = RestoreProgress.step_progress(
             step_progress=on_step_progress, on_progress=on_progress)
@@ -200,7 +207,7 @@ class Packman:
 
         return True
 
-    def uninstall(self, name: str, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    def uninstall(self, name: str, on_progress: ProgressCallback = progress_noop) -> bool:
         manifest = self.manifest()
 
         on_progress(0.0)
@@ -216,7 +223,7 @@ class Packman:
         logger.success(f"{name} - uninstalled")
         return True
 
-    def update(self, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    def update(self, on_progress: ProgressCallback = progress_noop) -> bool:
         on_progress(0.0)
 
         dir = temp_path()
@@ -285,15 +292,15 @@ def default_packman() -> Packman:
     return _default_packman
 
 
-def install(package: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+def install(package: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: ProgressCallback = progress_noop) -> bool:
     return default_packman().install(package, version=version, force=force, no_cache=no_cache, on_progress=on_progress)
 
 
-def uninstall(package: str, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+def uninstall(package: str, on_progress: ProgressCallback = progress_noop) -> bool:
     return default_packman().uninstall(package, on_progress=on_progress)
 
 
-def update(on_progress: Callable[[float], None] = lambda p: None) -> bool:
+def update(on_progress: ProgressCallback = progress_noop) -> bool:
     return default_packman().update(on_progress=on_progress)
 
 

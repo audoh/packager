@@ -11,14 +11,13 @@ import patoolib
 import requests
 from loguru import logger
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
-from packman.utils.progress import StepProgress
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 from packman.utils.uninterruptible import uninterruptible
-
-_CHUNK_SIZE = 1024
 
 
 class Operation:
-    def __init__(self, on_restore_progress: Callable[[float], None] = lambda p: None):
+    def __init__(self, on_restore_progress: ProgressCallback = progress_noop):
         self.new_paths: Set[str] = set()
         self.temp_paths: Set[str] = set()
         self.last_path: Optional[str] = None
@@ -86,7 +85,7 @@ class Operation:
         if path in self.temp_paths:
             self.temp_paths.remove(path)
 
-    def download_file(self, url: str, ext: Optional[str] = "", on_progress: Callable[[float], None] = lambda p: None) -> str:
+    def download_file(self, url: str, ext: Optional[str] = "", on_progress: ProgressCallback = progress_noop) -> str:
         update_interval = timedelta(milliseconds=400)
 
         if ext is None:
@@ -121,15 +120,14 @@ class Operation:
         patoolib.extract_archive(path, outdir=dir, verbosity=-1)
         return dir
 
-    def restore(self, on_progress: Optional[Callable[[float], None]] = None) -> bool:
+    def restore(self, on_progress: Optional[ProgressCallback] = None) -> bool:
         if not on_progress:
             on_progress = self.on_restore_progress
 
         errors = False
 
-        step_count = len(self.new_paths) + len(self.backups)
-        progress = StepProgress(step_mult=1/step_count,
-                                on_progress=on_progress)
+        progress = StepProgress.from_step_count(step_count=len(self.new_paths) + len(self.backups),
+                                                on_progress=on_progress)
 
         for path in self.new_paths:
             logger.debug(f"cleaning up {path}")
@@ -156,7 +154,7 @@ class Operation:
 
         return errors
 
-    def abort(self, on_progress: Optional[Callable[[float], None]] = None) -> bool:
+    def abort(self, on_progress: Optional[ProgressCallback] = None) -> bool:
         """
         Shorthand for restore and close.
         """

@@ -1,7 +1,5 @@
 from math import floor
-from typing import Optional
-
-import colored
+from typing import Optional, Tuple
 
 
 class PercentString:
@@ -28,15 +26,17 @@ class ProgressBarString:
     def __init__(
         self,
         progress: float = 0.0,
-        start: str = "|",
-        part: str = "[]",
-        end: str = "|",
+        start: str = "▮",
+        part: str = "■",
+        background: str = " ",
+        end: str = "▮",
         parts: int = 10,
-        bar_padding: int = 21,
+        bar_padding: int = 11,
     ) -> None:
         self.progress = progress
         self.start = start
         self.part = part
+        self.background = background
         self.end = end
         self.parts = parts
         self.padding = bar_padding
@@ -44,7 +44,7 @@ class ProgressBarString:
     def __str__(self) -> str:
         parts = floor(self.progress * self.parts)
         bar = self.start + self.part * parts
-        bar = bar.ljust(self.padding) + self.end
+        bar = bar.ljust(self.padding, self.background) + self.end
         return bar
 
     def __repr__(self) -> str:
@@ -65,26 +65,27 @@ class StepString:
             self.percent.value = value
 
     def __init__(self,
-                 name: str,
                  progress_bar: ProgressBarString = ProgressBarString(),
                  percent: Optional[PercentString] = PercentString(),
                  percent_padding: int = 5,
-                 percent_on_right: bool = False,
-                 separator: str = ": ") -> None:
+                 percent_on_right: bool = True,
+                 separator: str = " ",
+                 state_border: Tuple[str, str] = ("", " ")) -> None:
         self.complete: bool = False
         self.error: Optional[str] = None
-        self.name = name
+        self.name = ""
         self.percent = percent
         self.progress_bar = progress_bar
         self.percent_padding = percent_padding
         self.percent_on_right = percent_on_right
         self.separator = separator
+        self.state_border = state_border
 
     def __str__(self) -> str:
         if self.error:
-            state = f"{colored.fg('red')}✗{colored.attr('reset')}"
+            state = f"✗"
         elif self.complete:
-            state = f"{colored.fg('green')}✓{colored.attr('reset')}"
+            state = f"✓"
         else:
             state = " "
 
@@ -95,9 +96,52 @@ class StepString:
             percent_str = str(self.percent).ljust(self.percent_padding)
             progress_part = f"{percent_str}{self.progress_bar}"
 
-        result = f"{self.name}{self.separator}{progress_part} [{state}]"
+        result = f"{self.state_border[0]}{state}{self.state_border[1]}{progress_part}{self.separator}{self.name}"
 
         if self.error:
             result += f" ({self.error})"
 
         return result
+
+
+class ConsoleOutput:
+    def __init__(self, step_string: StepString = StepString()) -> None:
+        self._step_string = step_string
+
+    def write(self, text: str, end: Optional[str] = None) -> None:
+        print(str(text), end=end)
+
+    def _finish_step(self, more_steps: bool = False) -> None:
+        if not self._step_string.name:
+            return
+        self.write(self._step_string, "\n")
+        self._step_string.name = ""
+        self._step_string.error = None
+        self._step_string.progress = 0.0
+
+    def write_step_progress(self, name: str, progress: float) -> None:
+        if self._step_string.name != name:
+            self._finish_step(True)
+            self._step_string.name = name
+
+        self._step_string.progress = progress
+        self.write(self._step_string, end="\r")
+
+    def write_step_complete(self, name: str) -> None:
+        if self._step_string.name != name:
+            self._finish_step(True)
+            self._step_string.name = name
+
+        self._step_string.complete = True
+        self.write(self._step_string, end="\r")
+
+    def write_step_error(self, name: str, error: str) -> None:
+        if self._step_string.name != name:
+            self._finish_step(True)
+            self._step_string.name = name
+
+        self._step_string.error = error
+        self.write(self._step_string, end="\r")
+
+    def end(self) -> None:
+        self._finish_step()

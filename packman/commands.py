@@ -8,7 +8,8 @@ from typing import Any, List, Optional
 from loguru import logger
 
 import packman.manager as packman
-from packman.utils.output import PercentString, ProgressBarString, StepString
+from packman.utils.output import (ConsoleOutput, PercentString,
+                                  ProgressBarString, StepString)
 
 
 class Command(ABC):
@@ -152,12 +153,8 @@ class InstallCommand(Command):
                 return
             packages = manifest.packages.keys()
 
-        padlen = 2 + max(len(package.split("@")[0]) for package in packages)
-        print()
-
+        output = ConsoleOutput()
         changed = True
-        progress_bar = ProgressBarString()
-        percent = PercentString()
         for package in packages:
             at_idx = package.find("@")
             if at_idx != -1:
@@ -166,31 +163,24 @@ class InstallCommand(Command):
                 name = package
                 version = None
 
-            lendiff = padlen - len(name)
-            padding = lendiff * " "
-
-            step_string = StepString(
-                f"{padding}Installing {name}", progress_bar, percent)
+            step_name = f"{name}"
 
             def on_progress(p: float) -> None:
-                step_string.progress = p
-                print(step_string, end="\r")
+                output.write_step_progress(step_name, p)
 
             on_progress(0.0)
 
             try:
                 if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
                     changed = False
-                    step_string.error = "already installed"
-                    print(step_string)
+                    output.write_step_error(step_name, "already installed")
                 else:
-                    step_string.complete = True
-                    print(step_string)
+                    output.write_step_complete(step_name)
             except Exception as exc:
-                step_string.error = str(exc)
-                print(step_string)
+                output.write_step_error(step_name, str(exc))
 
-        print()
+        output.end()
+
         if not changed:
             logger.info("use -f to force installation")
 

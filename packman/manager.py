@@ -83,7 +83,8 @@ class Packman:
             else:
                 break
         if not version_info:
-            raise Exception(f"failed to resolve info for version: {version}")
+            raise Exception(
+                f"failed to resolve info for version: {version or 'latest'}")
         version = version_info.version
         logger.success(f"{context} - resolved info for version {version}")
 

@@ -216,7 +216,9 @@ class Packman:
         logger.success(f"{name} - uninstalled")
         return True
 
-    def update(self) -> bool:
+    def update(self, on_progress: Callable[[float], None] = lambda p: None) -> bool:
+        on_progress(0.0)
+
         dir = temp_path()
         os.makedirs(dir)
         updated = False
@@ -234,6 +236,8 @@ class Packman:
                         logger.info(f"updating {dest}")
                         shutil.copy2(src, dest)
                         updated = True
+
+            on_progress(1.0)
         finally:
             remove_path(dir)
         if not updated:
@@ -289,8 +293,8 @@ def uninstall(package: str, on_progress: Callable[[float], None] = lambda p: Non
     return default_packman().uninstall(package, on_progress=on_progress)
 
 
-def update() -> bool:
-    return default_packman().update()
+def update(on_progress: Callable[[float], None] = lambda p: None) -> bool:
+    return default_packman().update(on_progress=on_progress)
 
 
 def versions(package: str) -> Iterable[str]:

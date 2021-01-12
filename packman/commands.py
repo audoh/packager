@@ -226,7 +226,23 @@ class UpdateCommand(Command):
     help = "Updates the configuration from the configured remote source"
 
     def execute(self) -> None:
-        packman.update()
+
+        output = ConsoleOutput()
+
+        step_name = "updating..."
+
+        def on_progress(p: float) -> None:
+            output.write_step_progress(step_name, p)
+
+        try:
+            if packman.update(on_progress=on_progress):
+                output.write_step_complete(step_name)
+            else:
+                output.write_step_error(step_name, "nothing to update")
+        except Exception as exc:
+            output.write_step_error(step_name, str(exc))
+
+        output.end()
 
 
 class ValidateCommand(Command):

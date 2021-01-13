@@ -4,8 +4,6 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 from typing import Any, List, Optional
 
-from loguru import logger
-
 import packman.manager as packman
 from packman.utils.output import ConsoleOutput
 
@@ -147,12 +145,12 @@ class InstallCommand(Command):
         if not packages:
             manifest = packman.default_packman().manifest()
             if not manifest.packages:
-                logger.info("no packages installed to update")
+                self.output.write("No installed packages to update.")
                 return
             packages = manifest.packages.keys()
 
         output = self.output
-        changed = True
+        not_installed = 0
         for package in packages:
             at_idx = package.find("@")
             if at_idx != -1:
@@ -170,7 +168,7 @@ class InstallCommand(Command):
 
             try:
                 if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
-                    changed = False
+                    not_installed += 1
                     output.write_step_error(step_name, "already installed")
                 else:
                     output.write_step_complete(step_name)
@@ -179,8 +177,12 @@ class InstallCommand(Command):
 
         output.end()
 
-        if not changed:
-            logger.info("use -f to force installation")
+        if not_installed > 1:
+            self.output.write(
+                f"{not_installed} packages were not installed. Use -f to force installation.")
+        else:
+            self.output.write(
+                f"{not_installed} package was not installed. Use -f to force installation.")
 
 
 class UninstallCommand(Command):
@@ -194,7 +196,7 @@ class UninstallCommand(Command):
         if not packages:
             manifest = packman.default_packman().manifest()
             if not manifest.packages:
-                logger.info("no packages installed to remove")
+                self.output.write("No installed packages to uninstall.")
                 return
             packages = manifest.packages.keys()
 
@@ -248,28 +250,21 @@ class ValidateCommand(Command):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "packages", help="Names of the package or packages to validate; if none specified, all packages will be validated", nargs="*")
-        parser.add_argument(
-            "-l", "--list", help="List the specific files which are invalid", action="store_true", dest="list_files"
-        )
 
-    def execute(self, packages: Optional[List[str]] = None, list_files=False) -> None:
+    def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
             manifest = packman.default_packman().manifest()
             if not manifest.packages:
-                logger.info("no packages installed to validate")
+                self.output.write("0 invalid files")
                 return
             packages = manifest.packages.keys()
         invalid_files: List[str] = []
         for package in packages:
             invalid_files += list(packman.validate(package=package))
         invalid_count = len(invalid_files)
-        if invalid_count == 0:
-            logger.success("all files are valid")
+        if invalid_count == 1:
+            self.output.write("1 invalid file")
         else:
-            if list_files:
-                for file in invalid_files:
-                    self.output.write(file)
-            elif invalid_count == 1:
-                logger.warning("1 file is invalid")
-            else:
-                logger.warning(f"{invalid_count} files are invalid")
+            self.output.write(f"{invalid_count} invalid files")
+        for file in invalid_files:
+            self.output.write(file)

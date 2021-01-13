@@ -42,9 +42,8 @@ class CopyFolderInstallStep(BaseInstallStep):
                 file_dest = os.path.join(dest_root, file)
                 files_to_copy[file_src] = file_dest
 
-        step_count = len(files_to_copy)
-        on_step_progress = StepProgress(
-            step_mult=1 / step_count, on_progress=on_progress)
+        on_step_progress = StepProgress.from_step_count(
+            step_count=len(files_to_copy), on_progress=on_progress)
 
         for file_src, file_dest in files_to_copy.items():
             operation.copy_file(file_src, file_dest)

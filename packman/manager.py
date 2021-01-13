@@ -134,6 +134,7 @@ class Packman:
         # endregion
         # region Cache
 
+        logger.info(f"{context} - checking cache")
         cache_source = Cache(name=name)
         if no_cache:
             cache_miss = True
@@ -143,14 +144,15 @@ class Packman:
                 cache_source.fetch_version(
                     version, operation=op, on_progress=on_step_progress)
             except Exception:
+                logger.info(f"{context} - not found in cache")
                 op.abort()
                 op = None
                 cache_miss = True
             else:
                 if op.last_path:
+                    logger.info(f"{context} - retrieved from cache")
                     package_path = op.last_path
                     on_step_progress.advance()
-                    logger.info(f"{context} - retrieved from cache")
                     cache_miss = False
                 else:
                     logger.error(

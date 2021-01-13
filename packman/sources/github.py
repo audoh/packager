@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 from urllib import parse as urlparse
 
 import requests
+from loguru import logger
 from packman.models.package_source import (BasePackageSource, PackageVersion,
                                            package_source)
 from packman.utils.operation import Operation
@@ -54,6 +55,39 @@ def _to_version_info(release: Dict[str, Any]) -> PackageVersion:
     return PackageVersion(name=release["name"], version=release["tag_name"], description=release["body"])
 
 
+def _is_usable_archive(asset: Dict[str, Any]) -> bool:
+    supported_content_types = ("application/zip")
+    supported_extensions = ("zip")
+
+    if "content_type" in asset:
+        if asset["content_type"] in supported_content_types:
+            return True
+    else:
+        logger.warning("no content_type field for asset")
+
+    if "name" in asset:
+        name = asset["name"]
+        extidx = name.rfind(".")
+        if extidx != -1:
+            if name[extidx:] in supported_extensions:
+                return True
+        else:
+            logger.warning("no extension for asset")
+    else:
+        logger.warning("no name field for asset")
+
+    if "browser_download_url" in asset:
+        name = os.path.basename(asset["browser_download_url"])
+        extidx = name.rfind(".")
+        if extidx != -1:
+            if name[extidx:] in supported_extensions:
+                return False
+    else:
+        logger.warning("no browser_download_url field for asset")
+
+    return True
+
+
 @package_source(type="github")
 class GitHubPackageSource(BasePackageSource):
     repository: str
@@ -74,7 +108,8 @@ class GitHubPackageSource(BasePackageSource):
         api = self.get_api()
         release = api.get_release_by_tag_name(tag=version)
         release_id = release["id"]
-        assets = api.list_release_assets(release_id=release_id)
+        assets = [asset for asset in api.list_release_assets(
+            release_id=release_id) if _is_usable_archive(asset)]
 
         asset_count = len(assets)
         if asset_count == 1:

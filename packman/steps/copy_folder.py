@@ -1,6 +1,6 @@
 import os
 from pathlib import Path, PurePath
-from typing import Callable, Dict, List, Optional, Set
+from typing import Callable, Dict, List, Optional
 
 from packman.models.install_step import BaseInstallStep, install_step
 from packman.utils.operation import Operation

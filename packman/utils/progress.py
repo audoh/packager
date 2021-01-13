@@ -12,7 +12,7 @@ class StepProgress:
 
     @staticmethod
     def from_step_count(step_count: int, on_progress: ProgressCallback) -> "StepProgress":
-        return StepProgress(step_mult=1/step_count, on_progress=on_progress)
+        return StepProgress(step_mult=1 / step_count if step_count != 0 else 1, on_progress=on_progress)
 
     def __call__(self, progress: float) -> None:
         try:

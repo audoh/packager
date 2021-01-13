@@ -101,9 +101,8 @@ class GitHubPackageSource(BasePackageSource):
         return _to_version_info(release)
 
     def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda p: None) -> None:
-        step_count = 1
-        on_step_progress = StepProgress(
-            step_mult=1 / step_count, on_progress=on_progress)
+        on_step_progress = StepProgress.from_step_count(
+            step_count=1, on_progress=on_progress)
 
         api = self.get_api()
         release = api.get_release_by_tag_name(tag=version)

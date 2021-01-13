@@ -1,7 +1,7 @@
 import filecmp
 import os
 import shutil
-from typing import Callable, Iterable, Optional, Set, Tuple
+from typing import Iterable, Optional, Set, Tuple
 
 from git.repo.base import Repo
 from loguru import logger
@@ -22,6 +22,20 @@ from packman.utils.progress import (ProgressCallback, RestoreProgress,
                                     StepProgress, progress_noop)
 
 
+class VersionNotFoundError(Exception):
+    def __init__(self, message: str, package: str, version: str) -> None:
+        super().__init__(message)
+        self.package = package
+        self.version = version
+
+
+class NoSourcesError(Exception):
+    def __init__(self, message: str, package: str, version: str) -> None:
+        super().__init__(message)
+        self.package = package
+        self.version = version
+
+
 class Packman:
     def __init__(
         self,
@@ -36,6 +50,30 @@ class Packman:
         self.git_config_dir = git_config_dir
         self.git_url = git_url
         self.root_dir = root_dir
+
+    def get_version_info(self, name: str, version: str) -> PackageVersion:
+        package = self.package(name)
+        for source in package.sources:
+            try:
+                return source.get_version(version)
+            except Exception as exc:
+                logger.error(f"failed to load from source: {source}")
+                logger.exception(exc)
+                continue
+        raise VersionNotFoundError(
+            f"no version info for {name}@{version}", package=name, version=version)
+
+    def get_latest_version_info(self, name: str) -> PackageVersion:
+        package = self.package(name)
+        for source in package.sources:
+            try:
+                return source.get_latest_version()
+            except Exception as exc:
+                logger.error(f"failed to load from source: {source}")
+                logger.exception(exc)
+                continue
+        raise VersionNotFoundError(
+            f"no version info for {name}@latest", package=name, version="latest")
 
     def manifest(self) -> Manifest:
         return Manifest.from_path(self.manifest_path)
@@ -65,6 +103,7 @@ class Packman:
 
         op: Optional[Operation] = None
         package = self.package(name)
+        package_path = None
         context = name
 
         on_step_progress = StepProgress.from_step_count(
@@ -75,23 +114,9 @@ class Packman:
 
         # region Versioning
 
-        version_info: Optional[PackageVersion] = None
         logger.info(f"{context} - resolving version info...")
-        for source in package.sources:
-            try:
-                if version:
-                    version_info = source.get_version(version)
-                else:
-                    version_info = source.get_latest_version()
-            except Exception as exc:
-                logger.error(f"failed to load from source: {source}")
-                logger.exception(exc)
-                continue
-            else:
-                break
-        if not version_info:
-            raise Exception(
-                f"failed to resolve info for version: {version or 'latest'}")
+        version_info = self.get_version_info(
+            name, version) if version else self.get_latest_version_info(name)
         version = version_info.version
         logger.success(f"{context} - resolved info for version {version}")
 
@@ -122,9 +147,17 @@ class Packman:
                 op = None
                 cache_miss = True
             else:
-                on_step_progress.advance()
-                logger.info(f"{context} - retrieved from cache")
-                cache_miss = False
+                if op.last_path:
+                    package_path = op.last_path
+                    on_step_progress.advance()
+                    logger.info(f"{context} - retrieved from cache")
+                    cache_miss = False
+                else:
+                    logger.error(
+                        f"cache for {context} did not end operation with a path")
+                    op.abort()
+                    op = None
+                    cache_miss = True
 
         # endregion
         # region Download
@@ -144,18 +177,26 @@ class Packman:
                     op = None
                     continue
                 else:
-                    on_step_progress.advance()
-                    logger.success(f"{context} - downloaded")
-                    break
+                    if op.last_path:
+                        package_path = op.last_path
+                        on_step_progress.advance()
+                        logger.success(f"{context} - downloaded")
+                        break
+                    else:
+                        logger.error(
+                            f"source {source.type} for {context} did not end operation with a path")
+                        op.abort()
+                        op = None
+                        continue
+
         # endregion
 
         if not op:
-            raise Exception(f"no available sources for {context}")
+            raise NoSourcesError(
+                f"no available sources for {context}", package=name, version=version or "latest")
 
         with op:
-            package_path = op.last_path
-            if not package_path:
-                raise Exception("no package found")
+            assert package_path, "operation did not end with a path"
 
             # region Cache update
 

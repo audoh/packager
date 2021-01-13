@@ -177,12 +177,12 @@ class InstallCommand(Command):
 
         output.end()
 
-        if not_installed > 1:
-            self.output.write(
-                f"{not_installed} packages were not installed. Use -f to force installation.")
-        else:
+        if not_installed == 1:
             self.output.write(
                 f"{not_installed} package was not installed. Use -f to force installation.")
+        elif not_installed > 1:
+            self.output.write(
+                f"{not_installed} packages were not installed. Use -f to force installation.")
 
 
 class UninstallCommand(Command):

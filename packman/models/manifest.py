@@ -1,9 +1,11 @@
 import json
 import os
 import shutil
-from typing import Callable, Dict, List
+from typing import Dict, List
 
 from packman.utils.files import checksum, remove_path
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 from pydantic import BaseModel
 
 
@@ -36,6 +38,7 @@ class Manifest(BaseModel):
                     file_map[file] = [name]
                 else:
                     file_map[file].append(name)
+
         for file in self.file_map:
             if file not in file_map:
                 if file in self.original_files:
@@ -50,12 +53,16 @@ class Manifest(BaseModel):
         for package in self.packages.values():
             package.update_checksums()
 
-    def write_json(self, path: str, on_progress: Callable[[float], None] = lambda p: None) -> None:
-        # TODO on_progress
+    def write_json(self, path: str, on_progress: ProgressCallback = progress_noop) -> None:
+        step_progress = StepProgress.from_step_count(
+            step_count=3, on_progress=on_progress)
         self.update_file_map()
+        step_progress.advance()
         self.update_checksums()
+        step_progress.advance()
         with open(path, "w") as fp:
             fp.write(self.json(indent=2))
+        step_progress.advance()
 
     @staticmethod
     def from_path(path: str) -> "Manifest":

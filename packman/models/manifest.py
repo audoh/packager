@@ -52,6 +52,8 @@ class Manifest(BaseModel):
         new_file_map: Dict[str, List[str]] = {}
         for name, package in self.packages.items():
             for file in package.files:
+                if file in self.orphaned_files:
+                    self.orphaned_files.remove(file)
                 if file not in new_file_map:
                     new_file_map[file] = [name]
                 else:
@@ -69,6 +71,10 @@ class Manifest(BaseModel):
                         remove_path(file)
                 else:
                     self.orphaned_files.add(file)
+
+        if remove_orphans:
+            for file in self.orphaned_files:
+                remove_path(self.original_files[file])
 
         self.file_map = new_file_map
 

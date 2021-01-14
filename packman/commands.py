@@ -159,7 +159,7 @@ class InstallCommand(Command):
                 name = package
                 version = None
 
-            step_name = name
+            step_name = f"+ {name}"
 
             def on_progress(p: float) -> None:
                 output.write_step_progress(step_name, p)
@@ -202,8 +202,7 @@ class UninstallCommand(Command):
 
         output = self.output
         for name in packages:
-
-            step_name = name
+            step_name = f"- {name}"
 
             def on_progress(p: float) -> None:
                 output.write_step_progress(step_name, p)

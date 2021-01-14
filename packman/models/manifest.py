@@ -25,7 +25,9 @@ class Manifest(BaseModel):
     packages: Dict[str, ManifestPackage] = {}
     file_map: Dict[str, List[str]] = {}
     original_files: Dict[str, str] = {}
-    file_checksums: Dict[str, Set[str]] = {}
+    orphaned_files: Set[str] = set()
+
+    _file_checksums: Dict[str, Set[str]] = {}
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
@@ -38,12 +40,12 @@ class Manifest(BaseModel):
     def _update_checksum_map(self) -> None:
         for package in self.packages.values():
             for file, chk in package.checksums.items():
-                if file in self.file_checksums:
-                    self.file_checksums[file].add(chk)
+                if file in self._file_checksums:
+                    self._file_checksums[file].add(chk)
                 else:
-                    self.file_checksums[file] = set((chk,))
+                    self._file_checksums[file] = set((chk,))
 
-    def cleanup_files(self) -> None:
+    def cleanup_files(self, remove_orphans: bool = False) -> None:
         """
         Deletes files that have been removed from the manifest since the last cleanup, or since the Manifest was instantiated if no previous cleanups.
         """
@@ -58,13 +60,15 @@ class Manifest(BaseModel):
         for file in self.file_map:
             if file not in new_file_map:
                 curr_chk = checksum(file)
-                if any(chk == curr_chk for chk in self.file_checksums[file]):
+                if remove_orphans or any(chk == curr_chk for chk in self._file_checksums[file]):
                     if file in self.original_files:
                         shutil.copy2(self.original_files[file], file)
                         remove_path(self.original_files[file])
                         del self.original_files[file]
                     else:
                         remove_path(file)
+                else:
+                    self.orphaned_files.add(file)
 
         self.file_map = new_file_map
 
@@ -77,13 +81,13 @@ class Manifest(BaseModel):
         with open(path, "w") as fp:
             fp.write(self.json(indent=2))
 
-    def update_files(self, path: str, on_progress: ProgressCallback = progress_noop) -> None:
+    def update_files(self, path: str, on_progress: ProgressCallback = progress_noop, remove_orphans: bool = False) -> None:
         """
         Updates the manifest file and cleans up any files that are no longer in the manifest.
         """
         step_progress = StepProgress.from_step_count(
             step_count=3, on_progress=on_progress)
-        self.cleanup_files()
+        self.cleanup_files(remove_orphans=remove_orphans)
         step_progress.advance()
         self.update_checksums()
         step_progress.advance()

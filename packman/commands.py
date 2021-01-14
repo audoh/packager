@@ -189,6 +189,13 @@ class InstallCommand(Command):
                 f"{not_installed} packages were not installed. Use -f to force installation.")
 
 
+# TODO interactive orphan resolution:
+# - Delete all
+# - Delete orphan
+# - Keep orphan (remove from manifest)
+# - Restore from backup (if applicable)
+
+
 class UninstallCommand(Command):
     help = "Uninstalls one or more packages previously installed using this tool"
 

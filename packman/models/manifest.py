@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from typing import Dict, List
+from typing import Any, Dict, List, Set
 
 from packman.utils.files import checksum, remove_path
 from packman.utils.progress import (ProgressCallback, StepProgress,
@@ -25,36 +25,53 @@ class Manifest(BaseModel):
     packages: Dict[str, ManifestPackage] = {}
     file_map: Dict[str, List[str]] = {}
     original_files: Dict[str, str] = {}
+    file_checksums: Dict[str, Set[str]] = {}
+
+    def __init__(self, **data: Any) -> None:
+        super().__init__(**data)
+        self._update_checksum_map()
 
     @property
     def modified_files(self) -> List[str]:
         return self.file_map.keys()
 
+    def _update_checksum_map(self) -> None:
+        for package in self.packages.values():
+            for file, chk in package.checksums.items():
+                if file in self.file_checksums:
+                    self.file_checksums[file].add(chk)
+                else:
+                    self.file_checksums[file] = set((chk,))
+
     def cleanup_files(self) -> None:
         """
         Deletes files that have been removed from the manifest since the last cleanup, or since the Manifest was instantiated if no previous cleanups.
         """
-        file_map: Dict[str, List[str]] = {}
+        new_file_map: Dict[str, List[str]] = {}
         for name, package in self.packages.items():
             for file in package.files:
-                if file not in file_map:
-                    file_map[file] = [name]
+                if file not in new_file_map:
+                    new_file_map[file] = [name]
                 else:
-                    file_map[file].append(name)
+                    new_file_map[file].append(name)
 
         for file in self.file_map:
-            if file not in file_map:
-                if file in self.original_files:
-                    shutil.copy2(self.original_files[file], file)
-                    remove_path(self.original_files[file])
-                    del self.original_files[file]
-                else:
-                    remove_path(file)
-        self.file_map = file_map
+            if file not in new_file_map:
+                curr_chk = checksum(file)
+                if any(chk == curr_chk for chk in self.file_checksums[file]):
+                    if file in self.original_files:
+                        shutil.copy2(self.original_files[file], file)
+                        remove_path(self.original_files[file])
+                        del self.original_files[file]
+                    else:
+                        remove_path(file)
+
+        self.file_map = new_file_map
 
     def update_checksums(self) -> None:
         for package in self.packages.values():
             package.update_checksums()
+        self._update_checksum_map()
 
     def write_json(self, path: str) -> None:
         with open(path, "w") as fp:

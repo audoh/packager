@@ -159,9 +159,10 @@ class InstallCommand(Command):
                 name, version = package.split("@")
             else:
                 name = package
-                version = None
+                version_info = packman.default_packman().get_latest_version_info(name)
+                version = version_info.version
 
-            step_name = f"+ {name}"
+            step_name = f"+ {name}@{version}"
 
             def on_progress(p: float) -> None:
                 output.write_step_progress(step_name, p)

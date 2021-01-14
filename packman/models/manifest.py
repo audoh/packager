@@ -30,7 +30,10 @@ class Manifest(BaseModel):
     def modified_files(self) -> List[str]:
         return self.file_map.keys()
 
-    def update_file_map(self) -> None:
+    def cleanup_files(self) -> None:
+        """
+        Deletes files that have been removed from the manifest since the last cleanup, or since the Manifest was instantiated if no previous cleanups.
+        """
         file_map: Dict[str, List[str]] = {}
         for name, package in self.packages.items():
             for file in package.files:
@@ -53,19 +56,28 @@ class Manifest(BaseModel):
         for package in self.packages.values():
             package.update_checksums()
 
-    def write_json(self, path: str, on_progress: ProgressCallback = progress_noop) -> None:
+    def write_json(self, path: str) -> None:
+        with open(path, "w") as fp:
+            fp.write(self.json(indent=2))
+
+    def update_files(self, path: str, on_progress: ProgressCallback = progress_noop) -> None:
+        """
+        Updates the manifest file and cleans up any files that are no longer in the manifest.
+        """
         step_progress = StepProgress.from_step_count(
             step_count=3, on_progress=on_progress)
-        self.update_file_map()
+        self.cleanup_files()
         step_progress.advance()
         self.update_checksums()
         step_progress.advance()
-        with open(path, "w") as fp:
-            fp.write(self.json(indent=2))
+        self.write_json(path=path)
         step_progress.advance()
 
     @staticmethod
     def from_path(path: str) -> "Manifest":
+        """
+        Creates a new instance of a Manifest, loaded from the given path.
+        """
         if os.path.exists(path):
             with open(path, "r") as fp:
                 raw = json.load(fp)

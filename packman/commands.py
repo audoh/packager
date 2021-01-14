@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 from typing import Any, List, Optional
 
+from loguru import logger
+
 import packman.manager as packman
 from packman.utils.output import ConsoleOutput
 
@@ -173,6 +175,7 @@ class InstallCommand(Command):
                 else:
                     output.write_step_complete(step_name)
             except Exception as exc:
+                logger.exception(exc)
                 output.write_step_error(step_name, str(exc))
 
         output.end()
@@ -215,6 +218,7 @@ class UninstallCommand(Command):
                 else:
                     output.write_step_complete(step_name)
             except Exception as exc:
+                logger.exception(exc)
                 output.write_step_error(step_name, str(exc))
 
         output.end()
@@ -238,6 +242,7 @@ class UpdateCommand(Command):
             else:
                 output.write_step_error(step_name, "nothing to update")
         except Exception as exc:
+            logger.exception(exc)
             output.write_step_error(step_name, str(exc))
 
         output.end()

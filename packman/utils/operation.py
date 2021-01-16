@@ -142,8 +142,9 @@ class Operation:
         for dest, src in self.backups.items():
             logger.debug(f"restoring {src} to {dest}")
             try:
-                dest_dir = os.path.dirname(dest)
-                os.makedirs(dest_dir, exist_ok=True)
+                dest_dir = os.path.normpath(os.path.dirname(dest))
+                if dest_dir != ".":
+                    os.makedirs(dest_dir, exist_ok=True)
                 shutil.copy2(src, dest)
                 progress.advance()
             except Exception as exc:

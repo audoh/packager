@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Iterable, Optional
+from typing import Iterable, Optional
 
 from packman.utils.operation import Operation
+from packman.utils.progress import ProgressCallback, progress_noop
 from packman.utils.union import DiscriminatedUnion
 from pydantic import BaseModel, Extra
 
@@ -20,7 +21,7 @@ class BasePackageSource(BaseModel, ABC):
         ...
 
     @abstractmethod
-    def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda: None) -> None:
+    def fetch_version(self, version: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
         ...
 
     @abstractmethod

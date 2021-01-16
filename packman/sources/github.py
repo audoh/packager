@@ -2,7 +2,7 @@
 import base64
 import json
 import os
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 from urllib import parse as urlparse
 
 import requests
@@ -10,7 +10,8 @@ from loguru import logger
 from packman.models.package_source import (BasePackageSource, PackageVersion,
                                            package_source)
 from packman.utils.operation import Operation
-from packman.utils.progress import StepProgress
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 
 _API_URL = "https://api.github.com"
 
@@ -100,7 +101,7 @@ class GitHubPackageSource(BasePackageSource):
         release = api.get_release_by_tag_name(tag=version)
         return _to_version_info(release)
 
-    def fetch_version(self, version: str, operation: Operation, on_progress: Callable[[float], None] = lambda p: None) -> None:
+    def fetch_version(self, version: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
         on_step_progress = StepProgress.from_step_count(
             step_count=1, on_progress=on_progress)
 

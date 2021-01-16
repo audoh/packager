@@ -1,10 +1,11 @@
 import os
 from pathlib import Path, PurePath
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from packman.models.install_step import BaseInstallStep, install_step
 from packman.utils.operation import Operation
-from packman.utils.progress import StepProgress
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 
 
 @install_step("copy_folder")
@@ -13,7 +14,7 @@ class CopyFolderInstallStep(BaseInstallStep):
     to: str
     exclude: Optional[List[str]] = None
 
-    def execute(self, operation: Operation, package_path: str, root_dir: str, on_progress: Callable[[float], None] = lambda p: None) -> None:
+    def execute(self, operation: Operation, package_path: str, root_dir: str, on_progress: ProgressCallback = progress_noop) -> None:
         src = ""
         dest = ""
         for root, subdirs, files in os.walk(package_path):

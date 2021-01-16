@@ -14,10 +14,26 @@ class ManifestPackage(BaseModel):
     files: List[str]
     checksums: Dict[str, str] = {}
 
+    def deepcopy(self) -> "ManifestPackage":
+        return ManifestPackage(**self.dict())
+
     def update_checksums(self) -> None:
         self.checksums = {}
         for file in self.files:
             self.checksums[file] = checksum(file)
+
+    def update_path_root(self, root: str) -> None:
+        new_files: List[str] = []
+        for file in self.files:
+            new_file = os.path.relpath(file, root)
+            new_files.append(new_file)
+        self.files = new_files
+
+        new_checksums: Dict[str, str] = {}
+        for file, chk in self.checksums.items():
+            new_file = os.path.relpath(file, root)
+            new_checksums[new_file] = chk
+        self.checksums = new_checksums
 
 
 class Manifest(BaseModel):
@@ -100,17 +116,7 @@ class Manifest(BaseModel):
 
     def update_path_root(self, root: str) -> None:
         for package in self.packages.values():
-            new_files: List[str] = []
-            for file in package.files:
-                new_file = os.path.relpath(file, root)
-                new_files.append(new_file)
-            package.files = new_files
-
-            new_checksums: Dict[str, str] = {}
-            for file, chk in package.checksums.items():
-                new_file = os.path.relpath(file, root)
-                new_checksums[new_file] = chk
-            package.checksums = new_checksums
+            package.update_path_root(root)
 
         new_file_map: Dict[str, List[str]] = {}
         for file, packages in self.file_map.items():

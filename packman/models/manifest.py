@@ -84,6 +84,7 @@ class Manifest(BaseModel):
         self._update_checksum_map()
 
     def write_json(self, path: str) -> None:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as fp:
             fp.write(self.json(indent=2))
 
@@ -103,7 +104,7 @@ class Manifest(BaseModel):
     @staticmethod
     def from_path(path: str) -> "Manifest":
         """
-        Creates a new instance of a Manifest, loaded from the given path.
+        Creates a new instance of a Manifest, loaded from the given path. If the path does not exist, creates an empty Manifest.
         """
         if os.path.exists(path):
             with open(path, "r") as fp:

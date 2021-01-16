@@ -84,10 +84,11 @@ class Manifest(BaseModel):
         self._update_checksum_map()
 
     def write_json(self, path: str) -> None:
-        path_dir = os.path.dirname(path)
-        os.makedirs(path_dir, exist_ok=True)
+        path_dir = os.path.normpath(os.path.dirname(path))
+        if path_dir != ".":
+            os.makedirs(path_dir, exist_ok=True)
         with open(path, "w") as fp:
-            if os.path.normpath(path_dir) != ".":
+            if path_dir != ".":
                 clone = Manifest(**self.dict())
                 clone.update_path_root(path_dir)
                 fp.write(clone.json(indent=2))

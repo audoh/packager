@@ -86,7 +86,7 @@ class ExportCommand(Command):
         if not format:
             format = _infer_export_format(output_path)
 
-        manifest = self.packman.manifest_deprecated()
+        manifest = self.packman.manifest
 
         if format == "json":
             versions = {package_name: package.version for package_name,
@@ -121,7 +121,7 @@ class ImportCommand(Command):
     def execute(self, input_path: str) -> None:
         format = _infer_export_format(input_path)
 
-        manifest = self.packman.manifest_deprecated()
+        manifest = self.packman.manifest
 
         if format == "json":
             with open(input_path, "r") as fp:
@@ -167,7 +167,7 @@ class InstalledPackageListCommand(Command):
     help = "Lists installed packages"
 
     def execute(self) -> None:
-        manifest = self.packman.manifest_deprecated()
+        manifest = self.packman.manifest
         packages = {key: value for key, value in self.packman.packages()}
         self.output.write_table(rows=[[name, info.version, packages[name].name, packages[name].description]
                                       for name, info in manifest.packages.items()])
@@ -188,7 +188,7 @@ class InstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None, force: bool = False, no_cache: bool = False) -> None:
         if not packages:
-            manifest = self.packman.manifest_deprecated()
+            manifest = self.packman.manifest
             if not manifest.packages:
                 self.output.write("No installed packages to update.")
                 return
@@ -248,7 +248,7 @@ class UninstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = self.packman.manifest_deprecated()
+            manifest = self.packman.manifest
             if not manifest.packages:
                 self.output.write("No installed packages to uninstall.")
                 return
@@ -308,7 +308,7 @@ class ValidateCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = self.packman.manifest_deprecated()
+            manifest = self.packman.manifest
             if not manifest.packages:
                 self.output.write("0 invalid files")
                 return

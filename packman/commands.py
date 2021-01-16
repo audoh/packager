@@ -44,6 +44,8 @@ def _default_export_path(format: Optional[str] = None) -> str:
 
     if format == "json":
         return f"{_DEFAULT_EXPORT_FILE}.json"
+    if format == "zip":
+        return f"{_DEFAULT_EXPORT_FILE}.zip"
 
     raise Exception(f"unknown format: {format}")
 
@@ -82,7 +84,8 @@ class ExportCommand(Command):
             with open(output_path, "w") as fp:
                 json.dump(versions, fp)
         elif format == "zip":
-            raise NotImplementedError("TODO")  # TODO
+            raise NotImplementedError("zip TODO")  # TODO
+
         else:
             raise Exception(f"unknown format: {format}")
 

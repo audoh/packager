@@ -278,8 +278,8 @@ class ValidateCommand(Command):
                 return
             packages = manifest.packages.keys()
         invalid_files: List[str] = []
-        for package in packages:
-            invalid_files += list(self.packman.validate(package=package))
+        for name in packages:
+            invalid_files += list(self.packman.validate(name=name))
         invalid_count = len(invalid_files)
         if invalid_count == 1:
             self.output.write("1 invalid file")

@@ -84,9 +84,49 @@ class Manifest(BaseModel):
         self._update_checksum_map()
 
     def write_json(self, path: str) -> None:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        path_dir = os.path.dirname(path)
+        os.makedirs(path_dir, exist_ok=True)
         with open(path, "w") as fp:
-            fp.write(self.json(indent=2))
+            if os.path.normpath(path_dir) != ".":
+                clone = Manifest(**self.dict())
+                clone.update_path_root(path_dir)
+                fp.write(clone.json(indent=2))
+            else:
+                fp.write(self.json(indent=2))
+
+    def update_path_root(self, root: str) -> None:
+        for package in self.packages.values():
+            new_files: List[str] = []
+            for file in package.files:
+                new_file = os.path.relpath(file, root)
+                new_files.append(new_file)
+            package.files = new_files
+
+            new_checksums: Dict[str, str] = {}
+            for file, chk in package.checksums.items():
+                new_file = os.path.relpath(file, root)
+                new_checksums[new_file] = chk
+            package.checksums = new_checksums
+
+        new_file_map: Dict[str, List[str]] = {}
+        for file, packages in self.file_map.items():
+            new_file = os.path.relpath(file, root)
+            new_file_map[new_file] = packages
+        self.file_map = new_file_map
+
+        new_orphaned_files: Set[str] = set()
+        for file in self.orphaned_files:
+            new_file = os.path.relpath(file, root)
+            new_orphaned_files.add(new_file)
+        self.orphaned_files = new_orphaned_files
+
+        new_original_files: Dict[str, str] = {}
+        for file, value in self.original_files.items():
+            new_file = os.path.relpath(file, root)
+            new_original_files[file] = value
+        self.original_files = new_original_files
+
+        self._update_checksum_map()
 
     def update_files(self, path: str, on_progress: ProgressCallback = progress_noop, remove_orphans: bool = False) -> None:
         """
@@ -110,6 +150,11 @@ class Manifest(BaseModel):
             with open(path, "r") as fp:
                 raw = json.load(fp)
                 manifest = Manifest(**raw)
+
+                path_dir = os.path.dirname(path)
+                if os.path.normpath(path_dir) != ".":
+                    manifest.update_path_root(os.path.relpath(".", path_dir))
+
         else:
             manifest = Manifest()
         return manifest

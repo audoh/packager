@@ -89,6 +89,19 @@ class Packman:
                 logger.warning(f"checksum mismatch: {file}")
                 yield file
 
+    def commit_backups(self, operation: Operation) -> None:
+        manifest = self.manifest()
+        modified_files = manifest.modified_files
+        original_files = manifest.original_files
+        for original_path, temp_path in operation.backups.items():
+            if original_path not in modified_files and original_path not in original_files:
+                # commit temporary backup to permanence
+                logger.debug(f"committing backup for {original_path}")
+                permanent_path = backup_path(original_path)
+                os.makedirs(os.path.dirname(permanent_path), exist_ok=True)
+                shutil.copy2(temp_path, permanent_path)
+                manifest.original_files[original_path] = permanent_path
+
     def install(self, name: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: ProgressCallback = progress_noop) -> bool:
         cfg_path = self.package_path(name)
 
@@ -226,16 +239,7 @@ class Packman:
             # endregion
             # region Manifest
 
-            modified_files = manifest.modified_files
-            original_files = manifest.original_files
-            for original_path, temp_path in op.backups.items():
-                if original_path not in modified_files and original_path not in original_files:
-                    # commit temporary backup to permanence
-                    logger.debug(f"committing backup for {original_path}")
-                    permanent_path = backup_path(original_path)
-                    os.makedirs(os.path.dirname(permanent_path), exist_ok=True)
-                    shutil.copy2(temp_path, permanent_path)
-                    manifest.original_files[original_path] = permanent_path
+            self.commit_backups(op)
 
             manifest.packages[name] = ManifestPackage(
                 version=version, files=op.new_paths)

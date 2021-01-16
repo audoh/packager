@@ -3,6 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 from typing import Any, List, Optional
+from zipfile import ZipFile
 
 from loguru import logger
 
@@ -65,6 +66,8 @@ def _infer_export_format(path: str) -> str:
     if ext == ".zip":
         return "zip"
 
+    raise Exception(f"Unable to infer format from path: {path}")
+
 
 class ExportCommand(Command):
     help = "Exports installed packages"
@@ -73,7 +76,7 @@ class ExportCommand(Command):
         parser.add_argument(
             "-o", "--output", help="The file to export", dest="output_path")
         parser.add_argument(
-            "--format", help="The format to use", dest="output_path")
+            "--format", help="The format to use", dest="format")
 
     def execute(self, output_path: Optional[str] = None, format: Optional[str] = None) -> None:
         if not output_path:
@@ -82,13 +85,23 @@ class ExportCommand(Command):
             format = _infer_export_format(output_path)
 
         manifest = self.packman.manifest()
+
         if format == "json":
             versions = {package_name: package.version for package_name,
                         package in manifest.packages.items()}
             with open(output_path, "w") as fp:
                 json.dump(versions, fp)
+
         elif format == "zip":
-            raise NotImplementedError("zip TODO")  # TODO
+            root = self.packman.root_dir
+            with ZipFile(output_path, "w") as zipfile:
+                for package in manifest.packages.values():
+                    for file in package.files:
+                        relfile = os.path.relpath(file, root)
+                        zipfile.write(file, relfile)
+                zip_manifest = manifest.deepcopy()
+                zip_manifest.update_path_root(root)
+                zipfile.writestr("manifest.json", zip_manifest.json(indent=2))
 
         else:
             raise Exception(f"unknown format: {format}")

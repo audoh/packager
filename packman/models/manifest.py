@@ -132,6 +132,9 @@ class Manifest(BaseModel):
         """
         Updates the manifest file and cleans up any files that are no longer in the manifest.
         """
+
+        # TODO fix a bug where when the manifest is saved, package checksums are updated, so orphaned files effectively become un-orphaned
+
         step_progress = StepProgress.from_step_count(
             step_count=3, on_progress=on_progress)
         self.cleanup_files(remove_orphans=remove_orphans)

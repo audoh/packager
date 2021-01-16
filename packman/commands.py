@@ -6,12 +6,16 @@ from typing import Any, List, Optional
 
 from loguru import logger
 
-import packman.manager as packman
+from packman.manager import Packman
 from packman.utils.output import ConsoleOutput
 
 
 class Command(ABC):
     output = ConsoleOutput()
+
+    def __init__(self, packman: Packman) -> None:
+        super().__init__()
+        self.packman = packman
 
     @property
     @abstractmethod
@@ -31,7 +35,7 @@ class PackageListCommand(Command):
 
     def execute(self) -> None:
         self.output.write_table([[name, config.name, config.description]
-                                 for name, config in packman.packages()])
+                                 for name, config in self.packman.packages()])
 
 
 _DEFAULT_EXPORT_FILE = "packman-export"
@@ -77,7 +81,7 @@ class ExportCommand(Command):
         if not format:
             format = _infer_export_format(output_path)
 
-        manifest = packman.default_packman().manifest()
+        manifest = self.packman.manifest()
         if format == "json":
             versions = {package_name: package.version for package_name,
                         package in manifest.packages.items()}
@@ -104,7 +108,7 @@ class ImportCommand(Command):
             with open(input_path, "r") as fp:
                 versions = json.load(fp)
                 for package, version in versions.items():
-                    packman.install(package=package, version=version)
+                    self.packman.install(name=package, version=version)
         elif format == "zip":
             raise NotImplementedError("TODO")  # TODO
         else:
@@ -119,7 +123,7 @@ class VersionListCommand(Command):
             "package", help="The package to list versions for")
 
     def execute(self, package: str) -> None:
-        for version in packman.versions(package):
+        for version in self.packman.versions(package):
             self.output.write(version)
 
 
@@ -127,8 +131,8 @@ class InstalledPackageListCommand(Command):
     help = "Lists installed packages"
 
     def execute(self) -> None:
-        manifest = packman.default_packman().manifest()
-        packages = {key: value for key, value in packman.packages()}
+        manifest = self.packman.manifest()
+        packages = {key: value for key, value in self.packman.packages()}
         self.output.write_table(rows=[[name, info.version, packages[name].name, packages[name].description]
                                       for name, info in manifest.packages.items()])
 
@@ -148,7 +152,7 @@ class InstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None, force: bool = False, no_cache: bool = False) -> None:
         if not packages:
-            manifest = packman.default_packman().manifest()
+            manifest = self.packman.manifest()
             if not manifest.packages:
                 self.output.write("No installed packages to update.")
                 return
@@ -162,7 +166,7 @@ class InstallCommand(Command):
                 name, version = package.split("@")
             else:
                 name = package
-                version_info = packman.default_packman().get_latest_version_info(name)
+                version_info = self.packman.get_latest_version_info(name)
                 version = version_info.version
 
             step_name = f"+ {name}@{version}"
@@ -173,7 +177,7 @@ class InstallCommand(Command):
             on_progress(0.0)
 
             try:
-                if not packman.install(package=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
+                if not self.packman.install(name=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
                     not_installed += 1
                     output.write_step_error(step_name, "already installed")
                 else:
@@ -208,7 +212,7 @@ class UninstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = packman.default_packman().manifest()
+            manifest = self.packman.manifest()
             if not manifest.packages:
                 self.output.write("No installed packages to uninstall.")
                 return
@@ -223,7 +227,7 @@ class UninstallCommand(Command):
 
             on_progress(0.0)
             try:
-                if not packman.uninstall(package=name, on_progress=on_progress):
+                if not self.packman.uninstall(name=name, on_progress=on_progress):
                     output.write_step_error(
                         step_name, "not uninstalled; perhaps you didn't install it using this tool?")
                 else:
@@ -248,7 +252,7 @@ class UpdateCommand(Command):
             output.write_step_progress(step_name, p)
 
         try:
-            if packman.update(on_progress=on_progress):
+            if self.packman.update(on_progress=on_progress):
                 output.write_step_complete(step_name)
             else:
                 output.write_step_error(step_name, "nothing to update")
@@ -268,14 +272,14 @@ class ValidateCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = packman.default_packman().manifest()
+            manifest = self.packman.manifest()
             if not manifest.packages:
                 self.output.write("0 invalid files")
                 return
             packages = manifest.packages.keys()
         invalid_files: List[str] = []
         for package in packages:
-            invalid_files += list(packman.validate(package=package))
+            invalid_files += list(self.packman.validate(package=package))
         invalid_count = len(invalid_files)
         if invalid_count == 1:
             self.output.write("1 invalid file")

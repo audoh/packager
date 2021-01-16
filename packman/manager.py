@@ -39,11 +39,11 @@ class NoSourcesError(Exception):
 class Packman:
     def __init__(
         self,
-        config_dir=DEFAULT_CONFIG_PATH,
-        manifest_path=DEFAULT_MANIFEST_PATH,
-        git_config_dir=DEFAULT_REPO_CONFIG_PATH,
-        git_url=DEFAULT_GIT_URL,
-        root_dir=DEFAULT_ROOT_DIR
+        config_dir: str = DEFAULT_CONFIG_PATH,
+        manifest_path: str = DEFAULT_MANIFEST_PATH,
+        git_config_dir: str = DEFAULT_REPO_CONFIG_PATH,
+        git_url: str = DEFAULT_GIT_URL,
+        root_dir: str = DEFAULT_ROOT_DIR
     ) -> None:
         self.config_dir = config_dir
         self.manifest_path = manifest_path
@@ -320,40 +320,3 @@ class Packman:
                 relpath = os.path.relpath(path, self.config_dir)
                 name = relpath[:relpath.rindex(os.extsep)]
                 yield name, Package.from_path(path)
-
-
-_default_packman: Optional[Packman] = None
-
-
-def default_packman() -> Packman:
-    """
-    Accessor for the default Packman instance.
-    """
-    global _default_packman
-    if not _default_packman:
-        _default_packman = Packman()
-    return _default_packman
-
-
-def install(package: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: ProgressCallback = progress_noop) -> bool:
-    return default_packman().install(package, version=version, force=force, no_cache=no_cache, on_progress=on_progress)
-
-
-def uninstall(package: str, on_progress: ProgressCallback = progress_noop) -> bool:
-    return default_packman().uninstall(package, on_progress=on_progress)
-
-
-def update(on_progress: ProgressCallback = progress_noop) -> bool:
-    return default_packman().update(on_progress=on_progress)
-
-
-def versions(package: str) -> Iterable[str]:
-    yield from default_packman().versions(package)
-
-
-def packages() -> Iterable[Tuple[str, Package]]:
-    yield from default_packman().packages()
-
-
-def validate(package: str) -> Iterable[str]:
-    yield from default_packman().validate(package)

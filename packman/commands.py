@@ -8,6 +8,8 @@ from zipfile import ZipFile
 from loguru import logger
 
 from packman.manager import Packman
+from packman.models.manifest import Manifest
+from packman.utils.operation import Operation
 from packman.utils.output import ConsoleOutput
 
 
@@ -84,7 +86,7 @@ class ExportCommand(Command):
         if not format:
             format = _infer_export_format(output_path)
 
-        manifest = self.packman.manifest()
+        manifest = self.packman.manifest_deprecated()
 
         if format == "json":
             versions = {package_name: package.version for package_name,
@@ -100,6 +102,8 @@ class ExportCommand(Command):
                         relfile = os.path.relpath(file, root)
                         zipfile.write(file, relfile)
                 zip_manifest = manifest.deepcopy()
+                zip_manifest.original_files = {}
+                zip_manifest.orphaned_files = set()
                 zip_manifest.update_path_root(root)
                 zipfile.writestr("manifest.json", zip_manifest.json(indent=2))
 
@@ -117,13 +121,32 @@ class ImportCommand(Command):
     def execute(self, input_path: str) -> None:
         format = _infer_export_format(input_path)
 
+        manifest = self.packman.manifest_deprecated()
+
         if format == "json":
             with open(input_path, "r") as fp:
                 versions = json.load(fp)
                 for package, version in versions.items():
                     self.packman.install(name=package, version=version)
         elif format == "zip":
-            raise NotImplementedError("TODO")  # TODO
+            with Operation() as op:
+                zip_root = op.extract_archive(input_path)
+                zip_manifest = Manifest.from_path(os.path.join(
+                    zip_root, "manifest.json"), update_root=False)
+                for name, package in zip_manifest.packages.items():
+                    for relfile in package.files:
+                        tmpfile = os.path.join(zip_root, relfile)
+                        file = os.path.join(self.packman.root_dir, relfile)
+                        dest = os.path.normpath(os.path.dirname(file))
+                        if dest != ".":
+                            os.makedirs(dest, exist_ok=True)
+                        op.copy_file(tmpfile, file)
+
+                    package.prepend_path(self.packman.root_dir)
+                    manifest.packages[name] = package
+                self.packman.commit_backups(op)
+                manifest.update_files(self.packman.manifest_path)
+
         else:
             raise Exception(f"unknown format: {format}")
 
@@ -144,7 +167,7 @@ class InstalledPackageListCommand(Command):
     help = "Lists installed packages"
 
     def execute(self) -> None:
-        manifest = self.packman.manifest()
+        manifest = self.packman.manifest_deprecated()
         packages = {key: value for key, value in self.packman.packages()}
         self.output.write_table(rows=[[name, info.version, packages[name].name, packages[name].description]
                                       for name, info in manifest.packages.items()])
@@ -165,11 +188,11 @@ class InstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None, force: bool = False, no_cache: bool = False) -> None:
         if not packages:
-            manifest = self.packman.manifest()
+            manifest = self.packman.manifest_deprecated()
             if not manifest.packages:
                 self.output.write("No installed packages to update.")
                 return
-            packages = manifest.packages.keys()
+            packages = list(manifest.packages.keys())
 
         output = self.output
         not_installed = 0
@@ -225,11 +248,11 @@ class UninstallCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = self.packman.manifest()
+            manifest = self.packman.manifest_deprecated()
             if not manifest.packages:
                 self.output.write("No installed packages to uninstall.")
                 return
-            packages = manifest.packages.keys()
+            packages = list(manifest.packages.keys())
 
         output = self.output
         for name in packages:
@@ -285,11 +308,11 @@ class ValidateCommand(Command):
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
-            manifest = self.packman.manifest()
+            manifest = self.packman.manifest_deprecated()
             if not manifest.packages:
                 self.output.write("0 invalid files")
                 return
-            packages = manifest.packages.keys()
+            packages = list(manifest.packages.keys())
         invalid_files: List[str] = []
         for name in packages:
             invalid_files += list(self.packman.validate(name=name))

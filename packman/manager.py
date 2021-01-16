@@ -1,6 +1,7 @@
 import filecmp
 import os
 import shutil
+from functools import cached_property
 from typing import Iterable, Optional, Set, Tuple
 
 from git.repo.base import Repo
@@ -75,14 +76,20 @@ class Packman:
         raise VersionNotFoundError(
             f"no version info for {name}@latest", package=name, version="latest")
 
+    @cached_property
     def manifest(self) -> Manifest:
         return Manifest.from_path(self.manifest_path)
+
+    def manifest_deprecated(self) -> Manifest:
+        # TODO remove this
+        logger.warning("manifest_deprecated is deprecated (obviously)")
+        return self.manifest
 
     def package_path(self, package: str) -> str:
         return os.path.join(self.config_dir, f"{package}.yml")
 
     def validate(self, name: str) -> Iterable[str]:
-        manifest = self.manifest()
+        manifest = self.manifest_deprecated()
         package = manifest.packages[name]
         for file in package.checksums:
             if checksum(file) != package.checksums[file]:
@@ -90,7 +97,7 @@ class Packman:
                 yield file
 
     def commit_backups(self, operation: Operation) -> None:
-        manifest = self.manifest()
+        manifest = self.manifest_deprecated()
         modified_files = manifest.modified_files
         original_files = manifest.original_files
         for original_path, temp_path in operation.backups.items():
@@ -136,7 +143,7 @@ class Packman:
         # endregion
         # region Early-out
 
-        manifest = self.manifest()
+        manifest = self.manifest_deprecated()
         if name in manifest.packages and manifest.packages[name].version == version:
             if force:
                 logger.info(f"{context} - reinstalling")
@@ -255,7 +262,7 @@ class Packman:
         return True
 
     def uninstall(self, name: str, on_progress: ProgressCallback = progress_noop) -> bool:
-        manifest = self.manifest()
+        manifest = self.manifest_deprecated()
 
         on_progress(0.0)
 

@@ -124,7 +124,7 @@ class Application(tk.Frame):
         self.el_output.grid(row=10, column=0, columnspan=3, sticky=tk.EW)
 
     def update_buttons_state(self, trigger_event: Optional[tk.Event] = None) -> None:
-        manifest = self.packman.manifest()
+        manifest = self.packman.manifest_deprecated()
         any_installed = False
         any_uninstalled = False
         for name, _ in self.curselection():
@@ -177,7 +177,7 @@ class Application(tk.Frame):
         self.set_packages(self.packman.packages())
 
     def refresh_installed_packages(self) -> None:
-        manifest = self.packman.manifest()
+        manifest = self.packman.manifest_deprecated()
         self.set_packages((name, self.packman.package(name))
                           for name in manifest.packages)
 

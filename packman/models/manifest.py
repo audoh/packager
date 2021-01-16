@@ -35,6 +35,16 @@ class ManifestPackage(BaseModel):
             new_checksums[new_file] = chk
         self.checksums = new_checksums
 
+    def prepend_path(self, path: str) -> None:
+        new_files: List[str] = []
+        new_checksums: Dict[str, str] = {}
+        for file in self.files:
+            new_file = os.path.normpath(os.path.join(path, file))
+            new_files.append(new_file)
+            new_checksums[new_file] = self.checksums[file]
+        self.files = new_files
+        self.checksums = new_checksums
+
 
 class Manifest(BaseModel):
     version = 1
@@ -155,7 +165,7 @@ class Manifest(BaseModel):
         step_progress.advance()
 
     @staticmethod
-    def from_path(path: str) -> "Manifest":
+    def from_path(path: str, update_root: bool = True) -> "Manifest":
         """
         Creates a new instance of a Manifest, loaded from the given path. If the path does not exist, creates an empty Manifest.
         """
@@ -164,9 +174,11 @@ class Manifest(BaseModel):
                 raw = json.load(fp)
                 manifest = Manifest(**raw)
 
-                path_dir = os.path.dirname(path)
-                if os.path.normpath(path_dir) != ".":
-                    manifest.update_path_root(os.path.relpath(".", path_dir))
+                if update_root:
+                    path_dir = os.path.dirname(path)
+                    if os.path.normpath(path_dir) != ".":
+                        manifest.update_path_root(
+                            os.path.relpath(".", path_dir))
 
         else:
             manifest = Manifest()

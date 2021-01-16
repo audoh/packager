@@ -2,3 +2,5 @@ __pycache__
 .*
 *.pyc
 packman.json
+packman-export.json
+packman-export.zip

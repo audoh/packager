@@ -45,6 +45,9 @@ class Manifest(BaseModel):
                 else:
                     self._file_checksums[file] = set((chk,))
 
+    def deepcopy(self) -> "Manifest":
+        return Manifest(**self.dict())
+
     def cleanup_files(self, remove_orphans: bool = False) -> None:
         """
         Deletes files that have been removed from the manifest since the last cleanup, or since the Manifest was instantiated if no previous cleanups.
@@ -89,7 +92,7 @@ class Manifest(BaseModel):
             os.makedirs(path_dir, exist_ok=True)
         with open(path, "w") as fp:
             if path_dir != ".":
-                clone = Manifest(**self.dict())
+                clone = self.deepcopy()
                 clone.update_path_root(path_dir)
                 fp.write(clone.json(indent=2))
             else:

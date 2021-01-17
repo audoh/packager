@@ -221,7 +221,7 @@ class InstallCommand(Command):
             except Exception as exc:
                 logger.exception(exc)
                 output.write_step_error(step_name, str(exc))
-            except KeyboardInterrupt as exc:
+            except KeyboardInterrupt:
                 output.write_step_error(step_name, "cancelled")
 
         output.end()
@@ -273,7 +273,7 @@ class UninstallCommand(Command):
             except Exception as exc:
                 logger.exception(exc)
                 output.write_step_error(step_name, str(exc))
-            except KeyboardInterrupt as exc:
+            except KeyboardInterrupt:
                 output.write_step_error(step_name, "cancelled")
 
         output.end()
@@ -299,7 +299,7 @@ class UpdateCommand(Command):
         except Exception as exc:
             logger.exception(exc)
             output.write_step_error(step_name, str(exc))
-        except KeyboardInterrupt as exc:
+        except KeyboardInterrupt:
             output.write_step_error(step_name, "cancelled")
 
         output.end()

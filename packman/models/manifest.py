@@ -17,10 +17,15 @@ class ManifestPackage(BaseModel):
     def deepcopy(self) -> "ManifestPackage":
         return ManifestPackage(**self.dict())
 
-    def update_checksums(self) -> None:
+    def compute_checksums(self) -> None:
+        """
+        Computes checksums for files that do not already have checksums; does not recompute pre-existing checksums.
+        If a file for some reason gets updated, first delete it from the checksum dictionary.
+        """
         self.checksums = {}
         for file in self.files:
-            self.checksums[file] = checksum(file)
+            if file not in self.checksums:
+                self.checksums[file] = checksum(file)
 
     def update_path_root(self, root: str) -> None:
         new_files: List[str] = []
@@ -109,7 +114,7 @@ class Manifest(BaseModel):
 
     def update_checksums(self) -> None:
         for package in self.packages.values():
-            package.update_checksums()
+            package.compute_checksums()
         self._update_checksum_map()
 
     def write_json(self, path: str) -> None:
@@ -152,8 +157,6 @@ class Manifest(BaseModel):
         """
         Updates the manifest file and cleans up any files that are no longer in the manifest.
         """
-
-        # TODO fix a bug where when the manifest is saved, package checksums are updated, so orphaned files effectively become un-orphaned
 
         step_progress = StepProgress.from_step_count(
             step_count=3, on_progress=on_progress)

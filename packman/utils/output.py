@@ -82,7 +82,7 @@ class StepString:
         self.state_border = state_border
 
     def __str__(self) -> str:
-        if self.error:
+        if self.error is not None:
             state = f"✗"
         elif self.complete:
             state = f"✓"
@@ -110,6 +110,10 @@ class ConsoleOutput:
 
     def write(self, text: str, end: Optional[str] = None) -> None:
         print(str(text), end=end)
+
+    def write_line(self, line: str, end: Optional[str] = "\n") -> None:
+        self._finish_step()
+        self.write(line, end=end)
 
     def _finish_step(self, more_steps: bool = False) -> None:
         if not self._step_string.name:

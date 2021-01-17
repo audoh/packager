@@ -40,4 +40,7 @@ if __name__ == "__main__":
     args_dict = vars(args)
     command_name = args_dict.pop("command")
     command = commands[command_name]
-    command.execute(**args_dict)
+    try:
+        command.execute(**args_dict)
+    except KeyboardInterrupt:
+        print("Aborted due to keyboard interrupt.")

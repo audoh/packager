@@ -11,6 +11,7 @@ from packman.manager import Packman
 from packman.models.manifest import Manifest
 from packman.utils.operation import Operation
 from packman.utils.output import ConsoleOutput
+from packman.utils.progress import StepProgress
 
 
 class Command(ABC):
@@ -133,17 +134,39 @@ class ImportCommand(Command):
                 zip_root = op.extract_archive(input_path)
                 zip_manifest = Manifest.from_path(os.path.join(
                     zip_root, "manifest.json"), update_root=False)
-                for name, package in zip_manifest.packages.items():
-                    for relfile in package.files:
-                        tmpfile = os.path.join(zip_root, relfile)
-                        file = os.path.join(self.packman.root_dir, relfile)
-                        dest = os.path.normpath(os.path.dirname(file))
-                        if dest != ".":
-                            os.makedirs(dest, exist_ok=True)
-                        op.copy_file(tmpfile, file)
 
-                    package.prepend_path(self.packman.root_dir)
-                    manifest.packages[name] = package
+                step_name = ""
+
+                def on_progress(p: float) -> None:
+                    self.output.write_step_progress(step_name, p)
+
+                for name, package in zip_manifest.packages.items():
+                    step_name = f"+ {name}@{package.version}"
+                    self.output.write_step_progress(step_name, 0.0)
+
+                    try:
+                        on_step_progress = StepProgress.from_step_count(
+                            step_count=len(package.files), on_progress=on_progress)
+                        on_step_progress(0.0)
+
+                        for relfile in package.files:
+                            tmpfile = os.path.join(zip_root, relfile)
+                            file = os.path.join(self.packman.root_dir, relfile)
+                            dest = os.path.normpath(os.path.dirname(file))
+                            if dest != ".":
+                                os.makedirs(dest, exist_ok=True)
+                            op.copy_file(tmpfile, file)
+                            on_step_progress.advance()
+
+                        package.prepend_path(self.packman.root_dir)
+                        manifest.packages[name] = package
+                    except Exception as exc:
+                        logger.exception(exc)
+                        self.output.write_step_error(step_name, str(exc))
+                    except KeyboardInterrupt as exc:
+                        self.output.write_step_error(step_name, "cancelled")
+                        raise exc from None
+
                 self.packman.commit_backups(op)
                 manifest.update_files(self.packman.manifest_path)
 
@@ -221,8 +244,9 @@ class InstallCommand(Command):
             except Exception as exc:
                 logger.exception(exc)
                 output.write_step_error(step_name, str(exc))
-            except KeyboardInterrupt:
-                output.write_step_error(step_name, "cancelled")
+            except KeyboardInterrupt as exc:
+                self.output.write_step_error(step_name, "cancelled")
+                raise exc from None
 
         output.end()
 
@@ -273,8 +297,9 @@ class UninstallCommand(Command):
             except Exception as exc:
                 logger.exception(exc)
                 output.write_step_error(step_name, str(exc))
-            except KeyboardInterrupt:
-                output.write_step_error(step_name, "cancelled")
+            except KeyboardInterrupt as exc:
+                self.output.write_step_error(step_name, "cancelled")
+                raise exc from None
 
         output.end()
 
@@ -299,8 +324,9 @@ class UpdateCommand(Command):
         except Exception as exc:
             logger.exception(exc)
             output.write_step_error(step_name, str(exc))
-        except KeyboardInterrupt:
-            output.write_step_error(step_name, "cancelled")
+        except KeyboardInterrupt as exc:
+            self.output.write_step_error(step_name, "cancelled")
+            raise exc from None
 
         output.end()
 

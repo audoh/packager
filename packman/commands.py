@@ -98,6 +98,10 @@ class ExportCommand(Command):
             output_path = _default_export_path(format=format)
         step_name = output_path
         self.output.write_step_progress(step_name, 0.0)
+
+        def on_progress(p: float) -> None:
+            self.output.write_step_progress(step_name, p)
+
         try:
             if not format:
                 format = _infer_export_format(output_path)
@@ -113,18 +117,21 @@ class ExportCommand(Command):
 
             elif format == "zip":
                 root = self.packman.root_dir
-                self.output.write_step_progress(step_name, 0.0)
                 with ZipFile(output_path, "w") as zipfile:
+                    on_step_progress = StepProgress.from_step_count(step_count=sum(len(
+                        package.files) for package in manifest.packages.values()) + 1, on_progress=on_progress)
                     for package in manifest.packages.values():
                         for file in package.files:
                             relfile = os.path.relpath(file, root)
                             zipfile.write(file, relfile)
+                            on_step_progress.advance()
                     zip_manifest = manifest.deepcopy()
                     zip_manifest.original_files = {}
                     zip_manifest.orphaned_files = set()
                     zip_manifest.update_path_root(root)
                     zipfile.writestr(
                         "manifest.json", zip_manifest.json(indent=2))
+                    on_step_progress.advance()
 
             else:
                 raise ValueError(f"unknown format: {format}")

@@ -105,6 +105,7 @@ class Manifest(BaseModel):
                         remove_path(file)
                 else:
                     self.orphaned_files.add(file)
+                # TODO fix issue where files are not being recognised as orphan
 
         if remove_orphans:
             for file in self.orphaned_files:

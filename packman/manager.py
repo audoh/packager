@@ -252,7 +252,7 @@ class Packman:
             self.commit_backups(op)
 
             manifest.packages[name] = ManifestPackage(
-                version=version, files=op.new_paths)
+                version=version, options=[version_info.options[0]], files=op.new_paths)
 
             manifest.update_files(self.manifest_path,
                                   on_progress=on_step_progress)

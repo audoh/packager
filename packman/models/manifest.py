@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 class ManifestPackage(BaseModel):
     version: str
+    options: List[str]
     files: List[str]
     checksums: Dict[str, str] = {}
 

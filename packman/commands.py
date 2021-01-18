@@ -78,7 +78,7 @@ def _infer_export_format(path: str) -> str:
     if ext == ".zip":
         return "zip"
 
-    raise ValueError(f"Unable to infer format from path: {path}")
+    raise ValueError(f"unrecognised extension: {path}")
 
 
 class ExportCommand(Command):
@@ -93,14 +93,14 @@ class ExportCommand(Command):
     def execute(self, output_path: Optional[str] = None, format: Optional[str] = None) -> None:
         if not output_path:
             output_path = _default_export_path(format=format)
-        if not format:
-            format = _infer_export_format(output_path)
-
-        manifest = self.packman.manifest
-
         step_name = output_path
         self.output.write_step_progress(step_name, 0.0)
         try:
+            if not format:
+                format = _infer_export_format(output_path)
+
+            manifest = self.packman.manifest
+
             if format == "json":
                 versions = {package_name: package.version for package_name,
                             package in manifest.packages.items()}

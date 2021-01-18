@@ -64,8 +64,8 @@ def _to_version_info(release: Dict[str, Any]) -> PackageVersion:
         name=release["name"],
         version=release["tag_name"],
         description=release["body"],
-        options=list((os.path.basename(
-            asset["name"])) for asset in release["assets"] if _is_usable_archive(asset))
+        options=list(
+            (asset["name"] for asset in release["assets"] if _is_usable_archive(asset)))
     )
 
 

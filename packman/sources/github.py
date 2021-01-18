@@ -26,6 +26,7 @@ if "GITHUB_TOKEN" in os.environ:
 class RepositoryAPI:
     headers = _HEADERS
     url = _API_URL
+    _cache: Dict[str, Any] = {}
 
     def __init__(self, repository: str) -> None:
         self.repository = repository
@@ -33,11 +34,17 @@ class RepositoryAPI:
     def uri(self, endpoint: str) -> str:
         return urlparse.urljoin(self.url, f"/repos/{self.repository}/{endpoint}")
 
-    def get(self, endpoint: str, **kwargs: Any) -> requests.Response:
+    def get(self, endpoint: str, use_cache: bool = False, **kwargs: Any) -> requests.Response:
+        cache_key = f"get:{endpoint}?{urlparse.urlencode(kwargs)}"
+        if use_cache and cache_key in self._cache:
+            return self._cache[cache_key]
+
         res = requests.get(url=self.uri(endpoint),
                            headers=self.headers, params=kwargs)
         res.raise_for_status()
-        return res.json()
+        res_json = res.json()
+        self._cache[cache_key] = res_json
+        return res_json
 
     def list_releases(self, per_page: Optional[int] = None, page: Optional[int] = None) -> List[Dict[str, Any]]:
         return self.get("releases", per_page=per_page, page=page)
@@ -46,14 +53,20 @@ class RepositoryAPI:
         return self.get(f"releases/{release_id}/assets", per_page=per_page, page=page)
 
     def get_release_by_tag_name(self, tag: str) -> Dict[str, Any]:
-        return self.get(f"releases/tags/{tag}")
+        return self.get(f"releases/tags/{tag}", use_cache=True)
 
     def get_latest_release(self) -> Dict[str, Any]:
         return self.get(f"releases/latest")
 
 
 def _to_version_info(release: Dict[str, Any]) -> PackageVersion:
-    return PackageVersion(name=release["name"], version=release["tag_name"], description=release["body"])
+    return PackageVersion(
+        name=release["name"],
+        version=release["tag_name"],
+        description=release["body"],
+        options=list((os.path.basename(
+            asset["name"])) for asset in release["assets"] if _is_usable_archive(asset))
+    )
 
 
 def _is_usable_archive(asset: Dict[str, Any]) -> bool:

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, progress_noop
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Extra
 class PackageVersion(BaseModel):
     name: str
     version: str
+    options: List[str]
     description: Optional[str] = None
 
 

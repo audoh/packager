@@ -311,6 +311,11 @@ class InstallCommand(Command):
             self.output.write(
                 f"{not_installed} packages were not installed. Use -f to force installation.")
 
+        if self.packman.manifest.orphaned_files:
+            count = len(self.packman.manifest.orphaned_files)
+            print(
+                f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them")
+
 
 # TODO interactive orphan resolution:
 # - Delete all
@@ -354,6 +359,11 @@ class UninstallCommand(Command):
             except KeyboardInterrupt as exc:
                 self.output.write_step_error(step_name, "cancelled")
                 raise exc from None
+
+        if self.packman.manifest.orphaned_files:
+            count = len(self.packman.manifest.orphaned_files)
+            print(
+                f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them")
 
 
 class UpdateCommand(Command):

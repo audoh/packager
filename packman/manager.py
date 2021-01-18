@@ -92,6 +92,7 @@ class Packman:
                 yield file
 
     def commit_backups(self, operation: Operation) -> None:
+        # TODO fix error when installing with -f
         manifest = self.manifest
         modified_files = manifest.modified_files
         original_files = manifest.original_files

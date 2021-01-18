@@ -33,14 +33,17 @@ class Command(ABC):
     def execute(self, *args: Any, **kwargs: Any) -> None:
         ...
 
-    def execute_safe(self, *args: Any, **kwargs: Any) -> None:
+    def execute_safe(self, *args: Any, **kwargs: Any) -> bool:
         try:
             self.execute(*args, **kwargs)
         except Exception as exc:
             self.output.write_line(str(exc))
+            return False
         except KeyboardInterrupt as exc:
             self.output.write_line("Aborted due to keyboard interrupt.")
-            raise exc
+            return False
+        else:
+            return True
 
 
 class PackageListCommand(Command):

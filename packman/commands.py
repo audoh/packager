@@ -44,6 +44,8 @@ class Command(ABC):
             return False
         else:
             return True
+        finally:
+            self.output.end()
 
 
 class PackageListCommand(Command):
@@ -302,8 +304,6 @@ class InstallCommand(Command):
                 self.output.write_step_error(step_name, "cancelled")
                 raise exc from None
 
-        output.end()
-
         if not_installed == 1:
             self.output.write(
                 f"{not_installed} package was not installed. Use -f to force installation.")
@@ -355,8 +355,6 @@ class UninstallCommand(Command):
                 self.output.write_step_error(step_name, "cancelled")
                 raise exc from None
 
-        output.end()
-
 
 class UpdateCommand(Command):
     help = "Updates the configuration from the configured remote source"
@@ -381,8 +379,6 @@ class UpdateCommand(Command):
         except KeyboardInterrupt as exc:
             self.output.write_step_error(step_name, "cancelled")
             raise exc from None
-
-        output.end()
 
 
 class ValidateCommand(Command):

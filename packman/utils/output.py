@@ -1,5 +1,5 @@
 from math import floor
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class PercentString:
@@ -73,7 +73,7 @@ class StepString:
                  state_border: Tuple[str, str] = ("", " ")) -> None:
         self.complete: bool = False
         self.error: Optional[str] = None
-        self.name = ""
+        self.name: str = ""
         self.percent = percent
         self.progress_bar = progress_bar
         self.percent_padding = percent_padding
@@ -138,6 +138,7 @@ class ConsoleOutput:
             self._step_string.name = name
 
         self._step_string.complete = True
+        self._step_string.progress = 1.0
         self._finish_step()
 
     def write_step_error(self, name: str, error: str) -> None:

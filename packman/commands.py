@@ -153,16 +153,16 @@ class ImportCommand(Command):
                 zip_manifest = Manifest.from_path(os.path.join(
                     zip_root, "manifest.json"), update_root=False)
 
-                for name, name in zip_manifest.packages.items():
-                    step_name = f"+ {name}@{name.version}"
+                for name, package in zip_manifest.packages.items():
+                    step_name = f"+ {name}@{package.version}"
                     self.output.write_step_progress(step_name, 0.0)
 
                     try:
                         on_step_progress = StepProgress.from_step_count(
-                            step_count=len(name.files), on_progress=on_progress)
+                            step_count=len(package.files), on_progress=on_progress)
                         on_step_progress(0.0)
 
-                        for relfile in name.files:
+                        for relfile in package.files:
                             tmpfile = os.path.join(zip_root, relfile)
                             file = os.path.join(self.packman.root_dir, relfile)
                             dest = os.path.normpath(os.path.dirname(file))
@@ -171,8 +171,8 @@ class ImportCommand(Command):
                             op.copy_file(tmpfile, file)
                             on_step_progress.advance()
 
-                        name.prepend_path(self.packman.root_dir)
-                        manifest.packages[name] = name
+                        package.prepend_path(self.packman.root_dir)
+                        manifest.packages[name] = package
                     except Exception as exc:
                         logger.exception(exc)
                         self.output.write_step_error(step_name, str(exc))

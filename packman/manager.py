@@ -104,7 +104,7 @@ class Packman:
                 shutil.copy2(temp_path, permanent_path)
                 manifest.original_files[original_path] = permanent_path
 
-    def install(self, name: str, version: Optional[str] = None, force: bool = False, no_cache: bool = False, on_progress: ProgressCallback = progress_noop) -> bool:
+    def install(self, name: str, version: str, force: bool = False, no_cache: bool = False, on_progress: ProgressCallback = progress_noop) -> bool:
         cfg_path = self.package_path(name)
 
         # region Case sensitivity
@@ -130,8 +130,7 @@ class Packman:
         # region Versioning
 
         logger.info(f"{context} - resolving version info...")
-        version_info = self.get_version_info(
-            name, version) if version else self.get_latest_version_info(name)
+        version_info = self.get_version_info(name, version)
         version = version_info.version
         logger.success(f"{context} - resolved info for version {version}")
 

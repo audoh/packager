@@ -124,32 +124,45 @@ class ImportCommand(Command):
 
         manifest = self.packman.manifest
 
+        step_name = ""
+
+        def on_progress(p: float) -> None:
+            self.output.write_step_progress(step_name, p)
+
         if format == "json":
             with open(input_path, "r") as fp:
                 versions = json.load(fp)
-                for package, version in versions.items():
-                    self.packman.install(name=package, version=version)
+                for name, version in versions.items():
+                    step_name = f"+ {name}@{version}"
+                    try:
+                        if not self.packman.install(name=name, version=version, on_progress=on_progress):
+                            # not_installed += 1
+                            self.output.write_step_error(
+                                step_name, "already installed")
+                        else:
+                            self.output.write_step_complete(step_name)
+                    except Exception as exc:
+                        logger.exception(exc)
+                        self.output.write_step_error(step_name, str(exc))
+                    except KeyboardInterrupt as exc:
+                        self.output.write_step_error(step_name, "cancelled")
+
         elif format == "zip":
             with Operation() as op:
                 zip_root = op.extract_archive(input_path)
                 zip_manifest = Manifest.from_path(os.path.join(
                     zip_root, "manifest.json"), update_root=False)
 
-                step_name = ""
-
-                def on_progress(p: float) -> None:
-                    self.output.write_step_progress(step_name, p)
-
-                for name, package in zip_manifest.packages.items():
-                    step_name = f"+ {name}@{package.version}"
+                for name, name in zip_manifest.packages.items():
+                    step_name = f"+ {name}@{name.version}"
                     self.output.write_step_progress(step_name, 0.0)
 
                     try:
                         on_step_progress = StepProgress.from_step_count(
-                            step_count=len(package.files), on_progress=on_progress)
+                            step_count=len(name.files), on_progress=on_progress)
                         on_step_progress(0.0)
 
-                        for relfile in package.files:
+                        for relfile in name.files:
                             tmpfile = os.path.join(zip_root, relfile)
                             file = os.path.join(self.packman.root_dir, relfile)
                             dest = os.path.normpath(os.path.dirname(file))
@@ -158,14 +171,16 @@ class ImportCommand(Command):
                             op.copy_file(tmpfile, file)
                             on_step_progress.advance()
 
-                        package.prepend_path(self.packman.root_dir)
-                        manifest.packages[name] = package
+                        name.prepend_path(self.packman.root_dir)
+                        manifest.packages[name] = name
                     except Exception as exc:
                         logger.exception(exc)
                         self.output.write_step_error(step_name, str(exc))
                     except KeyboardInterrupt as exc:
                         self.output.write_step_error(step_name, "cancelled")
                         raise exc from None
+                    else:
+                        self.output.write_step_complete(step_name)
 
                 self.packman.commit_backups(op)
                 manifest.update_files(self.packman.manifest_path)

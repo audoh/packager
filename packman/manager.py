@@ -157,7 +157,11 @@ class Packman:
             op = Operation(on_restore_progress=on_restore_progress)
             try:
                 cache_source.fetch_version(
-                    version, operation=op, on_progress=on_step_progress)
+                    version=version,
+                    option=version_info.options[0],
+                    operation=op,
+                    on_progress=on_step_progress
+                )
             except Exception:
                 logger.info(f"{context} - not found in cache")
                 op.abort()
@@ -185,7 +189,11 @@ class Packman:
                 op = Operation(on_restore_progress=on_restore_progress)
                 try:
                     source.fetch_version(
-                        version, operation=op, on_progress=on_step_progress)
+                        version=version,
+                        option=version_info.options[0],
+                        operation=op,
+                        on_progress=on_step_progress
+                    )
                 except Exception as exc:
                     logger.error(f"failed to load from source: {source}")
                     logger.exception(exc)

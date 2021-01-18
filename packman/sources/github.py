@@ -114,7 +114,7 @@ class GitHubPackageSource(BasePackageSource):
         release = api.get_release_by_tag_name(tag=version)
         return _to_version_info(release)
 
-    def fetch_version(self, version: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
+    def fetch_version(self, version: str, option: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
         on_step_progress = StepProgress.from_step_count(
             step_count=1, on_progress=on_progress)
 
@@ -124,14 +124,11 @@ class GitHubPackageSource(BasePackageSource):
         assets = [asset for asset in api.list_release_assets(
             release_id=release_id) if _is_usable_archive(asset)]
 
-        asset_count = len(assets)
-        if asset_count == 1:
-            asset = assets[0]
-        elif asset_count > 1:
-            # TODO
-            raise NotImplementedError("multiple asset support")
-        else:
-            raise Exception("no assets")
+        try:
+            asset = next(
+                (asset for asset in assets if asset["name"] == option))
+        except StopIteration as exc:
+            raise ValueError(f"unknown option: {option}") from exc
 
         url = asset["browser_download_url"]
 

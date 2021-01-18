@@ -13,7 +13,7 @@ class Cache:
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def fetch_version(self, version: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
+    def fetch_version(self, version: str, option: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
         cache_path = self.get_path(version, ".zip")
         if not os.path.exists(cache_path):
             raise Exception("not found")

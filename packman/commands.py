@@ -55,7 +55,7 @@ def _default_export_path(format: Optional[str] = None) -> str:
     if format == "zip":
         return f"{_DEFAULT_EXPORT_FILE}.zip"
 
-    raise Exception(f"unknown format: {format}")
+    raise ValueError(f"unknown format: {format}")
 
 
 def _infer_export_format(path: str) -> str:
@@ -69,7 +69,7 @@ def _infer_export_format(path: str) -> str:
     if ext == ".zip":
         return "zip"
 
-    raise Exception(f"Unable to infer format from path: {path}")
+    raise ValueError(f"Unable to infer format from path: {path}")
 
 
 class ExportCommand(Command):
@@ -89,27 +89,42 @@ class ExportCommand(Command):
 
         manifest = self.packman.manifest
 
-        if format == "json":
-            versions = {package_name: package.version for package_name,
-                        package in manifest.packages.items()}
-            with open(output_path, "w") as fp:
-                json.dump(versions, fp)
+        step_name = output_path
+        self.output.write_step_progress(step_name, 0.0)
+        try:
+            if format == "json":
+                versions = {package_name: package.version for package_name,
+                            package in manifest.packages.items()}
 
-        elif format == "zip":
-            root = self.packman.root_dir
-            with ZipFile(output_path, "w") as zipfile:
-                for package in manifest.packages.values():
-                    for file in package.files:
-                        relfile = os.path.relpath(file, root)
-                        zipfile.write(file, relfile)
-                zip_manifest = manifest.deepcopy()
-                zip_manifest.original_files = {}
-                zip_manifest.orphaned_files = set()
-                zip_manifest.update_path_root(root)
-                zipfile.writestr("manifest.json", zip_manifest.json(indent=2))
+                with open(output_path, "w") as fp:
+                    json.dump(versions, fp)
 
+            elif format == "zip":
+                root = self.packman.root_dir
+                self.output.write_step_progress(step_name, 0.0)
+                with ZipFile(output_path, "w") as zipfile:
+                    for package in manifest.packages.values():
+                        for file in package.files:
+                            relfile = os.path.relpath(file, root)
+                            zipfile.write(file, relfile)
+                    zip_manifest = manifest.deepcopy()
+                    zip_manifest.original_files = {}
+                    zip_manifest.orphaned_files = set()
+                    zip_manifest.update_path_root(root)
+                    zipfile.writestr(
+                        "manifest.json", zip_manifest.json(indent=2))
+
+            else:
+                raise ValueError(f"unknown format: {format}")
+
+        except Exception as exc:
+            logger.exception(exc)
+            self.output.write_step_error(step_name, str(exc))
+        except KeyboardInterrupt as exc:
+            self.output.write_step_error(step_name, "cancelled")
+            raise exc from None
         else:
-            raise Exception(f"unknown format: {format}")
+            self.output.write_step_complete(step_name)
 
 
 class ImportCommand(Command):
@@ -191,7 +206,7 @@ class ImportCommand(Command):
                 manifest.update_files(self.packman.manifest_path)
 
         else:
-            raise Exception(f"unknown format: {format}")
+            raise ValueError(f"unknown format: {format}")
 
 
 class VersionListCommand(Command):

@@ -155,8 +155,13 @@ class ImportCommand(Command):
 
                 for name, package in zip_manifest.packages.items():
                     step_name = f"+ {name}@{package.version}"
-                    self.output.write_step_progress(step_name, 0.0)
 
+                    if name in manifest.packages and manifest.packages[name].version == package.version:
+                        self.output.write_step_error(
+                            step_name, "already installed")
+                        continue
+
+                    self.output.write_step_progress(step_name, 0.0)
                     try:
                         on_step_progress = StepProgress.from_step_count(
                             step_count=len(package.files), on_progress=on_progress)

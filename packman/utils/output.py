@@ -115,7 +115,7 @@ class ConsoleOutput:
         self._finish_step()
         self.write(line, end=end)
 
-    def _finish_step(self, more_steps: bool = False) -> None:
+    def _finish_step(self) -> None:
         if not self._step_string.name:
             return
         self.write(self._step_string, "\n")
@@ -126,7 +126,7 @@ class ConsoleOutput:
 
     def write_step_progress(self, name: str, progress: float) -> None:
         if self._step_string.name != name:
-            self._finish_step(True)
+            self._finish_step()
             self._step_string.name = name
 
         self._step_string.progress = progress
@@ -134,19 +134,19 @@ class ConsoleOutput:
 
     def write_step_complete(self, name: str) -> None:
         if self._step_string.name != name:
-            self._finish_step(True)
+            self._finish_step()
             self._step_string.name = name
 
         self._step_string.complete = True
-        self.write(self._step_string, end="\r")
+        self._finish_step()
 
     def write_step_error(self, name: str, error: str) -> None:
         if self._step_string.name != name:
-            self._finish_step(True)
+            self._finish_step()
             self._step_string.name = name
 
         self._step_string.error = error
-        self.write(self._step_string, end="\r")
+        self._finish_step()
 
     def write_table(self, rows: List[List[str]]) -> None:
         self._finish_step()

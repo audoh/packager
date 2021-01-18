@@ -6,9 +6,10 @@ from argparse import ArgumentParser
 from loguru import logger
 
 from packman import Packman
-from packman.commands import (ExportCommand, ImportCommand, InstallCommand,
-                              InstalledPackageListCommand, PackageListCommand,
-                              UninstallCommand, UpdateCommand, ValidateCommand,
+from packman.commands import (CleanCommand, ExportCommand, ImportCommand,
+                              InstallCommand, InstalledPackageListCommand,
+                              PackageListCommand, UninstallCommand,
+                              UpdateCommand, ValidateCommand,
                               VersionListCommand)
 
 packman = Packman()
@@ -21,7 +22,8 @@ commands = {
     "versions": VersionListCommand(packman),
     "validate": ValidateCommand(packman),
     "export": ExportCommand(packman),
-    "import": ImportCommand(packman)
+    "import": ImportCommand(packman),
+    "clean": CleanCommand(packman)
 }
 
 

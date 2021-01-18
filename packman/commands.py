@@ -317,11 +317,7 @@ class InstallCommand(Command):
                 f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them")
 
 
-# TODO interactive orphan resolution:
-# - Delete all
-# - Delete orphan
-# - Keep orphan (remove from manifest)
-# - Restore from backup (if applicable)
+
 
 
 class UninstallCommand(Command):
@@ -415,3 +411,16 @@ class ValidateCommand(Command):
             self.output.write(f"{invalid_count} invalid files")
         for file in invalid_files:
             self.output.write(file)
+
+
+class CleanCommand(Command):
+    help = "Cleans up orphaned files"
+
+    def execute(self) -> None:
+        raise NotImplementedError("TODO")
+
+# TODO interactive orphan resolution:
+# - Delete all
+# - Delete orphan
+# - Keep orphan (remove from manifest)
+# - Restore from backup (if applicable)

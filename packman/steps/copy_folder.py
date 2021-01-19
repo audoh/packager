@@ -2,6 +2,7 @@ import os
 from pathlib import Path, PurePath
 from typing import Dict, List, Optional
 
+from loguru import logger
 from packman.models.install_step import BaseInstallStep, install_step
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
@@ -25,13 +26,15 @@ class CopyFolderInstallStep(BaseInstallStep):
         for root, subdirs, files in os.walk(package_path):
             for subdir in subdirs:
                 if subdir == self.name:
+                    if src:
+                        raise FileExistsError(f"multiple folders found: {self.name}")
                     src = os.path.join(root, subdir)
                     dest = os.path.join(root_dir, self.to)
                     break
-            if src:
-                break
         if not src:
-            raise FileNotFoundError(f"folder not found: {self.name}")
+            logger.warning(f"folder not found: {self.name}")
+            on_progress(1.0)
+            return
 
         files_to_copy: Dict[str, str] = {}
         for root, subdirs, files in os.walk(src):

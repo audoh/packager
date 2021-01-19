@@ -1,1 +1,1 @@
-from . import github
+from . import github, spacedock  # noqa

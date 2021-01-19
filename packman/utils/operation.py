@@ -8,6 +8,7 @@ from urllib import parse as urlparse
 import patoolib
 import requests
 from loguru import logger
+from packman.config import REQUEST_CHUNK_SIZE, REQUEST_TIMEOUT
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from packman.utils.uninterruptible import uninterruptible
@@ -103,7 +104,8 @@ class Operation:
                 ext = url_path[extsep_idx:]
             else:
                 ext = ""
-        res = requests.get(url, stream=True)
+        res = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT)
+        res.raise_for_status()
         path = self.get_temp_path(ext=ext)
         logger.debug(f"downloading {url} to {path}")
         with open(path, "bw") as file:
@@ -111,12 +113,14 @@ class Operation:
             downloaded_size = 0
             time = datetime.now()
 
-            for chunk in res.iter_content():
+            for chunk in res.iter_content(REQUEST_CHUNK_SIZE):
                 file.write(chunk)
                 downloaded_size += len(chunk)
-                if datetime.now() - time >= update_interval:
+
+                now = datetime.now()
+                if now - time >= update_interval:
                     on_progress(downloaded_size / pending_size)
-                    time = datetime.now()
+                    time = now
         return path
 
     def extract_archive(self, path: str) -> str:

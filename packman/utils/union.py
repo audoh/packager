@@ -1,6 +1,11 @@
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict, Protocol, Type
 
 from pydantic import BaseModel
+
+
+class DecoratorFactoryProtocol(Protocol):
+    def __call__(self, type: str) -> Callable[[Type[BaseModel]], Type[BaseModel]]:
+        ...
 
 
 class DiscriminatedUnion:
@@ -21,7 +26,7 @@ class DiscriminatedUnion:
     def register(self, key: str, type: Type[BaseModel]) -> None:
         self._members[key] = type
 
-    def decorator(self) -> Callable[[str], Callable[[Type[BaseModel]], Type[BaseModel]]]:
+    def decorator(self) -> DecoratorFactoryProtocol:
         def _decorator_factory(type: str) -> Callable[[Type[BaseModel]], Type[BaseModel]]:
             def _decorator(cls: Type[BaseModel]) -> Type[BaseModel]:
                 self._members[type] = cls

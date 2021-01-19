@@ -1,18 +1,15 @@
-import math
 import os
 import shutil
 from datetime import datetime, timedelta
-from io import FileIO
 from types import TracebackType
-from typing import Callable, Dict, Optional, Set, Type
+from typing import Dict, Optional, Set, Type
 from urllib import parse as urlparse
 
 import patoolib
 import requests
 from loguru import logger
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
-from packman.utils.progress import (ProgressCallback, StepProgress,
-                                    progress_noop)
+from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from packman.utils.uninterruptible import uninterruptible
 
 
@@ -30,8 +27,7 @@ class Operation:
             try:
                 remove_path(path)
             except Exception as exc:
-                logger.warning(
-                    f"failed to discard temporary path {path}: {exc}")
+                logger.warning(f"failed to discard temporary path {path}: {exc}")
                 continue
 
     def __del__(self) -> None:
@@ -40,14 +36,19 @@ class Operation:
     def __enter__(self) -> "Operation":
         return self
 
-    def __exit__(self, exception_type: Type, exception_value: BaseException, traceback: TracebackType) -> None:
+    def __exit__(
+        self,
+        exception_type: Type,
+        exception_value: BaseException,
+        traceback: TracebackType,
+    ) -> None:
         if exception_type is None:
             self.close()
         else:
             with uninterruptible():
                 self.abort()
 
-    def get_temp_path(self, ext: str = "") -> None:
+    def get_temp_path(self, ext: str = "") -> str:
         path = temp_path(ext=ext)
         self.temp_paths.add(path)
         self.last_path = path
@@ -62,11 +63,12 @@ class Operation:
     def should_backup_file(self, path: str) -> bool:
         return (
             # Don't back up our own files
-            path not in self.temp_paths and
-            path not in self.new_paths and
+            path not in self.temp_paths
+            and path not in self.new_paths
+            and
             # Don't back up files already backed up
-            path not in self.backups and
-            os.path.exists(path)
+            path not in self.backups
+            and os.path.exists(path)
         )
 
     def copy_file(self, src: str, dest: str) -> None:
@@ -85,7 +87,12 @@ class Operation:
         if path in self.temp_paths:
             self.temp_paths.remove(path)
 
-    def download_file(self, url: str, ext: Optional[str] = "", on_progress: ProgressCallback = progress_noop) -> str:
+    def download_file(
+        self,
+        url: str,
+        ext: Optional[str] = "",
+        on_progress: ProgressCallback = progress_noop,
+    ) -> str:
         update_interval = timedelta(milliseconds=400)
 
         if ext is None:
@@ -104,9 +111,7 @@ class Operation:
             downloaded_size = 0
             time = datetime.now()
 
-            file: FileIO
             for chunk in res.iter_content():
-                chunk: bytes
                 file.write(chunk)
                 downloaded_size += len(chunk)
                 if datetime.now() - time >= update_interval:
@@ -126,8 +131,9 @@ class Operation:
 
         errors = False
 
-        progress = StepProgress.from_step_count(step_count=len(self.new_paths) + len(self.backups),
-                                                on_progress=on_progress)
+        progress = StepProgress.from_step_count(
+            step_count=len(self.new_paths) + len(self.backups), on_progress=on_progress
+        )
 
         for path in self.new_paths:
             logger.debug(f"cleaning up {path}")

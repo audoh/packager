@@ -9,18 +9,31 @@ from loguru import logger
 
 import packman.sources
 import packman.steps
-from packman.config import (DEFAULT_CONFIG_PATH, DEFAULT_GIT_URL,
-                            DEFAULT_MANIFEST_PATH, DEFAULT_REPO_CONFIG_PATH,
-                            DEFAULT_ROOT_DIR)
+from packman.config import (
+    DEFAULT_CONFIG_PATH,
+    DEFAULT_GIT_URL,
+    DEFAULT_MANIFEST_PATH,
+    DEFAULT_REPO_CONFIG_PATH,
+    DEFAULT_ROOT_DIR,
+)
 from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
-from packman.utils.files import (backup_path, checksum, remove_path,
-                                 resolve_case, temp_path)
+from packman.utils.files import (
+    backup_path,
+    checksum,
+    remove_path,
+    resolve_case,
+    temp_path,
+)
 from packman.utils.operation import Operation
-from packman.utils.progress import (ProgressCallback, RestoreProgress,
-                                    StepProgress, progress_noop)
+from packman.utils.progress import (
+    ProgressCallback,
+    RestoreProgress,
+    StepProgress,
+    progress_noop,
+)
 
 
 class VersionNotFoundError(Exception):
@@ -44,7 +57,7 @@ class Packman:
         manifest_path: str = DEFAULT_MANIFEST_PATH,
         git_config_dir: str = DEFAULT_REPO_CONFIG_PATH,
         git_url: str = DEFAULT_GIT_URL,
-        root_dir: str = DEFAULT_ROOT_DIR
+        root_dir: str = DEFAULT_ROOT_DIR,
     ) -> None:
         self.config_dir = config_dir
         self.manifest_path = manifest_path
@@ -62,7 +75,8 @@ class Packman:
                 logger.exception(exc)
                 continue
         raise VersionNotFoundError(
-            f"no version info for {name}@{version}", package=name, version=version)
+            f"no version info for {name}@{version}", package=name, version=version
+        )
 
     def get_latest_version_info(self, name: str) -> PackageVersion:
         package = self.package(name)
@@ -74,7 +88,8 @@ class Packman:
                 logger.exception(exc)
                 continue
         raise VersionNotFoundError(
-            f"no version info for {name}@latest", package=name, version="latest")
+            f"no version info for {name}@latest", package=name, version="latest"
+        )
 
     @cached_property
     def manifest(self) -> Manifest:
@@ -97,7 +112,10 @@ class Packman:
         modified_files = manifest.modified_files
         original_files = manifest.original_files
         for original_path, temp_path in operation.backups.items():
-            if original_path not in modified_files and original_path not in original_files:
+            if (
+                original_path not in modified_files
+                and original_path not in original_files
+            ):
                 # commit temporary backup to permanence
                 logger.debug(f"committing backup for {original_path}")
                 permanent_path = backup_path(original_path)
@@ -105,7 +123,14 @@ class Packman:
                 shutil.copy2(temp_path, permanent_path)
                 manifest.original_files[original_path] = permanent_path
 
-    def install(self, name: str, version: str, force: bool = False, no_cache: bool = False, on_progress: ProgressCallback = progress_noop) -> bool:
+    def install(
+        self,
+        name: str,
+        version: str,
+        force: bool = False,
+        no_cache: bool = False,
+        on_progress: ProgressCallback = progress_noop,
+    ) -> bool:
         cfg_path = self.package_path(name)
 
         # region Case sensitivity
@@ -123,10 +148,12 @@ class Packman:
         context = name
 
         on_step_progress = StepProgress.from_step_count(
-            step_count=2 + len(package.steps), on_progress=on_progress)
+            step_count=2 + len(package.steps), on_progress=on_progress
+        )
         on_progress(0.0)
         on_restore_progress = RestoreProgress.step_progress(
-            step_progress=on_step_progress, on_progress=on_progress)
+            step_progress=on_step_progress, on_progress=on_progress
+        )
 
         # region Versioning
 
@@ -160,7 +187,7 @@ class Packman:
                     version=version,
                     option=version_info.options[0],
                     operation=op,
-                    on_progress=on_step_progress
+                    on_progress=on_step_progress,
                 )
             except Exception:
                 logger.info(f"{context} - not found in cache")
@@ -175,7 +202,8 @@ class Packman:
                     cache_miss = False
                 else:
                     logger.error(
-                        f"cache for {context} did not end operation with a path")
+                        f"cache for {context} did not end operation with a path"
+                    )
                     op.abort()
                     op = None
                     cache_miss = True
@@ -192,7 +220,7 @@ class Packman:
                         version=version,
                         option=version_info.options[0],
                         operation=op,
-                        on_progress=on_step_progress
+                        on_progress=on_step_progress,
                     )
                 except Exception as exc:
                     logger.error(f"failed to load from source: {source}")
@@ -209,7 +237,8 @@ class Packman:
                         break
                     else:
                         logger.error(
-                            f"source {source.type} for {context} did not end operation with a path")
+                            f"source {source.type} for {context} did not end operation with a path"
+                        )
                         op.abort()
                         op = None
                         continue
@@ -218,7 +247,10 @@ class Packman:
 
         if not op:
             raise NoSourcesError(
-                f"no available sources for {context}", package=name, version=version or "latest")
+                f"no available sources for {context}",
+                package=name,
+                version=version or "latest",
+            )
 
         with op:
             assert package_path, "operation did not end with a path"
@@ -229,7 +261,8 @@ class Packman:
                 logger.info(f"{context} - updating cache...")
                 try:
                     cache_source.add_package(
-                        version_info=version_info, package_path=package_path)
+                        version_info=version_info, package_path=package_path
+                    )
                 except Exception as exc:
                     logger.error(f"{context} - failed to update cache")
                     logger.exception(exc)
@@ -242,8 +275,12 @@ class Packman:
 
             logger.info(f"{context} - installing...")
             for step in package.steps:
-                step.execute(operation=op, package_path=package_path,
-                             root_dir=self.root_dir, on_progress=on_step_progress)
+                step.execute(
+                    operation=op,
+                    package_path=package_path,
+                    root_dir=self.root_dir,
+                    on_progress=on_step_progress,
+                )
                 on_step_progress.advance()
 
             # endregion
@@ -252,10 +289,10 @@ class Packman:
             self.commit_backups(op)
 
             manifest.packages[name] = ManifestPackage(
-                version=version, options=[version_info.options[0]], files=op.new_paths)
+                version=version, options=[version_info.options[0]], files=op.new_paths
+            )
 
-            manifest.update_files(self.manifest_path,
-                                  on_progress=on_step_progress)
+            manifest.update_files(self.manifest_path, on_progress=on_step_progress)
 
             on_progress(1.0)
 
@@ -264,7 +301,9 @@ class Packman:
 
         return True
 
-    def uninstall(self, name: str, on_progress: ProgressCallback = progress_noop) -> bool:
+    def uninstall(
+        self, name: str, on_progress: ProgressCallback = progress_noop
+    ) -> bool:
         manifest = self.manifest
 
         on_progress(0.0)
@@ -288,7 +327,8 @@ class Packman:
         updated = False
         try:
             logger.debug(
-                f"retrieving config files from {self.git_url}/{self.git_config_dir}")
+                f"retrieving config files from {self.git_url}/{self.git_config_dir}"
+            )
             Repo.clone_from(url=self.git_url, to_path=dir, depth=1)
             cfg_path = os.path.join(dir, self.git_config_dir)
             for root, _, files in os.walk(cfg_path):
@@ -332,5 +372,5 @@ class Packman:
             for file in files:
                 path = os.path.join(root, file)
                 relpath = os.path.relpath(path, self.config_dir)
-                name = relpath[:relpath.rindex(os.extsep)]
+                name = relpath[: relpath.rindex(os.extsep)]
                 yield name, Package.from_path(path)

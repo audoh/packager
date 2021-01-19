@@ -22,7 +22,13 @@ class BasePackageSource(BaseModel, ABC):
         ...
 
     @abstractmethod
-    def fetch_version(self, version: str, option: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
+    def fetch_version(
+        self,
+        version: str,
+        option: str,
+        operation: Operation,
+        on_progress: ProgressCallback = progress_noop,
+    ) -> None:
         ...
 
     @abstractmethod

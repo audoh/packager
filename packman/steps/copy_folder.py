@@ -4,8 +4,7 @@ from typing import Dict, List, Optional
 
 from packman.models.install_step import BaseInstallStep, install_step
 from packman.utils.operation import Operation
-from packman.utils.progress import (ProgressCallback, StepProgress,
-                                    progress_noop)
+from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 
 
 @install_step("copy_folder")
@@ -14,7 +13,13 @@ class CopyFolderInstallStep(BaseInstallStep):
     to: str
     exclude: Optional[List[str]] = None
 
-    def execute(self, operation: Operation, package_path: str, root_dir: str, on_progress: ProgressCallback = progress_noop) -> None:
+    def execute(
+        self,
+        operation: Operation,
+        package_path: str,
+        root_dir: str,
+        on_progress: ProgressCallback = progress_noop,
+    ) -> None:
         src = ""
         dest = ""
         for root, subdirs, files in os.walk(package_path):
@@ -26,7 +31,7 @@ class CopyFolderInstallStep(BaseInstallStep):
             if src:
                 break
         if not src:
-            raise Exception("folder not found: {self.name}")
+            raise FileNotFoundError(f"folder not found: {self.name}")
 
         files_to_copy: Dict[str, str] = {}
         for root, subdirs, files in os.walk(src):
@@ -44,7 +49,8 @@ class CopyFolderInstallStep(BaseInstallStep):
                 files_to_copy[file_src] = file_dest
 
         on_step_progress = StepProgress.from_step_count(
-            step_count=len(files_to_copy), on_progress=on_progress)
+            step_count=len(files_to_copy), on_progress=on_progress
+        )
 
         for file_src, file_dest in files_to_copy.items():
             operation.copy_file(file_src, file_dest)

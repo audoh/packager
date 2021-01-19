@@ -2,7 +2,7 @@ import filecmp
 import os
 import shutil
 from functools import cached_property
-from typing import Iterable, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple
 
 from git.repo.base import Repo
 from loguru import logger
@@ -44,10 +44,13 @@ class VersionNotFoundError(Exception):
 
 
 class NoSourcesError(Exception):
-    def __init__(self, message: str, package: str, version: str) -> None:
+    def __init__(
+        self, message: str, package: str, version: str, causes: List[Exception]
+    ) -> None:
         super().__init__(message)
         self.package = package
         self.version = version
+        self.causes = causes
 
 
 class Packman:
@@ -176,6 +179,8 @@ class Packman:
         # endregion
         # region Cache
 
+        source_errors: List[Exception] = []
+
         logger.info(f"{context} - checking cache")
         cache_source = Cache(name=name)
         if no_cache:
@@ -189,8 +194,11 @@ class Packman:
                     operation=op,
                     on_progress=on_step_progress,
                 )
-            except Exception:
+            except Exception as exc:
                 logger.info(f"{context} - not found in cache")
+                err = Exception("not found in cache")
+                err.__cause__ = exc
+                source_errors.append(err)
                 op.abort()
                 op = None
                 cache_miss = True
@@ -225,7 +233,9 @@ class Packman:
                 except Exception as exc:
                     logger.error(f"failed to load from source: {source}")
                     logger.exception(exc)
-
+                    err = Exception(f"failed to load from source: {source}")
+                    err.__cause__ = exc
+                    source_errors.append(err)
                     op.abort()
                     op = None
                     continue
@@ -250,6 +260,7 @@ class Packman:
                 f"no available sources for {context}",
                 package=name,
                 version=version or "latest",
+                causes=source_errors,
             )
 
         with op:

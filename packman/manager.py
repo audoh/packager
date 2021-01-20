@@ -9,31 +9,18 @@ from loguru import logger
 
 import packman.sources
 import packman.steps
-from packman.config import (
-    DEFAULT_CONFIG_PATH,
-    DEFAULT_GIT_URL,
-    DEFAULT_MANIFEST_PATH,
-    DEFAULT_REPO_CONFIG_PATH,
-    DEFAULT_ROOT_DIR,
-)
+from packman.config import (DEFAULT_CONFIG_PATH, DEFAULT_GIT_URL,
+                            DEFAULT_MANIFEST_PATH, DEFAULT_REPO_CONFIG_PATH,
+                            DEFAULT_ROOT_DIR)
 from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
-from packman.utils.files import (
-    backup_path,
-    checksum,
-    remove_path,
-    resolve_case,
-    temp_path,
-)
+from packman.utils.files import (backup_path, checksum, remove_path,
+                                 resolve_case, temp_path)
 from packman.utils.operation import Operation
-from packman.utils.progress import (
-    ProgressCallback,
-    RestoreProgress,
-    StepProgress,
-    progress_noop,
-)
+from packman.utils.progress import (ProgressCallback, RestoreProgress,
+                                    StepProgress, progress_noop)
 
 
 class VersionNotFoundError(Exception):
@@ -51,6 +38,9 @@ class NoSourcesError(Exception):
         self.package = package
         self.version = version
         self.causes = causes
+
+class NoFilesError(Exception):
+    ...
 
 
 class Packman:
@@ -282,6 +272,9 @@ class Packman:
                     on_progress=on_step_progress,
                 )
                 on_step_progress.advance()
+
+            if not op.new_paths:
+                raise NoFilesError("mod has no files")
 
             # endregion
             # region Manifest

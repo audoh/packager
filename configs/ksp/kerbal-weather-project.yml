@@ -4,8 +4,5 @@ sources:
     id: 2607
 steps:
   - action: copy_folder
-    glob: GameData
-    to: GameData
-  - action: copy_folder
-    glob: Ships
-    to: Ships
+    glob: KerbalWeatherProject
+    to: GameData/KerbalWeatherProject

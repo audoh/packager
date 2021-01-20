@@ -4,8 +4,8 @@ sources:
     id: 2607
 steps:
   - action: copy_folder
-    name: GameData
+    glob: GameData
     to: GameData
   - action: copy_folder
-    name: Ships
+    glob: Ships
     to: Ships

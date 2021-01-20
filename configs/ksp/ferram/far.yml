@@ -5,8 +5,8 @@ sources:
     repository: dkavolis/Ferram-Aerospace-Research
 steps:
   - action: copy_folder
-    name: GameData
+    glob: GameData
     to: GameData
   - action: copy_folder
-    name: Ships
+    glob: Ships
     to: Ships

@@ -98,8 +98,8 @@ class Packman:
     def manifest(self) -> Manifest:
         return Manifest.from_path(self.manifest_path)
 
-    def package_path(self, package: str) -> str:
-        return os.path.join(self.config_dir, f"{package}.yml")
+    def package_path(self, name: str) -> str:
+        return os.path.join(self.config_dir, f"{name}.yml")
 
     def validate(self, name: str) -> Iterable[str]:
         manifest = self.manifest
@@ -134,17 +134,6 @@ class Packman:
         no_cache: bool = False,
         on_progress: ProgressCallback = progress_noop,
     ) -> bool:
-        cfg_path = self.package_path(name)
-
-        # region Case sensitivity
-
-        # Enforce case for consistency with uninstall() and across platforms
-        basename = os.path.basename(resolve_case(cfg_path))
-        if name != basename[:-4]:
-            raise FileNotFoundError(f"no such file or directory: {cfg_path}")
-
-        # endregion
-
         op: Optional[Operation] = None
         package = self.package(name)
         package_path = None
@@ -372,9 +361,11 @@ class Packman:
         path = self.package_path(name)
 
         # Enforce case for consistency with uninstall() and across platforms
-        basename = os.path.basename(resolve_case(path))
-        if name != basename[:-4]:
-            raise FileNotFoundError(f"no such file or directory: {path}")
+        path_cased = resolve_case(path)
+        relpath_cased = os.path.relpath(path_cased, self.config_dir)
+        pathname = relpath_cased[:-4]
+        if name != pathname:
+            raise FileNotFoundError(f"{name=} does not match {pathname=}")
 
         return Package.from_path(path)
 

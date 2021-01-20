@@ -138,6 +138,7 @@ class Operation:
         progress = StepProgress.from_step_count(
             step_count=len(self.new_paths) + len(self.backups), on_progress=on_progress
         )
+        on_progress(0.0)
 
         for path in self.new_paths:
             logger.debug(f"cleaning up {path}")
@@ -162,6 +163,8 @@ class Operation:
                 logger.exception(exc)
                 errors = True
                 continue
+
+        on_progress(1.0)
 
         return errors
 

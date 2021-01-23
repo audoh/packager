@@ -7,7 +7,7 @@ class PercentString:
         self,
         value: float = 0.0,
         left_side_percent: bool = False,
-        number_padding: int = 0
+        number_padding: int = 0,
     ) -> None:
         self.value = value
         self.left_side_percent = left_side_percent
@@ -48,8 +48,7 @@ class ProgressBarString:
         return bar
 
     def __repr__(self) -> str:
-        attrs = (f"{attr} = {value!r}" for attr,
-                 value in self.__dict__.items())
+        attrs = (f"{attr} = {value!r}" for attr, value in self.__dict__.items())
         return f"{type(self).__name__}({', '.join(attrs)})"
 
 
@@ -64,13 +63,15 @@ class StepString:
         if self.percent:
             self.percent.value = value
 
-    def __init__(self,
-                 progress_bar: ProgressBarString = ProgressBarString(),
-                 percent: Optional[PercentString] = PercentString(),
-                 percent_padding: int = 5,
-                 percent_on_right: bool = True,
-                 separator: str = " ",
-                 state_border: Tuple[str, str] = ("", " ")) -> None:
+    def __init__(
+        self,
+        progress_bar: ProgressBarString = ProgressBarString(),
+        percent: Optional[PercentString] = PercentString(),
+        percent_padding: int = 5,
+        percent_on_right: bool = True,
+        separator: str = " ",
+        state_border: Tuple[str, str] = ("", " "),
+    ) -> None:
         self.complete: bool = False
         self.error: Optional[str] = None
         self.name: str = ""
@@ -83,9 +84,9 @@ class StepString:
 
     def __str__(self) -> str:
         if self.error is not None:
-            state = f"✗"
+            state = "✗"
         elif self.complete:
-            state = f"✓"
+            state = "✓"
         else:
             state = "•"
 

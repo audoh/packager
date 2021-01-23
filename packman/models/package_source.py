@@ -3,7 +3,7 @@ from typing import Iterable, List, Optional
 
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, progress_noop
-from packman.utils.union import DiscriminatedUnion
+from packman.utils.union import create_discriminated_union
 from pydantic import BaseModel, Extra
 
 
@@ -43,5 +43,5 @@ class BasePackageSource(BaseModel, ABC):
         extra = Extra.forbid
 
 
-PackageSource = DiscriminatedUnion(BasePackageSource, "type")
+PackageSource = create_discriminated_union(BasePackageSource, discriminator="type")
 package_source = PackageSource.decorator()

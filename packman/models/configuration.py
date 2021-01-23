@@ -1,11 +1,9 @@
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import yaml
-from packman.models.install_step import BaseInstallStep, InstallStep
-from packman.models.package_source import BasePackageSource, PackageSource
+from packman.models.install_step import InstallStep
+from packman.models.package_source import PackageSource
 from pydantic import BaseModel
-from pydantic.class_validators import validator
-from pydantic.decorator import validate_arguments
 from pydantic.fields import Field
 from pydantic.main import Extra
 
@@ -15,18 +13,8 @@ _cache: Dict[str, "Package"] = {}
 class Package(BaseModel):
     name: str
     description: str = ""
-    sources: List[BasePackageSource] = Field(..., min_items=1)
-    steps: List[BaseInstallStep] = Field(..., min_items=1)
-
-    @validator("sources", each_item=True, pre=True)
-    @validate_arguments
-    def resolve_sources(cls: Any, raw: Dict[str, Any]) -> BasePackageSource:
-        return PackageSource(**raw)
-
-    @validator("steps", each_item=True, pre=True)
-    @validate_arguments
-    def resolve_steps(cls: Any, raw: Dict[str, Any]) -> BasePackageSource:
-        return InstallStep(**raw)
+    sources: List[PackageSource] = Field(..., min_items=1)
+    steps: List[InstallStep] = Field(..., min_items=1)
 
     class Config:
         extra = Extra.forbid

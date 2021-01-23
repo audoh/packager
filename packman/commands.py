@@ -39,7 +39,7 @@ class Command(ABC):
         except Exception as exc:
             self.output.write_line(str(exc))
             return False
-        except KeyboardInterrupt as exc:
+        except KeyboardInterrupt:
             self.output.write_line("Aborted due to keyboard interrupt.")
             return False
         else:
@@ -52,8 +52,12 @@ class PackageListCommand(Command):
     help = "Lists available packages"
 
     def execute(self) -> None:
-        self.output.write_table([[name, config.name, config.description]
-                                 for name, config in self.packman.packages()])
+        self.output.write_table(
+            [
+                [name, config.name, config.description]
+                for name, config in self.packman.packages()
+            ]
+        )
 
 
 _DEFAULT_EXPORT_FILE = "packman-export"
@@ -91,11 +95,13 @@ class ExportCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "-o", "--output", help="The file to export", dest="output_path")
-        parser.add_argument(
-            "--format", help="The format to use", dest="format")
+            "-o", "--output", help="The file to export", dest="output_path"
+        )
+        parser.add_argument("--format", help="The format to use", dest="format")
 
-    def execute(self, output_path: Optional[str] = None, format: Optional[str] = None) -> None:
+    def execute(
+        self, output_path: Optional[str] = None, format: Optional[str] = None
+    ) -> None:
         if not output_path:
             output_path = _default_export_path(format=format)
         step_name = output_path
@@ -111,8 +117,10 @@ class ExportCommand(Command):
             manifest = self.packman.manifest
 
             if format == "json":
-                versions = {package_name: package.version for package_name,
-                            package in manifest.packages.items()}
+                versions = {
+                    package_name: package.version
+                    for package_name, package in manifest.packages.items()
+                }
 
                 with open(output_path, "w") as fp:
                     json.dump(versions, fp)
@@ -120,8 +128,13 @@ class ExportCommand(Command):
             elif format == "zip":
                 root = self.packman.root_dir
                 with ZipFile(output_path, "w") as zipfile:
-                    on_step_progress = StepProgress.from_step_count(step_count=sum(len(
-                        package.files) for package in manifest.packages.values()) + 1, on_progress=on_progress)
+                    on_step_progress = StepProgress.from_step_count(
+                        step_count=sum(
+                            len(package.files) for package in manifest.packages.values()
+                        )
+                        + 1,
+                        on_progress=on_progress,
+                    )
                     for package in manifest.packages.values():
                         for file in package.files:
                             relfile = os.path.relpath(file, root)
@@ -131,8 +144,7 @@ class ExportCommand(Command):
                     zip_manifest.original_files = {}
                     zip_manifest.orphaned_files = set()
                     zip_manifest.update_path_root(root)
-                    zipfile.writestr(
-                        "manifest.json", zip_manifest.json(indent=2))
+                    zipfile.writestr("manifest.json", zip_manifest.json(indent=2))
                     on_step_progress.advance()
 
             else:
@@ -153,7 +165,12 @@ class ImportCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "-i", "--input", help="The file to import", dest="input_path", default=f"{_DEFAULT_EXPORT_FILE}.json")
+            "-i",
+            "--input",
+            help="The file to import",
+            dest="input_path",
+            default=f"{_DEFAULT_EXPORT_FILE}.json",
+        )
 
     def execute(self, input_path: str) -> None:
         format = _infer_export_format(input_path)
@@ -171,36 +188,41 @@ class ImportCommand(Command):
                 for name, version in versions.items():
                     step_name = f"+ {name}@{version}"
                     try:
-                        if not self.packman.install(name=name, version=version, on_progress=on_progress):
+                        if not self.packman.install(
+                            name=name, version=version, on_progress=on_progress
+                        ):
                             # not_installed += 1
-                            self.output.write_step_error(
-                                step_name, "already installed")
+                            self.output.write_step_error(step_name, "already installed")
                         else:
                             self.output.write_step_complete(step_name)
                     except Exception as exc:
                         logger.exception(exc)
                         self.output.write_step_error(step_name, str(exc))
-                    except KeyboardInterrupt as exc:
+                    except KeyboardInterrupt:
                         self.output.write_step_error(step_name, "cancelled")
 
         elif format == "zip":
             with Operation() as op:
                 zip_root = op.extract_archive(input_path)
-                zip_manifest = Manifest.from_path(os.path.join(
-                    zip_root, "manifest.json"), update_root=False)
+                zip_manifest = Manifest.from_path(
+                    os.path.join(zip_root, "manifest.json"), update_root=False
+                )
 
                 for name, package in zip_manifest.packages.items():
                     step_name = f"+ {name}@{package.version}"
 
-                    if name in manifest.packages and manifest.packages[name].version == package.version:
-                        self.output.write_step_error(
-                            step_name, "already installed")
+                    if (
+                        name in manifest.packages
+                        and manifest.packages[name].version == package.version
+                    ):
+                        self.output.write_step_error(step_name, "already installed")
                         continue
 
                     self.output.write_step_progress(step_name, 0.0)
                     try:
                         on_step_progress = StepProgress.from_step_count(
-                            step_count=len(package.files), on_progress=on_progress)
+                            step_count=len(package.files), on_progress=on_progress
+                        )
                         on_step_progress(0.0)
 
                         for relfile in package.files:
@@ -234,8 +256,7 @@ class VersionListCommand(Command):
     help = "Lists available versions for a package"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
-        parser.add_argument(
-            "package", help="The package to list versions for")
+        parser.add_argument("package", help="The package to list versions for")
 
     def execute(self, package: str) -> None:
         for version in self.packman.versions(package):
@@ -248,24 +269,45 @@ class InstalledPackageListCommand(Command):
     def execute(self) -> None:
         manifest = self.packman.manifest
         packages = {key: value for key, value in self.packman.packages()}
-        self.output.write_table(rows=[[name, info.version, packages[name].name, packages[name].description]
-                                      for name, info in manifest.packages.items()])
+        self.output.write_table(
+            rows=[
+                [name, info.version, packages[name].name, packages[name].description]
+                for name, info in manifest.packages.items()
+            ]
+        )
 
 
 class InstallCommand(Command):
-    help = "Installs or updates one or more packages using the current local configuration"
+    help = (
+        "Installs or updates one or more packages using the current local configuration"
+    )
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "packages", help="The package or packages to install, by name or in package@version format; if none specified, all packages will be updated to their latest versions", nargs="*")
-        parser.add_argument(
-            "-f", "--force", help="Forces re-installation when the package version is already installed", action="store_true"
+            "packages",
+            help="The package or packages to install, by name or in package@version format; if none specified, all"
+            "packages will be updated to their latest versions",
+            nargs="*",
         )
         parser.add_argument(
-            "--no-cache", help="Forces re-download when the package version is already downloaded", action="store_true", dest="no_cache"
+            "-f",
+            "--force",
+            help="Forces re-installation when the package version is already installed",
+            action="store_true",
+        )
+        parser.add_argument(
+            "--no-cache",
+            help="Forces re-download when the package version is already downloaded",
+            action="store_true",
+            dest="no_cache",
         )
 
-    def execute(self, packages: Optional[List[str]] = None, force: bool = False, no_cache: bool = False) -> None:
+    def execute(
+        self,
+        packages: Optional[List[str]] = None,
+        force: bool = False,
+        no_cache: bool = False,
+    ) -> None:
         if not packages:
             manifest = self.packman.manifest
             if not manifest.packages:
@@ -292,7 +334,13 @@ class InstallCommand(Command):
             on_progress(0.0)
 
             try:
-                if not self.packman.install(name=name, version=version, force=force, no_cache=no_cache, on_progress=on_progress):
+                if not self.packman.install(
+                    name=name,
+                    version=version,
+                    force=force,
+                    no_cache=no_cache,
+                    on_progress=on_progress,
+                ):
                     not_installed += 1
                     output.write_step_error(step_name, "already installed")
                 else:
@@ -306,18 +354,18 @@ class InstallCommand(Command):
 
         if not_installed == 1:
             self.output.write(
-                f"{not_installed} package was not installed. Use -f to force installation.")
+                f"{not_installed} package was not installed. Use -f to force installation."
+            )
         elif not_installed > 1:
             self.output.write(
-                f"{not_installed} packages were not installed. Use -f to force installation.")
+                f"{not_installed} packages were not installed. Use -f to force installation."
+            )
 
         if self.packman.manifest.orphaned_files:
             count = len(self.packman.manifest.orphaned_files)
             print(
-                f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them")
-
-
-
+                f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them"
+            )
 
 
 class UninstallCommand(Command):
@@ -325,7 +373,10 @@ class UninstallCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "packages", help="Names of the package or packages to remove; if none specified, all packages will be removed", nargs="*")
+            "packages",
+            help="Names of the package or packages to remove; if none specified, all packages will be removed",
+            nargs="*",
+        )
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
@@ -346,7 +397,9 @@ class UninstallCommand(Command):
             try:
                 if not self.packman.uninstall(name=name, on_progress=on_progress):
                     output.write_step_error(
-                        step_name, "not uninstalled; perhaps you didn't install it using this tool?")
+                        step_name,
+                        "not uninstalled; perhaps you didn't install it using this tool?",
+                    )
                 else:
                     output.write_step_complete(step_name)
             except Exception as exc:
@@ -359,7 +412,8 @@ class UninstallCommand(Command):
         if self.packman.manifest.orphaned_files:
             count = len(self.packman.manifest.orphaned_files)
             print(
-                f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them")
+                f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them"
+            )
 
 
 class UpdateCommand(Command):
@@ -392,7 +446,10 @@ class ValidateCommand(Command):
 
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
-            "packages", help="Names of the package or packages to validate; if none specified, all packages will be validated", nargs="*")
+            "packages",
+            help="Names of the package or packages to validate; if none specified, all packages will be validated",
+            nargs="*",
+        )
 
     def execute(self, packages: Optional[List[str]] = None) -> None:
         if not packages:
@@ -418,6 +475,7 @@ class CleanCommand(Command):
 
     def execute(self) -> None:
         raise NotImplementedError("TODO")
+
 
 # TODO interactive orphan resolution:
 # - Delete all

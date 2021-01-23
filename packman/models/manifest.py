@@ -4,8 +4,7 @@ import shutil
 from typing import Any, Dict, List, Set
 
 from packman.utils.files import checksum, remove_path
-from packman.utils.progress import (ProgressCallback, StepProgress,
-                                    progress_noop)
+from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from pydantic import BaseModel
 
 
@@ -82,7 +81,8 @@ class Manifest(BaseModel):
 
     def cleanup_files(self, remove_orphans: bool = False) -> None:
         """
-        Deletes files that have been removed from the manifest since the last cleanup, or since the Manifest was instantiated if no previous cleanups.
+        Deletes files that have been removed from the manifest since the last cleanup, or since the Manifest was
+        instantiated if no previous cleanups.
         """
         new_file_map: Dict[str, List[str]] = {}
         for name, package in self.packages.items():
@@ -97,7 +97,9 @@ class Manifest(BaseModel):
         for file in self.file_map:
             if file not in new_file_map:
                 curr_chk = checksum(file)
-                if remove_orphans or any(chk == curr_chk for chk in self._file_checksums[file]):
+                if remove_orphans or any(
+                    chk == curr_chk for chk in self._file_checksums[file]
+                ):
                     if file in self.original_files:
                         shutil.copy2(self.original_files[file], file)
                         remove_path(self.original_files[file])
@@ -155,13 +157,19 @@ class Manifest(BaseModel):
 
         self._update_checksum_map()
 
-    def update_files(self, path: str, on_progress: ProgressCallback = progress_noop, remove_orphans: bool = False) -> None:
+    def update_files(
+        self,
+        path: str,
+        on_progress: ProgressCallback = progress_noop,
+        remove_orphans: bool = False,
+    ) -> None:
         """
         Updates the manifest file and cleans up any files that are no longer in the manifest.
         """
 
         step_progress = StepProgress.from_step_count(
-            step_count=3, on_progress=on_progress)
+            step_count=3, on_progress=on_progress
+        )
         self.cleanup_files(remove_orphans=remove_orphans)
         step_progress.advance()
         self.update_checksums()
@@ -172,7 +180,8 @@ class Manifest(BaseModel):
     @staticmethod
     def from_path(path: str, update_root: bool = True) -> "Manifest":
         """
-        Creates a new instance of a Manifest, loaded from the given path. If the path does not exist, creates an empty Manifest.
+        Creates a new instance of a Manifest, loaded from the given path. If the path does not exist, creates an empty
+        Manifest.
         """
         if os.path.exists(path):
             with open(path, "r") as fp:
@@ -182,8 +191,7 @@ class Manifest(BaseModel):
                 if update_root:
                     path_dir = os.path.dirname(path)
                     if os.path.normpath(path_dir) != ".":
-                        manifest.update_path_root(
-                            os.path.relpath(".", path_dir))
+                        manifest.update_path_root(os.path.relpath(".", path_dir))
 
         else:
             manifest = Manifest()

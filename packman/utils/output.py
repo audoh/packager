@@ -109,10 +109,10 @@ class ConsoleOutput:
     def __init__(self, step_string: StepString = StepString()) -> None:
         self._step_string = step_string
 
-    def write(self, text: str, end: Optional[str] = None) -> None:
+    def write(self, text: str = "", end: Optional[str] = None) -> None:
         print(str(text), end=end)
 
-    def write_line(self, line: str, end: Optional[str] = "\n") -> None:
+    def write_line(self, line: str = "", end: Optional[str] = "\n") -> None:
         self._finish_step()
         self.write(line, end=end)
 
@@ -157,13 +157,13 @@ class ConsoleOutput:
         for row in rows:
             for cell, column in zip(row, range(len(row))):
                 width = len(cell)
-                if width > columns.get(column, 0):
+                if width > columns.get(column, -1):
                     columns[column] = width
         for row in rows:
             for cell, column in zip(row, range(len(row))):
                 width = columns[column]
-                print(cell.ljust(width + 2), end="")
-            print()
+                self.write(cell.ljust(width + 2), end="")
+            self.write()
 
     def end(self) -> None:
         self._finish_step()

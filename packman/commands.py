@@ -37,6 +37,7 @@ class Command(ABC):
         try:
             self.execute(*args, **kwargs)
         except Exception as exc:
+            logger.exception(exc)
             self.output.write_line(str(exc))
             return False
         except KeyboardInterrupt:

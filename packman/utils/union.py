@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Generic, List, Optional, Set, Type, TypeVar
+from typing import Callable, Dict, Generic, List, Optional, Set, Type, TypeVar, Union
 
 from pydantic import ValidationError
 
@@ -33,7 +33,7 @@ class BaseDiscriminatedUnion(Generic[T]):
 
 def create_discriminated_union(
     base: Type[T], *, discriminator: str
-) -> Type[BaseDiscriminatedUnion[T]]:
+) -> Type[Union[BaseDiscriminatedUnion[T], T]]:
     class DiscriminatedUnion(base, BaseDiscriminatedUnion):
         _base = base
         _members = {}
@@ -93,7 +93,7 @@ class BaseInstantiableUnion(Generic[T]):
         return cls.member
 
 
-def create_union(base: Type[T]) -> Type[BaseInstantiableUnion[T]]:
+def create_union(base: Type[T]) -> Type[Union[BaseInstantiableUnion[T], T]]:
     class InstantiableUnion(base, BaseInstantiableUnion):
         _base: Type[T] = base
         _members: Set[Type[T]] = set()

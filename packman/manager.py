@@ -9,18 +9,31 @@ from loguru import logger
 
 import packman.sources
 import packman.steps
-from packman.config import (DEFAULT_CONFIG_PATH, DEFAULT_GIT_URL,
-                            DEFAULT_MANIFEST_PATH, DEFAULT_REPO_CONFIG_PATH,
-                            DEFAULT_ROOT_DIR)
+from packman.config import (
+    DEFAULT_CONFIG_PATH,
+    DEFAULT_GIT_URL,
+    DEFAULT_MANIFEST_PATH,
+    DEFAULT_REPO_CONFIG_PATH,
+    DEFAULT_ROOT_DIR,
+)
 from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
-from packman.utils.files import (backup_path, checksum, remove_path,
-                                 resolve_case, temp_path)
+from packman.utils.files import (
+    backup_path,
+    checksum,
+    remove_path,
+    resolve_case,
+    temp_path,
+)
 from packman.utils.operation import Operation
-from packman.utils.progress import (ProgressCallback, RestoreProgress,
-                                    StepProgress, progress_noop)
+from packman.utils.progress import (
+    ProgressCallback,
+    RestoreProgress,
+    StepProgress,
+    progress_noop,
+)
 
 
 class VersionNotFoundError(Exception):
@@ -38,6 +51,7 @@ class NoSourcesError(Exception):
         self.package = package
         self.version = version
         self.causes = causes
+
 
 class NoFilesError(Exception):
     ...
@@ -356,7 +370,7 @@ class Packman:
         # Enforce case for consistency with uninstall() and across platforms
         path_cased = resolve_case(path)
         relpath_cased = os.path.relpath(path_cased, self.config_dir)
-        pathname = relpath_cased[:-4]
+        pathname = relpath_cased[:-4].replace(os.path.sep, "/")
         if name != pathname:
             raise FileNotFoundError(f"{name=} does not match {pathname=}")
 

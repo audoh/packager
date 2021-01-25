@@ -16,7 +16,7 @@ class CopyFolderInstallStep(BaseInstallStep):
     to: str
     exclude: Optional[List[str]] = None
 
-    def execute(
+    def do_execute(
         self,
         operation: Operation,
         package_path: str,

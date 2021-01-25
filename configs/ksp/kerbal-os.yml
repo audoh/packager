@@ -3,6 +3,5 @@ sources:
   - type: github
     repository: KSP-KOS/KOS
 steps:
-  - action: copy_folder
-    name: GameData
+  - copy_folder: GameData
     to: GameData

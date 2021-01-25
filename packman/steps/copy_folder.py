@@ -7,11 +7,12 @@ from loguru import logger
 from packman.models.install_step import BaseInstallStep, install_step
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
+from pydantic import Field
 
 
-@install_step("copy_folder")
+@install_step()
 class CopyFolderInstallStep(BaseInstallStep):
-    glob: str
+    glob: str = Field(..., alias="copy_folder")
     to: str
     exclude: Optional[List[str]] = None
 

@@ -3,6 +3,5 @@ sources:
   - type: spacedock
     id: 2607
 steps:
-  - action: copy_folder
-    glob: KerbalWeatherProject
+  - copy_folder: KerbalWeatherProject
     to: GameData/KerbalWeatherProject

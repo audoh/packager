@@ -1,4 +1,15 @@
-from typing import Callable, Dict, Generic, List, Optional, Set, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Set,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from pydantic import ValidationError
 
@@ -13,6 +24,13 @@ class BaseDiscriminatedUnion(Generic[T]):
     def __new__(self, *args, **kwargs) -> None:
         discriminator = kwargs[self._attr]
         return self._members[discriminator](*args, **kwargs)
+
+    @classmethod
+    def __modify_schema__(cls, schema: Dict[str, Any]) -> None:
+        schema["anyOf"] = [
+            {**member.schema(), cls._attr: {"const": name}}
+            for name, member in cls._members.items()
+        ]
 
     @classmethod
     def register(self, cls: Type[T], type: str) -> None:
@@ -34,7 +52,7 @@ class BaseDiscriminatedUnion(Generic[T]):
 def create_discriminated_union(
     base: Type[T], *, discriminator: str
 ) -> Type[Union[BaseDiscriminatedUnion[T], T]]:
-    class DiscriminatedUnion(base, BaseDiscriminatedUnion):
+    class DiscriminatedUnion(BaseDiscriminatedUnion[T], base):
         _base = base
         _members = {}
         _attr = discriminator
@@ -70,6 +88,10 @@ class BaseInstantiableUnion(Generic[T]):
         )
 
     @classmethod
+    def __modify_schema__(cls, schema: Dict[str, Any]) -> None:
+        schema["anyOf"] = [member.schema() for member in cls._members]
+
+    @classmethod
     def register(cls, type: Type[T]) -> None:
         """
         Registers a new member of this union.
@@ -94,7 +116,7 @@ class BaseInstantiableUnion(Generic[T]):
 
 
 def create_union(base: Type[T]) -> Type[Union[BaseInstantiableUnion[T], T]]:
-    class InstantiableUnion(base, BaseInstantiableUnion):
+    class InstantiableUnion(BaseInstantiableUnion[T], base):
         _base: Type[T] = base
         _members: Set[Type[T]] = set()
 

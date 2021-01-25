@@ -1,7 +1,6 @@
 name: KerbalOS
 sources:
-  - type: github
-    repository: KSP-KOS/KOS
+  - github: KSP-KOS/KOS
 steps:
-  - copy_folder: GameData
+  - copy-folder: GameData
     to: GameData

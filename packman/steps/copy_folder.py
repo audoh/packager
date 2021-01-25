@@ -12,7 +12,7 @@ from pydantic import Field
 
 @install_step()
 class CopyFolderInstallStep(BaseInstallStep):
-    glob: str = Field(..., alias="copy_folder")
+    glob: str = Field(..., alias="copy-folder")
     to: str
     exclude: Optional[List[str]] = None
 

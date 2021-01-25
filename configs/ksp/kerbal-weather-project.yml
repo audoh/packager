@@ -1,7 +1,6 @@
 name: Kerbal Weather Project
 sources:
-  - type: spacedock
-    id: 2607
+  - spacedock: 2607
 steps:
-  - copy_folder: KerbalWeatherProject
+  - copy-folder: KerbalWeatherProject
     to: GameData/KerbalWeatherProject

@@ -13,6 +13,7 @@ from packman.models.package_source import (
 )
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
+from pydantic import Field
 
 _API_URL = "https://api.github.com"
 
@@ -97,9 +98,9 @@ def _is_usable_archive(asset: Dict[str, Any]) -> bool:
     return True
 
 
-@package_source(type="github")
+@package_source()
 class GitHubPackageSource(BasePackageSource):
-    repository: str
+    repository: str = Field(..., alias="github")
 
     def get_api(self) -> RepositoryAPI:
         return RepositoryAPI(self.repository)

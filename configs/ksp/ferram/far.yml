@@ -1,9 +1,8 @@
 name: Ferram Aerospace Research
 sources:
-  - type: github
-    repository: dkavolis/Ferram-Aerospace-Research
+  - github: dkavolis/Ferram-Aerospace-Research
 steps:
-  - copy_folder: GameData
+  - copy-folder: GameData
     to: GameData
-  - copy_folder: Ships
+  - copy-folder: Ships
     to: Ships

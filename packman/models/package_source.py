@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, progress_noop
@@ -11,7 +11,7 @@ class PackageVersion(BaseModel):
     name: str
     version: str
     options: List[str]
-    description: Optional[str] = None
+    description: str = ""
 
 
 class BasePackageSource(BaseModel, ABC):

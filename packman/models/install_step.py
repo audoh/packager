@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Optional
+from typing import List
 
 from packman.models.condition import Condition
 from packman.utils.operation import Operation
@@ -9,7 +9,7 @@ from pydantic import BaseModel, Extra, Field
 
 
 class BaseInstallStep(BaseModel, ABC):
-    conditions: Optional[List[Condition]] = Field([], alias="if", min_items=1)
+    conditions: List[Condition] = Field([], alias="if", min_items=1)
 
     def execute(
         self,
@@ -18,7 +18,12 @@ class BaseInstallStep(BaseModel, ABC):
         root_dir: str,
         on_progress: ProgressCallback = progress_noop,
     ) -> None:
-        if any((not cond.evaluate() for cond in self.conditions)):
+        if any(
+            (
+                not cond.evaluate(package_path=package_path, root_dir=root_dir)
+                for cond in self.conditions
+            )
+        ):
             return
         self.do_execute(
             operation=operation,

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Extra
 
 class BaseCondition(BaseModel, ABC):
     @abstractmethod
-    def evaluate(self) -> bool:
+    def evaluate(self, package_path: str, root_dir: str) -> bool:
         ...
 
     class Config:
@@ -14,3 +14,4 @@ class BaseCondition(BaseModel, ABC):
 
 
 Condition = create_union(BaseCondition)
+condition = Condition.decorator()

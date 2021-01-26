@@ -9,31 +9,18 @@ from loguru import logger
 
 import packman.sources
 import packman.steps
-from packman.config import (
-    DEFAULT_CONFIG_PATH,
-    DEFAULT_GIT_URL,
-    DEFAULT_MANIFEST_PATH,
-    DEFAULT_REPO_CONFIG_PATH,
-    DEFAULT_ROOT_DIR,
-)
+from packman.config import (DEFAULT_CONFIG_PATH, DEFAULT_GIT_URL,
+                            DEFAULT_MANIFEST_PATH, DEFAULT_REPO_CONFIG_PATH,
+                            DEFAULT_ROOT_DIR)
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_definition import PackageDefinition
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
-from packman.utils.files import (
-    backup_path,
-    checksum,
-    remove_path,
-    resolve_case,
-    temp_path,
-)
+from packman.utils.files import (backup_path, checksum, remove_path,
+                                 resolve_case, temp_path)
 from packman.utils.operation import Operation
-from packman.utils.progress import (
-    ProgressCallback,
-    RestoreProgress,
-    StepProgress,
-    progress_noop,
-)
+from packman.utils.progress import (ProgressCallback, RestoreProgress,
+                                    StepProgress, progress_noop)
 
 
 class VersionNotFoundError(Exception):
@@ -73,6 +60,12 @@ class Packman:
         self.root_dir = root_dir
 
     def get_version_info(self, name: str, version: str) -> PackageVersion:
+        """
+        Returns information about the specified version for the given package.
+
+        :raises FileNotFoundError: If the package cannot be found.
+        :raises VersionNotFoundError: If the version cannot be found from the sources defined for the package.
+        """
         package = self.package(name)
         for source in package.sources:
             try:
@@ -86,6 +79,12 @@ class Packman:
         )
 
     def get_latest_version_info(self, name: str) -> PackageVersion:
+        """
+        Returns information about the latest version available for the given package.
+
+        :raises FileNotFoundError: If the package cannot be found.
+        :raises VersionNotFoundError: If the latest version cannot be found from the sources defined for the package.
+        """
         package = self.package(name)
         for source in package.sources:
             try:
@@ -100,12 +99,21 @@ class Packman:
 
     @cached_property
     def manifest(self) -> Manifest:
+        """
+        Returns the path to this manager's manifest file.
+        """
         return Manifest.from_json(self.manifest_path)
 
     def package_path(self, name: str) -> str:
+        """
+        Returns the path to the definition file for the given package.
+        """
         return os.path.join(self.config_dir, f"{name}.yml")
 
     def validate(self, name: str) -> Iterable[str]:
+        """
+        Validates the given package's files, returning an iterable of each invalid file path.
+        """
         manifest = self.manifest
         package = manifest.packages[name]
         for file in package.checksums:
@@ -114,11 +122,14 @@ class Packman:
                 yield file
 
     def commit_backups(self, operation: Operation) -> None:
+        """
+        Commits all temporary backup files for the given Operation to a permanent backup directory.
+        """
         # TODO fix error when installing with -f
         manifest = self.manifest
         modified_files = manifest.modified_files
         original_files = manifest.original_files
-        for original_path, temp_path in operation.backups.items():
+        for original_path, temporary_path in operation.backups.items():
             if (
                 original_path not in modified_files
                 and original_path not in original_files
@@ -127,7 +138,7 @@ class Packman:
                 logger.debug(f"committing backup for {original_path}")
                 permanent_path = backup_path(original_path)
                 os.makedirs(os.path.dirname(permanent_path), exist_ok=True)
-                shutil.copy2(temp_path, permanent_path)
+                shutil.copy2(temporary_path, permanent_path)
                 manifest.original_files[original_path] = permanent_path
 
     def install(
@@ -138,6 +149,14 @@ class Packman:
         no_cache: bool = False,
         on_progress: ProgressCallback = progress_noop,
     ) -> bool:
+        """
+        Idempotently installs a version of the given package.
+
+        :param force: If True, install even if already installed.
+        :param no_cache: If True, don't retrieve package from cache.
+
+        :returns: A boolean indicating whether or not the installation resulted in any changes.
+        """
         op: Optional[Operation] = None
         package = self.package(name)
         package_path = None
@@ -311,6 +330,11 @@ class Packman:
     def uninstall(
         self, name: str, on_progress: ProgressCallback = progress_noop
     ) -> bool:
+        """
+        Idempotently uninstalls the current version of the given package.
+
+        :returns: A boolean indicating whether or not the uninstallation resulted in any changes.
+        """
         manifest = self.manifest
 
         on_progress(0.0)
@@ -327,6 +351,9 @@ class Packman:
         return True
 
     def update(self, on_progress: ProgressCallback = progress_noop) -> bool:
+        """
+        Updates the local package definitions with the latest from the defined remote sources.
+        """
         on_progress(0.0)
 
         dir = temp_path()
@@ -356,6 +383,11 @@ class Packman:
         return updated
 
     def versions(self, name: str) -> Iterable[str]:
+        """
+        Returns an iterable of all versions available for the given package.
+
+        :raises FileNotFoundError: If the package cannot be found.
+        """
         package = self.package(name)
         versions: Set[str] = set()
         for source in package.sources:
@@ -365,6 +397,11 @@ class Packman:
                     yield version
 
     def package(self, name: str) -> PackageDefinition:
+        """
+        Returns the definition for the given package.
+
+        :raises FileNotFoundError: If the package cannot be found.
+        """
         path = self.package_path(name)
 
         # Enforce case for consistency with uninstall() and across platforms
@@ -377,6 +414,9 @@ class Packman:
         return PackageDefinition.from_yaml(path)
 
     def packages(self) -> Iterable[Tuple[str, PackageDefinition]]:
+        """
+        Returns an iterable of 2-tuples containing the name and definition of all available packages.
+        """
         for root, _, files in os.walk(self.config_dir):
             for file in files:
                 path = os.path.join(root, file)

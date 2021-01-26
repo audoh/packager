@@ -7,6 +7,7 @@ from typing import Iterable, List, Optional, Set, Tuple
 from git.repo.base import Repo
 from loguru import logger
 
+# TODO remove side-effecty imports
 import packman.sources
 import packman.steps
 from packman.config import (

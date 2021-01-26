@@ -1,7 +1,7 @@
 import os
 from glob import glob
 from pathlib import Path, PurePath
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from loguru import logger
 from packman.models.install_step import BaseInstallStep, install_step
@@ -12,9 +12,15 @@ from pydantic import Field
 
 @install_step()
 class CopyFolderInstallStep(BaseInstallStep):
-    glob: str = Field(..., alias="copy-folder")
-    to: str
-    exclude: Optional[List[str]] = None
+    glob: str = Field(
+        ..., alias="copy-folder", description="Glob pattern for a folder to copy."
+    )
+    dest: str = Field(..., alias="to", description="Path to copy a matched folder to.")
+    exclude: List[str] = Field(
+        [],
+        alias="without",
+        description="A list of glob patterns matching files to exclude.",
+    )
 
     def do_execute(
         self,
@@ -23,14 +29,18 @@ class CopyFolderInstallStep(BaseInstallStep):
         root_dir: str,
         on_progress: ProgressCallback = progress_noop,
     ) -> None:
-        src = glob(os.path.join(package_path, self.glob), recursive=True)
-        dest = os.path.join(root_dir, self.to)
+        src = [
+            path
+            for path in glob(os.path.join(package_path, self.glob), recursive=True)
+            if os.path.isdir(path)
+        ]
+        dest = os.path.join(root_dir, self.dest)
         if not src:
-            logger.warning(f"folder not found: {self.glob}")
-            on_progress(1.0)
+            logger.warning(f"no folders found matching glob: {self.glob}")
             return
+
         if len(src) > 1:
-            raise FileExistsError(f"multiple folders found: {self.glob}")
+            raise FileExistsError(f"multiple folders found matching glob: {self.glob}")
 
         files_to_copy: Dict[str, str] = {}
         for folder in src:
@@ -48,10 +58,14 @@ class CopyFolderInstallStep(BaseInstallStep):
                     file_dest = os.path.join(dest_root, file)
                     files_to_copy[file_src] = file_dest
 
-            on_step_progress = StepProgress.from_step_count(
-                step_count=len(files_to_copy), on_progress=on_progress
-            )
+        if not files_to_copy:
+            logger.warning(f"no files to copy: {self.glob}")
+            return
 
-            for file_src, file_dest in files_to_copy.items():
-                operation.copy_file(file_src, file_dest)
-                on_step_progress.advance()
+        on_step_progress = StepProgress.from_step_count(
+            step_count=len(files_to_copy), on_progress=on_progress
+        )
+
+        for file_src, file_dest in files_to_copy.items():
+            operation.copy_file(file_src, file_dest)
+            on_step_progress.advance()

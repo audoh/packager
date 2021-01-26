@@ -16,50 +16,6 @@ from pydantic import ValidationError
 T = TypeVar("T")
 
 
-class BaseDiscriminatedUnion(Generic[T]):
-    _base: Type[T]
-    _members: Dict[str, Type[T]]
-    _attr: str
-
-    def __new__(self, *args, **kwargs) -> None:
-        discriminator = kwargs[self._attr]
-        return self._members[discriminator](*args, **kwargs)
-
-    @classmethod
-    def __modify_schema__(cls, schema: Dict[str, Any]) -> None:
-        schema["anyOf"] = [
-            {**member.schema(), cls._attr: {"const": name}}
-            for name, member in cls._members.items()
-        ]
-
-    @classmethod
-    def register(self, cls: Type[T], type: str) -> None:
-        self._members[type] = cls
-
-    @classmethod
-    def member(self, type: str) -> Callable[[Type[T]], Type[T]]:
-        def _decorator(cls: Type[T]) -> Type[T]:
-            self.register(cls, type=type)
-            return cls
-
-        return _decorator
-
-    @classmethod
-    def decorator(cls) -> Callable[[str], Callable[[Type[T]], Type[T]]]:
-        return cls.member
-
-
-def create_discriminated_union(
-    base: Type[T], *, discriminator: str
-) -> Type[Union[BaseDiscriminatedUnion[T], T]]:
-    class DiscriminatedUnion(BaseDiscriminatedUnion[T], base):
-        _base = base
-        _members = {}
-        _attr = discriminator
-
-    return DiscriminatedUnion
-
-
 class BaseInstantiableUnion(Generic[T]):
     _base: Type[T]
     _members: Set[Type[T]]
@@ -92,15 +48,17 @@ class BaseInstantiableUnion(Generic[T]):
         schema["anyOf"] = [member.schema() for member in cls._members]
 
     @classmethod
-    def register(cls, type: Type[T]) -> None:
+    def register(cls, *types: Type[T]) -> None:
         """
-        Registers a new member of this union.
+        Registers one or more new members of this union.
         """
-        if not issubclass(type, cls._base):
-            raise TypeError(
-                f"{type.__name__} is not a subclass of {cls._base.__name__}"
-            )
-        cls._members.add(type)
+        for type in types:
+            if not issubclass(type, cls._base):
+                raise TypeError(
+                    f"{type.__name__} is not a subclass of {cls._base.__name__}"
+                )
+
+            cls._members.add(type)
 
     @classmethod
     def member(cls) -> Callable[[Type[T]], Type[T]]:

@@ -100,7 +100,15 @@ def _is_usable_archive(asset: Dict[str, Any]) -> bool:
 
 @package_source()
 class GitHubPackageSource(BasePackageSource):
-    repository: str = Field(..., alias="github")
+    """
+    Fetches packages and package information from github.com.
+    """
+
+    repository: str = Field(
+        ...,
+        alias="github",
+        description="Full name of the GitHub repository to fetch from e.g. octocat/Hello-World",
+    )
 
     def get_api(self) -> RepositoryAPI:
         return RepositoryAPI(self.repository)

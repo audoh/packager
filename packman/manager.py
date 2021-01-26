@@ -16,8 +16,8 @@ from packman.config import (
     DEFAULT_REPO_CONFIG_PATH,
     DEFAULT_ROOT_DIR,
 )
-from packman.models.configuration import Package
 from packman.models.manifest import Manifest, ManifestPackage
+from packman.models.package_definition import PackageDefinition
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
 from packman.utils.files import (
@@ -100,7 +100,7 @@ class Packman:
 
     @cached_property
     def manifest(self) -> Manifest:
-        return Manifest.from_path(self.manifest_path)
+        return Manifest.from_json(self.manifest_path)
 
     def package_path(self, name: str) -> str:
         return os.path.join(self.config_dir, f"{name}.yml")
@@ -364,7 +364,7 @@ class Packman:
                     versions.add(version)
                     yield version
 
-    def package(self, name: str) -> Package:
+    def package(self, name: str) -> PackageDefinition:
         path = self.package_path(name)
 
         # Enforce case for consistency with uninstall() and across platforms
@@ -374,12 +374,12 @@ class Packman:
         if name != pathname:
             raise FileNotFoundError(f"{name=} does not match {pathname=}")
 
-        return Package.from_path(path)
+        return PackageDefinition.from_yaml(path)
 
-    def packages(self) -> Iterable[Tuple[str, Package]]:
+    def packages(self) -> Iterable[Tuple[str, PackageDefinition]]:
         for root, _, files in os.walk(self.config_dir):
             for file in files:
                 path = os.path.join(root, file)
                 relpath = os.path.relpath(path, self.config_dir)
                 name = relpath[: relpath.rindex(os.extsep)]
-                yield name, Package.from_path(path)
+                yield name, PackageDefinition.from_yaml(path)

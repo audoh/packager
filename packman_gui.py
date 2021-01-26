@@ -1,11 +1,10 @@
 import sys
 import tkinter as tk
 from enum import Enum
-from re import L
-from typing import Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 from packman import Packman
-from packman.models.configuration import Package
+from packman.models.package_definition import PackageDefinition
 
 
 class SortKey(Enum):
@@ -13,11 +12,11 @@ class SortKey(Enum):
     NICE_NAME = 1
     DEFAULT = NAME
 
-    def get_key_from_tuple(self, tuple: Tuple[str, Package]) -> str:
+    def get_key_from_tuple(self, tuple: Tuple[str, PackageDefinition]) -> str:
         name, package = tuple
         return self.get_key(name, package)
 
-    def get_key(self, name: str, package: Package) -> str:
+    def get_key(self, name: str, package: PackageDefinition) -> str:
         if self == SortKey.NAME:
             return name
         elif self == SortKey.NICE_NAME:
@@ -25,16 +24,24 @@ class SortKey(Enum):
 
 
 class LogView(tk.Frame):
-    def __init__(self, master: Optional[tk.Misc] = None, background: Optional[str] = "white", height: Optional[Union[int, str]] = None, width: Optional[Union[int, str]] = None):
-        super().__init__(master, height=str(height)
-                         if height is not None else None, width=str(width) if width is not None else None)
+    def __init__(
+        self,
+        master: Optional[tk.Misc] = None,
+        background: Optional[str] = "white",
+        height: Optional[Union[int, str]] = None,
+        width: Optional[Union[int, str]] = None,
+    ):
+        super().__init__(
+            master,
+            height=str(height) if height is not None else None,
+            width=str(width) if width is not None else None,
+        )
         self.background = background
 
         self.el_labels: List[tk.Label] = []
         self.grid_propagate(0)
 
-        self.el_canvas = tk.Canvas(
-            self, background=background, highlightthickness=1)
+        self.el_canvas = tk.Canvas(self, background=background, highlightthickness=1)
         self.el_canvas.grid(row=0, column=0, sticky=tk.NSEW)
 
         self.el_scrollbar = tk.Scrollbar(self)
@@ -47,12 +54,17 @@ class LogView(tk.Frame):
         self.el_scrollbar.configure(command=self.el_canvas.yview)
 
         self.el_frame = tk.Frame(self.el_canvas)
-        self.el_canvas.create_window(
-            (0, 0), window=self.el_frame, anchor=tk.NW)
+        self.el_canvas.create_window((0, 0), window=self.el_frame, anchor=tk.NW)
 
     def line_write(self, text: str, color: Optional[str] = None) -> None:
-        label = tk.Text(self.el_frame, background=self.background, foreground=color,
-                        height=1, relief=tk.FLAT, maxundo=0)
+        label = tk.Text(
+            self.el_frame,
+            background=self.background,
+            foreground=color,
+            height=1,
+            relief=tk.FLAT,
+            maxundo=0,
+        )
         label.insert(tk.INSERT, text)
         label.configure(state=tk.DISABLED)
         label.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=0, pady=0)
@@ -77,12 +89,11 @@ class Menu(tk.Menu):
 
 
 class Application(tk.Frame):
-
     def __init__(self, master: Optional[tk.Misc] = None):
         super().__init__(master)
         self.create_widgets()
 
-        self.current_packages: List[Tuple[str, Package]] = []
+        self.current_packages: List[Tuple[str, PackageDefinition]] = []
         self.package_sort = SortKey.DEFAULT
         self.packman = Packman()
         self.refresh_packages()
@@ -90,11 +101,16 @@ class Application(tk.Frame):
     def create_widgets(self) -> None:
         self.filter_installed = tk.BooleanVar(self, value=False)
         self.el_filter_installed = tk.Checkbutton(
-            self, text="Installed", variable=self.filter_installed, command=self.refresh_packages)
+            self,
+            text="Installed",
+            variable=self.filter_installed,
+            command=self.refresh_packages,
+        )
         self.el_filter_installed.grid(row=0, column=0)
 
-        self.el_update = tk.Button(self, text="Update",
-                                   command=self.update_packman, justify=tk.RIGHT)
+        self.el_update = tk.Button(
+            self, text="Update", command=self.update_packman, justify=tk.RIGHT
+        )
         self.el_update.grid(row=0, column=2, sticky=tk.EW)
 
         self.el_packages = tk.Listbox(self, selectmode=tk.EXTENDED)
@@ -107,15 +123,27 @@ class Application(tk.Frame):
         button_panel = tk.Frame(self)
 
         self.el_install = tk.Button(
-            button_panel, text="Install", command=self.install_selected, state=tk.DISABLED)
+            button_panel,
+            text="Install",
+            command=self.install_selected,
+            state=tk.DISABLED,
+        )
         self.el_install.grid(row=0, column=0, sticky=tk.EW)
 
         self.el_uninstall = tk.Button(
-            button_panel, text="Uninstall", command=self.uninstall_selected, state=tk.DISABLED)
+            button_panel,
+            text="Uninstall",
+            command=self.uninstall_selected,
+            state=tk.DISABLED,
+        )
         self.el_uninstall.grid(row=0, column=1, sticky=tk.EW)
 
         self.el_validate = tk.Button(
-            button_panel, text="Validate", command=self.validate_selected, state=tk.DISABLED)
+            button_panel,
+            text="Validate",
+            command=self.validate_selected,
+            state=tk.DISABLED,
+        )
         self.el_validate.grid(row=0, column=2, sticky=tk.EW)
 
         button_panel.grid(row=2, column=2)
@@ -159,7 +187,9 @@ class Application(tk.Frame):
     def clear_message(self) -> None:
         self.el_output.line_clear()
 
-    def set_packages(self, packages: Iterable[Tuple[str, Package]], sorted=False) -> None:
+    def set_packages(
+        self, packages: Iterable[Tuple[str, PackageDefinition]], sorted=False
+    ) -> None:
         self.el_packages.delete(0, tk.END)
         if not isinstance(packages, list):
             packages = list(packages)
@@ -168,7 +198,7 @@ class Application(tk.Frame):
         self.current_packages = packages
         self.el_packages.insert(0, *(name for name, _ in packages))
 
-    def curselection(self) -> Iterable[Tuple[str, Package]]:
+    def curselection(self) -> Iterable[Tuple[str, PackageDefinition]]:
         for index in self.el_packages.curselection():
             index: int
             yield self.current_packages[index]
@@ -178,8 +208,9 @@ class Application(tk.Frame):
 
     def refresh_installed_packages(self) -> None:
         manifest = self.packman.manifest
-        self.set_packages((name, self.packman.package(name))
-                          for name in manifest.packages)
+        self.set_packages(
+            (name, self.packman.package(name)) for name in manifest.packages
+        )
 
     def refresh_packages(self) -> None:
         if self.filter_installed.get():
@@ -218,8 +249,7 @@ class Application(tk.Frame):
         for name, _ in self.curselection():
             for file in self.packman.validate(name=name):
                 invalid_files.append(file)
-                self.show_error(
-                    f"invalid file (checksum mismatch): {file}")
+                self.show_error(f"invalid file (checksum mismatch): {file}")
         if not invalid_files:
             self.show_success("no invalid files")
 

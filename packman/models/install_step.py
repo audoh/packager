@@ -9,7 +9,16 @@ from pydantic import BaseModel, Extra, Field
 
 
 class BaseInstallStep(BaseModel, ABC):
-    conditions: List[Condition] = Field([], alias="if", min_items=1)
+    """
+    An abstract class representing a step to be executed in the course of installing a particular package.
+    """
+
+    conditions: List[Condition] = Field(
+        [],
+        alias="if",
+        min_items=1,
+        description="Defines a list of conditions which must all be met in order for this install step to execute.",
+    )
 
     def execute(
         self,

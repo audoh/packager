@@ -72,7 +72,11 @@ class SpaceDockAPI(HTTPAPI):
 
 @package_source()
 class SpaceDockPackageSource(BasePackageSource):
-    id: int = Field(..., alias="spacedock")
+    """
+    Fetches packages and package information from spacedock.info.
+    """
+
+    id: int = Field(..., alias="spacedock", description="SpaceDock mod ID e.g. 1234")
 
     @cached_property
     def _api(self) -> SpaceDockAPI:

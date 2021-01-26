@@ -5,6 +5,10 @@ from pydantic import BaseModel, Extra
 
 
 class BaseCondition(BaseModel, ABC):
+    """
+    Resolves a condition used to determine whether or not a particular install step should be executed.
+    """
+
     @abstractmethod
     def evaluate(self, package_path: str, root_dir: str) -> bool:
         ...

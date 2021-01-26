@@ -6,6 +6,10 @@ from pydantic import Field
 
 @condition()
 class Either(BaseCondition):
+    """
+    A condition which succeeds if any of its constituent conditions succeed.
+    """
+
     conditions: List[Condition] = Field(..., alias="either")
 
     def evaluate(self, package_path: str, root_dir: str) -> bool:

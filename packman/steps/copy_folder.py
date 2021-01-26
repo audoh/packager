@@ -12,6 +12,10 @@ from pydantic import Field
 
 @install_step()
 class CopyFolderInstallStep(BaseInstallStep):
+    """
+    Copies folders matching a glob pattern into the root directory at a given relative path.
+    """
+
     glob: str = Field(
         ..., alias="copy-folder", description="Glob pattern for a folder to copy."
     )

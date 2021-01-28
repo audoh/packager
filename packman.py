@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 from loguru import logger
 
-from packman import Packman
+from packman import InstallStep, PackageSource, Packman, sources, steps
 from packman.commands import (
     CleanCommand,
     ExportCommand,
@@ -34,6 +34,9 @@ commands = {
 
 
 if __name__ == "__main__":
+    PackageSource.register(sources.GitHubPackageSource, sources.SpaceDockPackageSource)
+    InstallStep.register(steps.CopyFolderInstallStep)
+
     logger.remove()
     logger.add(sys.stderr, level=os.environ.get("PACKMAN_LOGGING", "CRITICAL"))
     parser = ArgumentParser(

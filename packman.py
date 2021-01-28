@@ -36,11 +36,15 @@ commands = {
 if __name__ == "__main__":
     # TODO set up docs generation, including the yaml schema
 
+    # Set up yaml handlers
     PackageSource.register(sources.GitHubPackageSource, sources.SpaceDockPackageSource)
     InstallStep.register(steps.CopyFolderInstallStep)
 
+    # Set up logger
     logger.remove()
     logger.add(sys.stderr, level=os.environ.get("PACKMAN_LOGGING", "CRITICAL"))
+
+    # Set up parser
     parser = ArgumentParser(
         description="Rudimentary file package management intended for modifications for games such as KSP and RimWorld"
     )
@@ -50,6 +54,9 @@ if __name__ == "__main__":
     for name, command in commands.items():
         command_parser = command_parsers.add_parser(name, help=command.help)
         command.configure_parser(command_parser)
+    parser.usage = parser.format_help()[7:]
+
+    # Run
     args = parser.parse_args(sys.argv[1:])
     args_dict = vars(args)
     command_name = args_dict.pop("command")

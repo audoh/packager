@@ -11,6 +11,7 @@ from typing import (
     Union,
 )
 
+from ordered_set import OrderedSet
 from pydantic import ValidationError
 
 T = TypeVar("T")
@@ -18,12 +19,12 @@ T = TypeVar("T")
 
 class BaseInstantiableUnion(Generic[T]):
     _base: Type[T]
-    _members: Set[Type[T]]
+    _members: OrderedSet[Type[T]]
 
     def __new__(self, *args, **kwargs) -> None:
         validation_errs: List[ValidationError] = []
         last_exc: Optional[Exception] = None
-        for member in self._members:
+        for member in reversed(self._members):
             try:
                 return member(*args, **kwargs)
             except ValidationError as exc:
@@ -51,6 +52,8 @@ class BaseInstantiableUnion(Generic[T]):
     def register(cls, *types: Type[T]) -> None:
         """
         Registers one or more new members of this union.
+
+        Members registered later will be attempted first when instantiating.
         """
         for type in types:
             if not issubclass(type, cls._base):
@@ -59,6 +62,20 @@ class BaseInstantiableUnion(Generic[T]):
                 )
 
             cls._members.add(type)
+
+    def unregister(cls, *types: Type[T]) -> None:
+        """
+        Unregisters one or more new members of this union.
+        """
+        for type in types:
+            if type in cls._members:
+                cls._members.remove(type)
+
+    def unregister_all(cls) -> None:
+        """
+        Unregisters all members of this union.
+        """
+        cls.unregister(*cls._members)
 
     @classmethod
     def member(cls) -> Callable[[Type[T]], Type[T]]:
@@ -76,6 +93,6 @@ class BaseInstantiableUnion(Generic[T]):
 def create_union(base: Type[T]) -> Type[Union[BaseInstantiableUnion[T], T]]:
     class InstantiableUnion(BaseInstantiableUnion[T], base):
         _base: Type[T] = base
-        _members: Set[Type[T]] = set()
+        _members: OrderedSet[Type[T]] = OrderedSet()
 
     return InstantiableUnion

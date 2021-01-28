@@ -16,6 +16,7 @@ GitPython = "^3.1.11"
 pywin32 = "^300"
 appdirs = "^1.4.4"
 colored = "^1.4.2"
+ordered-set = "^4.0.2"
 
 [tool.poetry.dev-dependencies]
 autopep8 = "^1.5.4"

@@ -88,6 +88,9 @@ if __name__ == "__main__":
                 print(f"error: {exc.message}")
             except Exception as exc:
                 print(f"error: {exc}")
+            except SystemExit as exc:
+                if exc.code != 2:
+                    raise
 
     else:
         command = commands[command_name]

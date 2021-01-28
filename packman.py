@@ -80,7 +80,10 @@ if __name__ == "__main__":
             argv = shlex.split(raw)
             if argv:
                 arg0 = argv[0].lower()
-                if arg0.startswith(("exit", "quit")) or arg0 in ("q", "e"):
+                if arg0.startswith(("exit", "quit", "stop", "abort")) or arg0 in (
+                    "q",
+                    "e",
+                ):
                     sys.exit(0)
             try:
                 args = parser.parse_args(argv)

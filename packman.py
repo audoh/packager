@@ -71,7 +71,7 @@ if __name__ == "__main__":
         parser.usage = parser.format_help()[7:]
 
         print("Packman interactive session started.")
-        print('Type "exit" to quit.')
+        print('Type "exit" to quit or "--help" for more information.')
 
         while True:
             raw = input("> ")

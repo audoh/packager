@@ -1,6 +1,10 @@
+import argparse
 import os
+import shlex
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentError, ArgumentParser
+from logging import error
+from typing import Optional
 
 from loguru import logger
 
@@ -49,7 +53,7 @@ if __name__ == "__main__":
         description="Rudimentary file package management intended for modifications for games such as KSP and RimWorld"
     )
     command_parsers = parser.add_subparsers(
-        metavar="<command>", help="Valid commands:", dest="command", required=True
+        metavar="<command>", help="Valid commands:", dest="command", required=False
     )
     for name, command in commands.items():
         command_parser = command_parsers.add_parser(name, help=command.help)
@@ -59,6 +63,32 @@ if __name__ == "__main__":
     # Run
     args = parser.parse_args(sys.argv[1:])
     args_dict = vars(args)
-    command_name = args_dict.pop("command")
-    command = commands[command_name]
-    command.execute_safe(**args_dict)
+    command_name: Optional[str] = args_dict.pop("command")
+    if command_name is None:
+        parser.exit_on_error = False
+        command_parsers.required = True
+        command_parsers.add_parser("exit", help="Quits this interactive session")
+        parser.usage = parser.format_help()[7:]
+
+        print("Packman interactive session started.")
+        print('Type "exit" to quit.')
+
+        while True:
+            raw = input("> ")
+            argv = shlex.split(raw)
+            if argv and argv[0].lower() in ("exit", "quit", "e", "q"):
+                sys.exit(0)
+            try:
+                args = parser.parse_args(argv)
+                args_dict = vars(args)
+                command_name: str = args_dict.pop("command")
+                command = commands[command_name]
+                command.execute_safe(**args_dict)
+            except ArgumentError as exc:
+                print(f"error: {exc.message}")
+            except Exception as exc:
+                print(f"error: {exc}")
+
+    else:
+        command = commands[command_name]
+        command.execute_safe(**args_dict)

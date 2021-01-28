@@ -76,8 +76,10 @@ if __name__ == "__main__":
         while True:
             raw = input("> ")
             argv = shlex.split(raw)
-            if argv and argv[0].lower() in ("exit", "quit", "e", "q"):
-                sys.exit(0)
+            if argv:
+                arg0 = argv[0].lower()
+                if arg0.startswith(("exit", "quit")) or arg0 in ("q", "e"):
+                    sys.exit(0)
             try:
                 args = parser.parse_args(argv)
                 args_dict = vars(args)

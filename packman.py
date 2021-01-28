@@ -34,6 +34,8 @@ commands = {
 
 
 if __name__ == "__main__":
+    # TODO set up docs generation, including the yaml schema
+
     PackageSource.register(sources.GitHubPackageSource, sources.SpaceDockPackageSource)
     InstallStep.register(steps.CopyFolderInstallStep)
 

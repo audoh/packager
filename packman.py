@@ -80,7 +80,9 @@ if __name__ == "__main__":
             argv = shlex.split(raw)
             if argv:
                 arg0 = argv[0].lower()
-                if arg0.startswith(("exit", "quit", "stop", "abort")) or arg0 in (
+                if arg0.startswith(
+                    ("exit", "quit", "stop", "abort", "goaway", "cancel")
+                ) or arg0 in (
                     "q",
                     "e",
                 ):

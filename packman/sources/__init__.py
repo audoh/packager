@@ -1,1 +1,2 @@
-from . import github, spacedock  # noqa
+from .github import GitHubPackageSource
+from .spacedock import SpaceDockPackageSource  # noqa

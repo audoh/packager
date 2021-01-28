@@ -4,13 +4,13 @@ from pathlib import Path, PurePath
 from typing import Dict, List
 
 from loguru import logger
-from packman.models.install_step import BaseInstallStep, install_step
+from packman.models.install_step import BaseInstallStep
 from packman.utils.operation import Operation
-from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 from pydantic import Field
 
 
-@install_step()
 class CopyFolderInstallStep(BaseInstallStep):
     """
     Copies folders matching a glob pattern into the root directory at a given relative path.

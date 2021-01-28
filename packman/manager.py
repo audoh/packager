@@ -7,9 +7,7 @@ from typing import Iterable, List, Optional, Set, Tuple
 from git.repo.base import Repo
 from loguru import logger
 
-# TODO remove side-effecty imports
-import packman.sources
-import packman.steps
+from packman import sources, steps
 from packman.config import (
     DEFAULT_CONFIG_PATH,
     DEFAULT_GIT_URL,
@@ -17,9 +15,10 @@ from packman.config import (
     DEFAULT_REPO_CONFIG_PATH,
     DEFAULT_ROOT_DIR,
 )
+from packman.models.install_step import InstallStep
 from packman.models.manifest import Manifest, ManifestPackage
 from packman.models.package_definition import PackageDefinition
-from packman.models.package_source import PackageVersion
+from packman.models.package_source import PackageSource, PackageVersion
 from packman.utils.cache import Cache
 from packman.utils.files import (
     backup_path,
@@ -84,6 +83,10 @@ class Packman:
         self.git_config_dir = git_config_dir
         self.git_url = git_url
         self.root_dir = root_dir
+        PackageSource.register(
+            sources.GitHubPackageSource, sources.SpaceDockPackageSource
+        )
+        InstallStep.register(steps.CopyFolderInstallStep)
 
     def get_version_info(self, name: str, version: str) -> PackageVersion:
         """

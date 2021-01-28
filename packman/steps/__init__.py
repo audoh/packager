@@ -1,1 +1,1 @@
-from . import copy_folder
+from .copy_folder import CopyFolderInstallStep  # noqa

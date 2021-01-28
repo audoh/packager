@@ -4,11 +4,7 @@ from typing import Any, Iterable, List, Optional
 from urllib import parse as urlparse
 
 from packman.api.http import HTTPAPI
-from packman.models.package_source import (
-    BasePackageSource,
-    PackageVersion,
-    package_source,
-)
+from packman.models.package_source import BasePackageSource, PackageVersion
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from pydantic import BaseModel, Field
@@ -70,7 +66,6 @@ class SpaceDockAPI(HTTPAPI):
         return mod
 
 
-@package_source()
 class SpaceDockPackageSource(BasePackageSource):
     """
     Fetches packages and package information from spacedock.info.

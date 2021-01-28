@@ -6,11 +6,7 @@ from urllib import parse as urlparse
 
 from loguru import logger
 from packman.api.http import HTTPAPI
-from packman.models.package_source import (
-    BasePackageSource,
-    PackageVersion,
-    package_source,
-)
+from packman.models.package_source import BasePackageSource, PackageVersion
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from pydantic import Field
@@ -98,7 +94,6 @@ def _is_usable_archive(asset: Dict[str, Any]) -> bool:
     return True
 
 
-@package_source()
 class GitHubPackageSource(BasePackageSource):
     """
     Fetches packages and package information from github.com.

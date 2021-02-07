@@ -1,21 +1,20 @@
 import math
-from argparse import ArgumentParser
-from typing import List, Optional
-
-from loguru import logger
-
-from .command import Command
 
 # TODO interactive orphan resolution:
 # - Delete all
 # - Delete orphan
 # - Keep orphan (remove from manifest)
-# - Restore from backup (if applicable)
+from abc import ABC, abstractmethod
+from argparse import ArgumentParser
+from typing import Any, Iterable, List, Optional, Tuple
+
+from loguru import logger
+from packman.models.package_definition import PackageDefinition
+
+from .command import Command
 
 
-class PackageListCommand(Command):
-    help = "Lists available packages"
-
+class ListCommand(Command, ABC):
     def configure_parser(self, parser: ArgumentParser) -> None:
         parser.add_argument(
             "--page",
@@ -37,9 +36,13 @@ class PackageListCommand(Command):
         )
 
     def execute(
-        self, *, page: Optional[int] = None, limit: Optional[int] = None
+        self,
+        *args: Any,
+        page: Optional[int] = None,
+        limit: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
-        package_iterable = self.packman.packages()
+        iterable = self.get_iterable(*args, **kwargs)
 
         if page is not None:
             if limit is None:
@@ -47,46 +50,66 @@ class PackageListCommand(Command):
             elif limit < 1:
                 raise ValueError("limit cannot be less than 1")
 
-            package_iterable = list(package_iterable)
-            page_count = math.ceil(len(package_iterable) / limit)
+            iterable = list(iterable)
+            page_count = math.ceil(len(iterable) / limit)
             page = max(1, min(page, page_count))
 
             start = (page - 1) * limit
             end = start + limit
-            package_iterable = package_iterable[start:end]
+            iterable = iterable[start:end]
             self.output.write_line(f"Showing page {page} of {page_count}")
 
+        self.write_iterable(iterable, *args, **kwargs)
+
+    @abstractmethod
+    def get_iterable(self, *args: Any, **kwargs: Any) -> Iterable:
+        raise NotImplementedError
+
+    @abstractmethod
+    def write_iterable(self, iterable: Iterable, *args: Any, **kwargs: Any) -> None:
+        raise NotImplementedError
+
+
+class PackageListCommand(ListCommand):
+    help = "Lists available packages"
+
+    def get_iterable(self) -> Iterable[Tuple[str, PackageDefinition]]:
+        return self.packman.packages()
+
+    def write_iterable(self, iterable: Iterable[Tuple[str, PackageDefinition]]) -> None:
         self.output.write_table(
-            [
-                [name, config.name, config.description]
-                for name, config in package_iterable
-            ]
+            [[name, config.name, config.description] for name, config in iterable]
         )
 
 
-class VersionListCommand(Command):
+class VersionListCommand(ListCommand):
     help = "Lists available versions for a package"
 
     def configure_parser(self, parser: ArgumentParser) -> None:
+        super().configure_parser(parser)
         parser.add_argument("package", help="The package to list versions for")
 
-    def execute(self, package: str) -> None:
-        for version in self.packman.versions(package):
+    def get_iterable(self, package: str) -> Iterable[str]:
+        return self.packman.versions(package)
+
+    def write_iterable(self, iterable: Iterable[str], package: str) -> None:
+        for version in iterable:
             self.output.write(version)
 
 
-class InstalledPackageListCommand(Command):
+class InstalledPackageListCommand(ListCommand):
     help = "Lists installed packages"
 
-    def execute(self) -> None:
+    def get_iterable(self) -> List[List[str]]:
         manifest = self.packman.manifest
         packages = {key: value for key, value in self.packman.packages()}
-        self.output.write_table(
-            rows=[
-                [name, info.version, packages[name].name, packages[name].description]
-                for name, info in manifest.packages.items()
-            ]
-        )
+        return [
+            [name, info.version, packages[name].name, packages[name].description]
+            for name, info in manifest.packages.items()
+        ]
+
+    def write_iterable(self, iterable: List[List[str]]) -> None:
+        self.output.write_table(rows=iterable)
 
 
 class UpdateCommand(Command):

@@ -1,3 +1,4 @@
+import math
 from argparse import ArgumentParser
 from typing import List, Optional
 
@@ -15,11 +16,50 @@ from .command import Command
 class PackageListCommand(Command):
     help = "Lists available packages"
 
-    def execute(self) -> None:
+    def configure_parser(self, parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "--page",
+            "-p",
+            default=None,
+            type=int,
+            dest="page",
+            help="1-based page number",
+            metavar="<page>",
+        )
+        parser.add_argument(
+            "--limit",
+            "-l",
+            default=None,
+            type=int,
+            dest="limit",
+            help="Maximum of packages to show",
+            metavar="<limit>",
+        )
+
+    def execute(
+        self, *, page: Optional[int] = None, limit: Optional[int] = None
+    ) -> None:
+        package_iterable = self.packman.packages()
+
+        if page is not None:
+            if limit is None:
+                limit = 10
+            elif limit < 1:
+                raise ValueError("limit cannot be less than 1")
+
+            package_iterable = list(package_iterable)
+            page_count = math.ceil(len(package_iterable) / limit)
+            page = max(1, min(page, page_count))
+
+            start = (page - 1) * limit
+            end = start + limit
+            package_iterable = package_iterable[start:end]
+            self.output.write_line(f"Showing page {page} of {page_count}")
+
         self.output.write_table(
             [
                 [name, config.name, config.description]
-                for name, config in self.packman.packages()
+                for name, config in package_iterable
             ]
         )
 

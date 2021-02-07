@@ -45,6 +45,7 @@ class InstallCommand(Command):
             packages = list(manifest.packages.keys())
 
         output = self.output
+        output.step_count = len(packages)
         not_installed = 0
         for package in packages:
             at_idx = package.find("@")
@@ -116,6 +117,7 @@ class UninstallCommand(Command):
             packages = list(manifest.packages.keys())
 
         output = self.output
+        output.step_count = len(packages)
         for name in packages:
             step_name = f"- {name}"
 

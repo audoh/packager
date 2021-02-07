@@ -55,7 +55,7 @@ class ProgressBarString:
 class StepString:
     @property
     def progress(self) -> float:
-        return self.progress_bar.value
+        return self.progress_bar.progress
 
     @progress.setter
     def progress(self, value: float) -> None:
@@ -65,6 +65,8 @@ class StepString:
 
     def __init__(
         self,
+        step_no: int = 0,
+        step_count: int = 0,
         progress_bar: ProgressBarString = ProgressBarString(),
         percent: Optional[PercentString] = PercentString(),
         percent_padding: int = 5,
@@ -81,6 +83,8 @@ class StepString:
         self.percent_on_right = percent_on_right
         self.separator = separator
         self.state_border = state_border
+        self.step_no = step_no
+        self.step_count = step_count
 
     def __str__(self) -> str:
         if self.error is not None:
@@ -99,6 +103,9 @@ class StepString:
 
         result = f"{self.state_border[0]}{state}{self.state_border[1]}{progress_part}{self.separator}{self.name}"
 
+        if 0 < self.step_no and 0 < self.step_count:
+            result = f"{self.step_no}/{self.step_count} {result}"
+
         if self.error:
             result += f" ({self.error})"
 
@@ -106,6 +113,14 @@ class StepString:
 
 
 class ConsoleOutput:
+    @property
+    def step_count(self) -> int:
+        return self._step_string.step_count
+
+    @step_count.setter
+    def step_count(self, value: int) -> None:
+        self._step_string.step_count = value
+
     def __init__(self, step_string: StepString = StepString()) -> None:
         self._step_string = step_string
 
@@ -119,7 +134,7 @@ class ConsoleOutput:
     def _finish_step(self) -> None:
         if not self._step_string.name:
             return
-        self.write(self._step_string, "\n")
+        self.write(str(self._step_string), "\n")
         self._step_string.name = ""
         self._step_string.error = None
         self._step_string.progress = 0.0
@@ -129,9 +144,10 @@ class ConsoleOutput:
         if self._step_string.name != name:
             self._finish_step()
             self._step_string.name = name
+            self._step_string.step_no += 1
 
         self._step_string.progress = progress
-        self.write(self._step_string, end="\r")
+        self.write(str(self._step_string), end="\r")
 
     def write_step_complete(self, name: str) -> None:
         if self._step_string.name != name:

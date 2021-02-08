@@ -3,6 +3,7 @@ import os
 import shutil
 from typing import Any, Dict, List, Set
 
+from loguru import logger
 from packman.utils.files import checksum, remove_path
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from pydantic import BaseModel, Field
@@ -127,6 +128,7 @@ class Manifest(BaseModel):
 
         Rebuilds file_map and orphaned_files.
         """
+
         new_file_map: Dict[str, List[str]] = {}
         for name, package in self.packages.items():
             for file in package.files:
@@ -155,7 +157,9 @@ class Manifest(BaseModel):
 
         if remove_orphans:
             for file in self.orphaned_files:
+                logger.debug(f"removing orphan {file}")
                 remove_path(self.original_files[file])
+            self.orphaned_files.clear()
 
         self.file_map = new_file_map
 

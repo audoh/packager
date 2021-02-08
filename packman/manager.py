@@ -317,7 +317,8 @@ class Packman:
 
             # endregion
             # region Installation
-            # We don't need to uninstall first - files that are unreplaced (i.e. no longer included in package) are deleted/restored as part of manifest.write_json()
+            # We don't need to uninstall first - files that are unreplaced (i.e. no longer included in package) are
+            # deleted/restored as part of manifest.write_json()
 
             logger.info(f"{context} - installing...")
             for step in package.steps:

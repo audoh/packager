@@ -13,14 +13,20 @@ class Cache:
     def __init__(self, name: str) -> None:
         self.name = name
 
-    def fetch_version(self, version: str, option: str, operation: Operation, on_progress: ProgressCallback = progress_noop) -> None:
+    def fetch_version(
+        self,
+        version: str,
+        option: str,
+        operation: Operation,
+        on_progress: ProgressCallback = progress_noop,
+    ) -> None:
         cache_path = self.get_path(version, ".zip")
         if not os.path.exists(cache_path):
             raise Exception("not found")
         operation.extract_archive(cache_path)
 
     def get_versions(self) -> Iterable[str]:
-        self._raise_unsupported_error()
+        raise NotImplementedError("Not supported for cache")
 
     def add_package(self, version_info: PackageVersion, package_path: str) -> None:
         version = version_info.version

@@ -13,15 +13,14 @@ class HTTPAPI(ABC):
 
     @abstractmethod
     def uri(self, endpoint: str) -> str:
-        ...
+        raise NotImplementedError
 
-    def get(self, endpoint: str, use_cache: bool = False, **kwargs: Any) -> requests.Response:
+    def get(self, endpoint: str, use_cache: bool = False, **kwargs: Any) -> Any:
         cache_key = f"get:{endpoint}?{urlparse.urlencode(kwargs)}"
         if use_cache and cache_key in self.cache:
             return self.cache[cache_key]
 
-        res = requests.get(url=self.uri(endpoint),
-                           headers=self.headers, params=kwargs)
+        res = requests.get(url=self.uri(endpoint), headers=self.headers, params=kwargs)
         res.raise_for_status()
         res_json = res.json()
         self.cache[cache_key] = res_json

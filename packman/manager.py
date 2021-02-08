@@ -282,7 +282,7 @@ class Packman:
                         break
                     else:
                         logger.error(
-                            f"source {source.type} for {context} did not end operation with a path"
+                            f"source {source.__class__.__name__} for {context} did not end operation with a path"
                         )
                         op.abort()
                         op = None

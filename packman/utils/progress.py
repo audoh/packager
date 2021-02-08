@@ -1,5 +1,7 @@
 from typing import Callable, Optional
 
+from loguru import logger
+
 ProgressCallback = Callable[[float], None]
 progress_noop: ProgressCallback = lambda p: None
 
@@ -9,6 +11,7 @@ class StepProgress:
         self.step_no = 0
         self.step_mult = step_mult
         self.on_progress = on_progress
+        self._cb_error: bool = False
 
     @staticmethod
     def from_step_count(
@@ -22,8 +25,11 @@ class StepProgress:
         try:
             self.on_progress((self.step_no + progress) * self.step_mult)
         except Exception as exc:
-            # TODO warn limited number of times
-            ...
+            if self._cb_error:
+                return
+            else:
+                logger.warning(f"on_progress callback threw error: {exc}")
+                self._cb_error = True
 
     def advance(self) -> None:
         """ Increments the current step number. """
@@ -40,13 +46,17 @@ class RestoreProgress:
     def __init__(self, start_progress: float, on_progress: ProgressCallback) -> None:
         self.start_progress = start_progress
         self.on_progress = on_progress
+        self._cb_error: bool = False
 
     def __call__(self, progress: float) -> None:
         try:
             self.on_progress(self.start_progress * (1 - progress))
         except Exception as exc:
-            # TODO warn limited number of times
-            ...
+            if self._cb_error:
+                return
+            else:
+                logger.warning(f"on_progress callback threw error: {exc}")
+                self._cb_error = True
 
     @staticmethod
     def step_progress(

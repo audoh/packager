@@ -1,30 +1,20 @@
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    Set,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Dict, Generic, List, Optional, Type, TypeVar
 
 from ordered_set import OrderedSet
 from pydantic import ValidationError
+from pydantic.main import BaseModel
 
-T = TypeVar("T")
+T = TypeVar("T", bound=BaseModel)
 
 
 class BaseInstantiableUnion(Generic[T]):
     _base: Type[T]
     _members: OrderedSet[Type[T]]
 
-    def __new__(self, *args, **kwargs) -> None:
+    def __new__(cls, *args, **kwargs) -> T:
         validation_errs: List[ValidationError] = []
         last_exc: Optional[Exception] = None
-        for member in reversed(self._members):
+        for member in reversed(cls._members):
             try:
                 return member(*args, **kwargs)
             except ValidationError as exc:
@@ -37,7 +27,7 @@ class BaseInstantiableUnion(Generic[T]):
         if validation_errs:
             raise ValidationError(
                 [err for exc in validation_errs for err in exc.raw_errors],
-                self,
+                cls,
             )
 
         raise last_exc or TypeError(
@@ -63,6 +53,7 @@ class BaseInstantiableUnion(Generic[T]):
 
             cls._members.add(type)
 
+    @classmethod
     def unregister(cls, *types: Type[T]) -> None:
         """
         Unregisters one or more new members of this union.
@@ -71,6 +62,7 @@ class BaseInstantiableUnion(Generic[T]):
             if type in cls._members:
                 cls._members.remove(type)
 
+    @classmethod
     def unregister_all(cls) -> None:
         """
         Unregisters all members of this union.
@@ -90,7 +82,7 @@ class BaseInstantiableUnion(Generic[T]):
         return cls.member
 
 
-def create_union(base: Type[T]) -> Type[Union[BaseInstantiableUnion[T], T]]:
+def create_union(base: Type[T]) -> Type[T]:
     class InstantiableUnion(BaseInstantiableUnion[T], base):
         _base: Type[T] = base
         _members: OrderedSet[Type[T]] = OrderedSet()

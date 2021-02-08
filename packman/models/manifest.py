@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, Iterable, List, Set
 
 from loguru import logger
 from packman.utils.files import checksum, remove_path
@@ -107,7 +107,7 @@ class Manifest(BaseModel):
         self._update_checksum_map()
 
     @property
-    def modified_files(self) -> List[str]:
+    def modified_files(self) -> Iterable[str]:
         return self.file_map.keys()
 
     def _update_checksum_map(self) -> None:

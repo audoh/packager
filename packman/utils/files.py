@@ -128,7 +128,7 @@ def resolve_case(pathlike: str) -> str:
 
 
 def remove_file(path: str) -> None:
-    logger.trace(f"removing file {path}", backtrace=True)
+    logger.debug(f"removing file {path}")
     try:
         os.remove(path)
     except OSError:
@@ -142,7 +142,7 @@ def remove_file(path: str) -> None:
 def remove_path(path: str) -> None:
     try:
         if os.path.isdir(path):
-            logger.trace(f"removing tree {path}")
+            logger.debug(f"removing tree {path}")
             shutil.rmtree(path, onerror=_error_handler)
         else:
             remove_file(path)

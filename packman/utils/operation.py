@@ -47,6 +47,7 @@ class Operation:
             self.close()
         else:
             with uninterruptible():
+                logger.exception(exception_value)
                 self.abort()
 
     def get_temp_path(self, ext: str = "") -> str:

@@ -35,8 +35,7 @@ def temp_path(ext: str = "") -> str:
 def backup_dir() -> str:
     global _BACKUP_DIR
     if _BACKUP_DIR is None:
-        _BACKUP_DIR = os.path.join(
-            appdirs.user_state_dir(appname="packman"), "backups")
+        _BACKUP_DIR = os.path.join(appdirs.user_state_dir(appname="packman"), "backups")
     return _BACKUP_DIR
 
 
@@ -63,26 +62,33 @@ def is_hidden(path: str) -> bool:
         return os.path.basename(path).startswith(".")
 
 
-def _nt_error_handler(source: Callable[[str], None], path: str, error: Tuple[Type[OSError], OSError, TracebackType]) -> None:
+def _nt_error_handler(
+    source: Callable[[str], None],
+    path: str,
+    error: Tuple[Type[BaseException], BaseException, TracebackType],
+) -> None:
     type, _, _ = error
-    if type == FileNotFoundError:
+    if issubclass(type, FileNotFoundError):
         return
 
     attributes = win32api.GetFileAttributes(path)
-    if (attributes & FILE_ATTRIBUTE_UNWRITEABLE):
-        win32api.SetFileAttributes(
-            path, attributes & ~FILE_ATTRIBUTE_UNWRITEABLE)
+    if attributes & FILE_ATTRIBUTE_UNWRITEABLE:
+        win32api.SetFileAttributes(path, attributes & ~FILE_ATTRIBUTE_UNWRITEABLE)
         source(path)
         if source not in REMOVE_FUNCS:
             try:
                 win32api.SetFileAttributes(path, attributes)
             except FileNotFoundError:
                 logger.warning(f"fn {source} also removes the file")
-            except:
+            except Exception:
                 return
 
 
-def _noop_error_handler(source: Callable[[str], None], path: str, error: Tuple[Type[OSError], OSError, TracebackType]) -> None:
+def _noop_error_handler(
+    source: Callable[[str], None],
+    path: str,
+    error: Tuple[Type[BaseException], BaseException, TracebackType],
+) -> None:
     return
 
 
@@ -125,14 +131,17 @@ def remove_file(path: str) -> None:
     try:
         os.remove(path)
     except OSError:
-        _error_handler(os.remove, path, sys.exc_info())
+        type, err, trace = sys.exc_info()
+        assert type is not None
+        assert err is not None
+        assert trace is not None
+        _error_handler(os.remove, path, (type, err, trace))
 
 
 def remove_path(path: str) -> None:
     try:
         if os.path.isdir(path):
-            shutil.rmtree(
-                path, onerror=_error_handler)
+            shutil.rmtree(path, onerror=_error_handler)
         else:
             remove_file(path)
 

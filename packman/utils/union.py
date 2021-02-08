@@ -83,6 +83,7 @@ class BaseInstantiableUnion(Generic[T]):
 
 
 def create_union(base: Type[T]) -> Type[T]:
+    # TODO fix this
     class InstantiableUnion(BaseInstantiableUnion[T], base):
         _base: Type[T] = base
         _members: OrderedSet[Type[T]] = OrderedSet()

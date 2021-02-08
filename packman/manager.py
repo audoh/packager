@@ -148,7 +148,6 @@ class Packman:
         """
         Commits all temporary backup files for the given Operation to a permanent backup directory.
         """
-        # TODO fix error when installing with -f
         manifest = self.manifest
         modified_files = manifest.modified_files
         original_files = manifest.original_files

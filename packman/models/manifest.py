@@ -15,12 +15,12 @@ class ManifestPackage(BaseModel):
     """
 
     version: str = Field(..., description="Name of the installed package version.")
-    options: List[str] = Field(
+    options: Set[str] = Field(
         ...,
         description="List of specific packages installed for this version"
         " e.g. software often has separate builds for amd64, arm, x86.",
     )
-    files: List[str] = Field(
+    files: Set[str] = Field(
         ...,
         description="List of files claimed (either partially or wholly) by this package"
         " e.g. files that were created, modified or replaced during the installation of this version.",
@@ -49,10 +49,10 @@ class ManifestPackage(BaseModel):
         Updates the paths to be relative to a new root assuming the package's files remain at the same absolute path
         in the file-system.
         """
-        new_files: List[str] = []
+        new_files: Set[str] = set()
         for file in self.files:
             new_file = os.path.relpath(file, root)
-            new_files.append(new_file)
+            new_files.add(new_file)
         self.files = new_files
 
         new_checksums: Dict[str, str] = {}
@@ -65,11 +65,11 @@ class ManifestPackage(BaseModel):
         """
         Changes the absolute path of this package's files. Paths will be normalised.
         """
-        new_files: List[str] = []
+        new_files: Set[str] = set()
         new_checksums: Dict[str, str] = {}
         for file in self.files:
             new_file = os.path.normpath(os.path.join(path, file))
-            new_files.append(new_file)
+            new_files.add(new_file)
             new_checksums[new_file] = self.checksums[file]
         self.files = new_files
         self.checksums = new_checksums
@@ -132,6 +132,7 @@ class Manifest(BaseModel):
         new_file_map: Dict[str, List[str]] = {}
         for name, package in self.packages.items():
             for file in package.files:
+                file = os.path.normpath(file)
                 if file in self.orphaned_files:
                     self.orphaned_files.remove(file)
                 if file not in new_file_map:
@@ -145,6 +146,7 @@ class Manifest(BaseModel):
                 if remove_orphans or any(
                     chk == curr_chk for chk in self._file_checksums[file]
                 ):
+                    logger.debug(f"cleaning up {file}")
                     if file in self.original_files:
                         shutil.copy2(self.original_files[file], file)
                         remove_path(self.original_files[file])
@@ -152,6 +154,7 @@ class Manifest(BaseModel):
                     else:
                         remove_path(file)
                 else:
+                    logger.debug(f"found orphan {file}")
                     self.orphaned_files.add(file)
                 # TODO fix issue where files are not being recognised as orphan
 

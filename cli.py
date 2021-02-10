@@ -38,6 +38,7 @@ commands = {
 if __name__ == "__main__":
     # TODO use cmd module
     # TODO set up docs generation, including the yaml schema
+    # TODO add autocomplete
 
     # Set up yaml handlers
     PackageSource.register(sources.GitHubPackageSource, sources.SpaceDockPackageSource)

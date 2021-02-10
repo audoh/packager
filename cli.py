@@ -1,9 +1,7 @@
-import argparse
 import os
 import shlex
 import sys
 from argparse import ArgumentError, ArgumentParser
-from logging import error
 from typing import Optional
 
 from loguru import logger
@@ -38,6 +36,7 @@ commands = {
 
 
 if __name__ == "__main__":
+    # TODO use cmd module
     # TODO set up docs generation, including the yaml schema
 
     # Set up yaml handlers
@@ -90,7 +89,7 @@ if __name__ == "__main__":
             try:
                 args = parser.parse_args(argv)
                 args_dict = vars(args)
-                command_name: str = args_dict.pop("command")
+                command_name = args_dict.pop("command")
                 command = commands[command_name]
                 command.execute_safe(**args_dict)
             except ArgumentError as exc:

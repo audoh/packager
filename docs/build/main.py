@@ -1,4 +1,5 @@
 import os
+from shutil import copyfile
 from typing import Iterable, Type
 
 from packman import InstallStep, PackageSource, sources, steps
@@ -27,7 +28,7 @@ def generate_schemas(models: Iterable[Type[BaseModel]], dir: str) -> None:
 
 
 def generate_docs_index(readme_path: str, index_path: str) -> None:
-    os.system(f"pandoc {readme_path} -f rst -t markdown -o {index_path}")
+    copyfile(readme_path, index_path)
 
 
 def main(schemas_dir: str, readme_path: str, index_path: str) -> None:

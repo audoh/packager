@@ -1,10 +1,8 @@
-import os
 import shlex
 import sys
 from argparse import ArgumentError, ArgumentParser
 from typing import Dict, List, Optional
 
-from loguru import logger
 from packman import InstallStep, PackageSource, Packman, sources, steps
 from packman.commands import (
     CleanCommand,
@@ -14,6 +12,7 @@ from packman.commands import (
     InstallCommand,
     InstalledPackageListCommand,
     PackageListCommand,
+    RecoverCommand,
     UninstallCommand,
     UpdateCommand,
     ValidateCommand,
@@ -25,6 +24,7 @@ packman = Packman()
 DEFAULT_COMMANDS = {
     "install": InstallCommand(packman),
     "uninstall": UninstallCommand(packman),
+    "recover": RecoverCommand(packman),
     "list": InstalledPackageListCommand(packman),
     "update": UpdateCommand(packman),
     "packages": PackageListCommand(packman),

@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from loguru import logger
 from packman.commands.util import get_version_name
+from packman.utils.operation import StateFileExistsError
 
 from .command import Command
 
@@ -77,6 +78,13 @@ class InstallCommand(Command):
                     output.write_step_error(step_name, "already installed")
                 else:
                     output.write_step_complete(step_name)
+            except StateFileExistsError as exc:
+                logger.exception(exc)
+                output.write_step_error(step_name, str(exc))
+                output.write(
+                    "A previously interrupted operation was detected; use 'recover' to recover and roll it back."
+                )
+                break
             except Exception as exc:
                 logger.exception(exc)
                 output.write_step_error(step_name, str(exc))
@@ -85,11 +93,11 @@ class InstallCommand(Command):
                 raise exc from None
 
         if not_installed == 1:
-            self.output.write(
+            output.write(
                 f"{not_installed} package was not installed. Use -f to force installation."
             )
         elif not_installed > 1:
-            self.output.write(
+            output.write(
                 f"{not_installed} packages were not installed. Use -f to force installation."
             )
 
@@ -147,3 +155,26 @@ class UninstallCommand(Command):
             print(
                 f"You have {count} orphaned file{'s' if count != 1 else ''}; use 'clean' to resolve them"
             )
+
+
+class RecoverCommand(Command):
+    help = "Recovers and rolls back a previously interrupted operation"
+
+    def execute(self) -> None:
+        step_name = "⭯ rollback"
+        output = self.output
+
+        def on_progress(p: float) -> None:
+            output.write_step_progress(step_name, p)
+
+        on_progress(0.0)
+        try:
+            self.packman.recover(on_progress=on_progress)
+        except Exception as exc:
+            logger.exception(exc)
+            output.write_step_error(step_name, str(exc))
+        except KeyboardInterrupt as exc:
+            output.write_step_error(step_name, "cancelled")
+            raise exc from None
+        else:
+            output.write_step_complete(step_name)

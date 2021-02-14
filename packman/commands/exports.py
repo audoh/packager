@@ -10,6 +10,7 @@ from packman.utils.operation import Operation
 from packman.utils.progress import StepProgress
 
 from .command import Command
+from .util import get_version_name
 
 _DEFAULT_EXPORT_FILE = "packman-export"
 _DEFAULT_EXPORT_FORMAT = "json"
@@ -137,7 +138,8 @@ class ImportCommand(Command):
             with open(input_path, "r") as fp:
                 versions = json.load(fp)
                 for name, version in versions.items():
-                    step_name = f"+ {name}@{version}"
+                    version_name = get_version_name(version)
+                    step_name = f"+ {name}@{version_name}"
                     try:
                         if not self.packman.install(
                             name=name, version=version, on_progress=on_progress
@@ -160,7 +162,8 @@ class ImportCommand(Command):
                 )
 
                 for name, package in zip_manifest.packages.items():
-                    step_name = f"+ {name}@{package.version}"
+                    version_name = get_version_name(package.version)
+                    step_name = f"+ {name}@{version_name}"
 
                     if (
                         name in manifest.packages

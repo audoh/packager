@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from typing import List, Optional
 
 from loguru import logger
+from packman.commands.util import get_version_name
 
 from .command import Command
 
@@ -56,7 +57,7 @@ class InstallCommand(Command):
             else:
                 name, version = package.split("@")
 
-            version_name = version if version is not None else "unknown"
+            version_name = get_version_name(version)
             step_name = f"+ {name}@{version_name}"
 
             def on_progress(p: float) -> None:

@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from typing import Iterable, List, Optional, Tuple
 
 from loguru import logger
+from packman.commands.util import get_version_name
 from packman.models.package_definition import PackageDefinition
 
 from .command import Command, ListCommand
@@ -45,7 +46,12 @@ class InstalledPackageListCommand(ListCommand):
         manifest = self.packman.manifest
         packages = {key: value for key, value in self.packman.packages()}
         return [
-            [name, info.version, packages[name].name, packages[name].description]
+            [
+                name,
+                get_version_name(info.version),
+                packages[name].name,
+                packages[name].description,
+            ]
             for name, info in manifest.packages.items()
         ]
 

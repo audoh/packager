@@ -469,3 +469,7 @@ class Packman:
                 except Exception as exc:
                     logger.error(f"Failed to read {file}")
                     logger.exception(exc)
+
+    def recover(self, on_progress: ProgressCallback) -> None:
+        with Operation.recover(key=self.key) as op:
+            op.abort(on_progress=on_progress)

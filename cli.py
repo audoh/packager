@@ -143,12 +143,8 @@ if __name__ == "__main__":
     # TODO add autocomplete
 
     # Set up yaml handlers
-    PackageSource.register(
-        sources.GitHubPackageSource,
-        sources.SpaceDockPackageSource,
-        sources.LinkPackageSource,
-    )
-    InstallStep.register(steps.CopyFolderInstallStep)
+    sources.register_all(PackageSource)
+    steps.register_all(InstallStep)
 
     # Set up logger
     logger.remove()

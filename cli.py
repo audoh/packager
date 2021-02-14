@@ -139,7 +139,6 @@ class PackmanCLI:
 
 
 if __name__ == "__main__":
-    # TODO set up docs generation, including the yaml schema
     # TODO add autocomplete
 
     # Set up yaml handlers

@@ -1,4 +1,5 @@
 import os
+from os import makedirs
 from typing import Iterable, Type
 
 from packman import InstallStep, PackageSource, sources, steps
@@ -27,10 +28,11 @@ def generate_schemas(models: Iterable[Type[BaseModel]], dir: str) -> None:
 
 
 def main(docs_dir: str) -> None:
+    makedirs(docs_dir, exist_ok=True)
     sources.register_all(PackageSource)
     steps.register_all(InstallStep)
     generate_schemas([Manifest, PackageDefinition], docs_dir)
 
 
 if __name__ == "__main__":
-    main("./docs")
+    main("./docs/schemas")

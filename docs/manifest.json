@@ -5,7 +5,7 @@
   "properties": {
     "packages": {
       "title": "Packages",
-      "description": "Currently installed package.s",
+      "description": "Currently installed packages.",
       "default": {},
       "type": "object",
       "additionalProperties": {
@@ -52,7 +52,7 @@
   },
   "definitions": {
     "ManifestPackage": {
-      "title": "ManifestPackage",
+      "title": "Manifest Package",
       "description": "Describes an installed package's files, checksums, files displaced during installation, etc.",
       "type": "object",
       "properties": {

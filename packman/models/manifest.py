@@ -76,6 +76,9 @@ class ManifestPackage(BaseModel):
         self.files = new_files
         self.checksums = new_checksums
 
+    class Config:
+        title = "Manifest Package"
+
 
 class Manifest(BaseModel):
     """
@@ -86,7 +89,7 @@ class Manifest(BaseModel):
         1, description="Manifest version for future backwards compatibility."
     )
     packages: Dict[str, ManifestPackage] = Field(
-        {}, description="Currently installed package.s"
+        {}, description="Currently installed packages."
     )
     file_map: Dict[str, List[str]] = Field(
         {},

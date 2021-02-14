@@ -7,6 +7,7 @@ install:
 .PHONY: docs
 docs:
 	poetry run python docs/build/main.py
+	mkdocs gh-deploy
 
 # Checks code for code style issues etc.
 .PHONY: lint

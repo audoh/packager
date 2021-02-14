@@ -1,8 +1,9 @@
+import json
 import os
 import shutil
 from datetime import datetime, timedelta
 from types import TracebackType
-from typing import Dict, Optional, Set, Type
+from typing import Dict, Optional, Set, Type, Union
 from urllib import parse as urlparse
 
 import patoolib
@@ -10,8 +11,23 @@ import requests
 from loguru import logger
 from packman.config import REQUEST_CHUNK_SIZE, REQUEST_TIMEOUT
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
-from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 from packman.utils.uninterruptible import uninterruptible
+from pydantic import BaseModel
+
+
+class OperationState(BaseModel):
+    temp_paths: Set[str]
+    new_paths: Set[str]
+    backups: Dict[str, str]
+    last_path: Union[str, None]
+
+    @staticmethod
+    def from_json(path: str) -> "OperationState":
+        with open(path, "r") as fp:
+            state = json.load(fp)
+            return OperationState(**state)
 
 
 class Operation:
@@ -22,6 +38,17 @@ class Operation:
         self.backups: Dict[str, str] = {}
         self.on_restore_progress = on_restore_progress
         os.makedirs(temp_dir(), exist_ok=True)
+
+    @staticmethod
+    def recover(
+        state: OperationState, on_restore_progress: ProgressCallback = progress_noop
+    ) -> "Operation":
+        op = Operation(on_restore_progress=on_restore_progress)
+        op.new_paths = state.new_paths
+        op.temp_paths = state.temp_paths
+        op.last_path = state.last_path
+        op.backups = state.backups
+        return op
 
     def close(self) -> None:
         for path in self.temp_paths:

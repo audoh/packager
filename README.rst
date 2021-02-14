@@ -10,16 +10,20 @@ This would be a lot of work, introduce consistency issues where said database do
 
 Quick start
 ===========
-1. Install Python 3.9.1: https://www.python.org/downloads/release/python-391/
-2. Install Poetry: pip install poetry
-3. On Windows, install Make: http://gnuwin32.sourceforge.net/packages/make.htm
-4. Start Packman: make cli or make gui
-
 **Note:** At some point, it will be simpler than this - probably a compiled binary with an installer - but **it is not yet intended for general use**.
+
+Install Python 3.9.1:
+  https://www.python.org/downloads/release/python-391/
+Install Poetry:
+  :code:`pip install poetry`
+On Windows, install Make:
+  http://gnuwin32.sourceforge.net/packages/make.htm
+Start Packman:
+  :code:`make cli` or :code:`make gui`
 
 Settings
 ========
-Currently, Packman settings are configured using environment variables; see packman/config.py.
+Currently, Packman settings are configured using environment variables; see :code:`packman/config.py`.
 
 At some point, this will change to be a configuration file in a more user-friendly format.
 
@@ -27,7 +31,7 @@ Configuring new mods
 ====================
 Currently, mod configurations exist in the form of YAML files in the configs folder.
 
-The schema for mod configurations can be found at docs/schemas/package_definition.json.
+The schema for mod configurations can be found at :code:`docs/schemas/package_definition.json`.
 
 Contributing
 ============

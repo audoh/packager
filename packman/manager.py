@@ -311,7 +311,7 @@ class Packman:
 
             # region Cache update
 
-            if cache_miss:
+            if cache_miss and version is not None:
                 logger.info(f"{context} - updating cache...")
                 try:
                     cache_source.add_package(

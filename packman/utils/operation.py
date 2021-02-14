@@ -11,8 +11,7 @@ import requests
 from loguru import logger
 from packman.config import REQUEST_CHUNK_SIZE, REQUEST_TIMEOUT
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
-from packman.utils.progress import (ProgressCallback, StepProgress,
-                                    progress_noop)
+from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from packman.utils.uninterruptible import uninterruptible
 from pydantic import BaseModel
 
@@ -24,10 +23,16 @@ class OperationState(BaseModel):
     backups: Dict[str, str]
 
     @staticmethod
-    def from_json(path: str) -> "OperationState":
+    def load(path: str) -> "OperationState":
         with open(path, "r") as fp:
             state = json.load(fp)
             return OperationState(**state)
+
+    def save(self, path: str) -> None:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as fp:
+            text = self.json()
+            fp.write(text)
 
 
 class Operation:
@@ -46,12 +51,6 @@ class Operation:
             last_path=self.last_path,
             backups=self.backups,
         )
-
-    def save_state(self, path: str) -> None:
-        state = self.capture_state()
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as fp:
-            fp.write(state.json())
 
     @staticmethod
     def recover(

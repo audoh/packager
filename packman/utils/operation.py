@@ -42,15 +42,21 @@ class Operation:
         self.last_path: Optional[str] = None
         self.backups: Dict[str, str] = {}
         self.on_restore_progress = on_restore_progress
-        os.makedirs(temp_dir(), exist_ok=True)
 
-    def capture_state(self) -> OperationState:
+        os.makedirs(temp_dir(), exist_ok=True)
+        self.state_path = temp_path(".json")
+
+    def _capture_state(self) -> OperationState:
         return OperationState(
             new_paths=self.new_paths,
             temp_paths=self.temp_paths,
             last_path=self.last_path,
             backups=self.backups,
         )
+
+    def _update_state(self) -> None:
+        state = self._capture_state()
+        state.save(self.state_path)
 
     @staticmethod
     def recover(
@@ -70,6 +76,12 @@ class Operation:
             except Exception as exc:
                 logger.warning(f"failed to discard temporary path {path}: {exc}")
                 continue
+        try:
+            remove_path(self.state_path)
+        except Exception as exc:
+            logger.warning(
+                f"failed to discard state recovery file {self.state_path}: {exc}"
+            )
 
     def __del__(self) -> None:
         self.close()
@@ -94,6 +106,7 @@ class Operation:
         path = temp_path(ext=ext)
         self.temp_paths.add(path)
         self.last_path = path
+        self._update_state()
         return path
 
     def backup_file(self, path: str) -> None:
@@ -101,6 +114,7 @@ class Operation:
         logger.debug(f"backing up {path} to {backup}")
         shutil.copy2(path, backup)
         self.backups[path] = backup
+        self._update_state()
 
     def should_backup_file(self, path: str) -> bool:
         return (
@@ -120,6 +134,7 @@ class Operation:
         logger.debug(f"copying {src} to {dest}")
         shutil.copy2(src, dest)
         self.new_paths.add(dest)
+        self._update_state()
 
     def remove_file(self, path: str) -> None:
         if self.should_backup_file(path):
@@ -128,6 +143,7 @@ class Operation:
         remove_file(path)
         if path in self.temp_paths:
             self.temp_paths.remove(path)
+            self._update_state()
 
     def download_file(
         self,

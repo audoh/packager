@@ -116,7 +116,8 @@ class PackmanCLI:
     def stop_interactive_mode(self) -> None:
         if not self.interactive_mode:
             return
-        self.command_parsers.required = False
+        # FIXME clean up 'exit' parser
+        self.command_parsers.required = not self.interactive_mode_enabled
         self.interactive_mode = False
 
     def parse(self, argv: List[str]) -> None:

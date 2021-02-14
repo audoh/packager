@@ -52,7 +52,13 @@ class OperationState(BaseModel):
 
 
 class Operation:
-    def __init__(self, on_restore_progress: ProgressCallback = progress_noop):
+    _DEFAULT_KEY = "default"
+
+    def __init__(
+        self,
+        key: str = _DEFAULT_KEY,
+        on_restore_progress: ProgressCallback = progress_noop,
+    ):
         self.new_paths: Set[str] = set()
         self.temp_paths: Set[str] = set()
         self.last_path: Optional[str] = None
@@ -60,7 +66,11 @@ class Operation:
         self.on_restore_progress = on_restore_progress
 
         os.makedirs(temp_dir(), exist_ok=True)
-        self.state_path = temp_path(sub_path="state", ext=".json")
+        self.state_path = Operation._get_state_path(key=key)
+
+    @staticmethod
+    def _get_state_path(key: str) -> str:
+        return os.path.join(temp_dir(), f"state_{key}.json")
 
     def _capture_state(self) -> OperationState:
         return OperationState(
@@ -78,7 +88,7 @@ class Operation:
         state.save(self.state_path)
 
     @staticmethod
-    def recover(
+    def _recover(
         state: OperationState, on_restore_progress: ProgressCallback = progress_noop
     ) -> "Operation":
         op = Operation(on_restore_progress=on_restore_progress)
@@ -87,6 +97,14 @@ class Operation:
         op.last_path = state.last_path
         op.backups = state.backups
         return op
+
+    @staticmethod
+    def recover(
+        key: str = _DEFAULT_KEY, on_restore_progress: ProgressCallback = progress_noop
+    ) -> "Operation":
+        path = Operation._get_state_path(key=key)
+        state = OperationState.load(path)
+        return Operation._recover(state=state, on_restore_progress=on_restore_progress)
 
     def close(self) -> None:
         for path in self.temp_paths:

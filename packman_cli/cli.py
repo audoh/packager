@@ -79,6 +79,7 @@ class PackmanCLI:
         setattr(parser, "exit_on_error", False)
         command_parsers.required = True
         command_parsers.add_parser("exit", help="Quits this interactive session")
+        command_parsers.add_parser("help", help="Shows this help message")
         self.parser.format_help
         self.update_usage()
 
@@ -105,8 +106,11 @@ class PackmanCLI:
                 args_dict = vars(args)
                 command_name = args_dict.pop("command")
                 assert command_name is not None, "command_name cannot be None"
-                command = self.commands[command_name]
-                command.execute_safe(**args_dict)
+                if command_name == "help":
+                    parser.print_help()
+                else:
+                    command = self.commands[command_name]
+                    command.execute_safe(**args_dict)
             except ArgumentError as exc:
                 self.print(f"error: {exc.message}")
             except Exception as exc:

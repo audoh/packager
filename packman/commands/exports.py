@@ -166,7 +166,8 @@ class ImportCommand(Command):
                     step_name = f"+ {name}@{version_name}"
 
                     if (
-                        name in manifest.packages
+                        package.version is not None
+                        and name in manifest.packages
                         and manifest.packages[name].version == package.version
                     ):
                         self.output.write_step_error(step_name, "already installed")

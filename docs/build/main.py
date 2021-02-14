@@ -30,7 +30,6 @@ def main(docs_dir: str) -> None:
     sources.register_all(PackageSource)
     steps.register_all(InstallStep)
     generate_schemas([Manifest, PackageDefinition], docs_dir)
-    return 0
 
 
 if __name__ == "__main__":

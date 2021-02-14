@@ -1,7 +1,7 @@
 import os
 from glob import iglob
 from pathlib import Path, PurePath
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Set
 
 from loguru import logger
 from packman.models.install_step import BaseInstallStep
@@ -25,10 +25,31 @@ class CopyFolderInstallStep(BaseInstallStep):
         description="A list of glob patterns matching files to exclude.",
     )
 
+    @staticmethod
+    def _is_subpath(path: str, subpath: str) -> bool:
+        """ Returns True if subpath is a subpath of path. """
+        resolved_subpath = os.path.abspath(subpath)
+        resolved_path = os.path.abspath(path)
+        return resolved_subpath.startswith(resolved_path + os.sep)
+
     def iter_src(self, package_path: str) -> Iterable[str]:
+        found_paths: Set[str] = set()
         for path in iglob(os.path.join(package_path, self.glob), recursive=True):
-            if os.path.isdir(path):
-                yield os.path.normpath(path)
+            if not os.path.isdir(path):
+                continue
+
+            # Ignore children of previously matched paths
+            if any(
+                (
+                    CopyFolderInstallStep._is_subpath(path=other_path, subpath=path)
+                    for other_path in found_paths
+                )
+            ):
+                continue
+
+            normpath = os.path.normpath(path)
+            found_paths.add(normpath)
+            yield normpath
 
     def do_execute(
         self,

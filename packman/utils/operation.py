@@ -23,6 +23,10 @@ class OperationState(BaseModel):
     backups: Dict[str, str]
 
     @staticmethod
+    def _get_tmp_path(path: str) -> str:
+        return f"{path}.tmp"
+
+    @staticmethod
     def load(path: str) -> "OperationState":
 
         try:
@@ -31,7 +35,7 @@ class OperationState(BaseModel):
                 return OperationState(**state)
         except Exception as exc:
             logger.exception(exc)
-            tmp_path = f"{path}.tmp"
+            tmp_path = OperationState._get_tmp_path(path)
             with open(tmp_path, "r") as fp:
                 state = json.load(fp)
                 return OperationState(**state)
@@ -39,7 +43,7 @@ class OperationState(BaseModel):
     def save(self, path: str) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         try:
-            tmp_path = f"{path}.tmp"
+            tmp_path = OperationState._get_tmp_path(path)
             shutil.copyfile(path, tmp_path)
         except FileNotFoundError:
             tmp_path = None
@@ -49,6 +53,12 @@ class OperationState(BaseModel):
             fp.write(text)
         if tmp_path is not None:
             remove_path(tmp_path)
+
+    @staticmethod
+    def exists(path: str) -> bool:
+        return os.path.exists(path) or os.path.exists(
+            OperationState._get_tmp_path(path)
+        )
 
 
 class Operation:
@@ -67,6 +77,9 @@ class Operation:
 
         os.makedirs(temp_dir(), exist_ok=True)
         self.state_path = Operation._get_state_path(key=key)
+
+        if OperationState.exists(self.state_path):
+            raise FileExistsError(f"unable to create '{self.state_path}': file exists")
 
     @staticmethod
     def _get_state_path(key: str) -> str:

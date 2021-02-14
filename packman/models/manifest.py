@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from typing import Any, Dict, Iterable, List, Set
+from typing import Any, Dict, Iterable, List, Set, Union
 
 from loguru import logger
 from packman.utils.files import checksum, remove_path
@@ -14,7 +14,9 @@ class ManifestPackage(BaseModel):
     Describes an installed package's files, checksums, files displaced during installation, etc.
     """
 
-    version: str = Field(..., description="Name of the installed package version.")
+    version: Union[str, None] = Field(
+        ..., description="Name of the installed package version."
+    )
     options: Set[str] = Field(
         ...,
         description="List of specific packages installed for this version"

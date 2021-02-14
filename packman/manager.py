@@ -2,6 +2,7 @@ import filecmp
 import os
 import shutil
 from functools import cached_property
+from hashlib import md5
 from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from git.repo.base import Repo
@@ -81,6 +82,10 @@ class Packman:
         self.git_config_dir = git_config_dir
         self.git_url = git_url
         self.root_dir = root_dir
+
+        key_bytes = bytes(os.path.abspath(self.root_dir), "utf-8")
+        key_md5 = md5(key_bytes)
+        self.key = key_md5.hexdigest()
 
     def get_version_info(self, name: str, version: Union[str, None]) -> PackageVersion:
         """
@@ -233,7 +238,7 @@ class Packman:
         if no_cache or version is None:
             cache_miss = True
         else:
-            op = Operation(on_restore_progress=on_restore_progress)
+            op = Operation(key=self.key, on_restore_progress=on_restore_progress)
             try:
                 cache_source.fetch_version(
                     version=version,
@@ -269,7 +274,7 @@ class Packman:
         if cache_miss:
             logger.info(f"{context} - downloading...")
             for source in package.sources:
-                op = Operation(on_restore_progress=on_restore_progress)
+                op = Operation(key=self.key, on_restore_progress=on_restore_progress)
                 try:
                     source.fetch_version(
                         version=version,

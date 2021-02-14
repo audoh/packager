@@ -60,10 +60,11 @@ class PackmanCLI:
         self.interactive_mode = False
         self.file = file
 
-        self.update_usage()
+        PackmanCLI.update_usage(self.parser)
 
-    def update_usage(self) -> None:
-        self.parser.usage = self.parser.format_help()[7:]
+    @staticmethod
+    def update_usage(parser: ArgumentParser) -> None:
+        parser.usage = parser.format_help()[7:]
 
     def print(self, value: str) -> None:
         print(value, file=self.file)
@@ -73,18 +74,24 @@ class PackmanCLI:
             return
         self.interactive_mode = True
 
-        parser = self.parser
-        command_parsers = self.command_parsers
+        # Create new parser
+        parser = ArgumentParser(
+            description=self.parser.description, add_help=False, exit_on_error=False
+        )
+        command_parsers = parser.add_subparsers(
+            metavar="<command>", help="Valid commands:", dest="command", required=True
+        )
+        for name, command in self.commands.items():
+            command_parser = command_parsers.add_parser(name, help=command.help)
+            command.configure_parser(command_parser)
 
-        setattr(parser, "exit_on_error", False)
-        command_parsers.required = True
         command_parsers.add_parser("exit", help="Quits this interactive session")
         command_parsers.add_parser("help", help="Shows this help message")
-        self.update_usage()
+        PackmanCLI.update_usage(parser)
 
         self.print("Packman interactive session started.")
         self.print(
-            "Type \u0022exit\u0022 to quit or \u0022--help\u0022 for more information."
+            "Type \u0022exit\u0022 to quit or \u0022help\u0022 for more information."
         )
 
         while True:
@@ -122,8 +129,6 @@ class PackmanCLI:
     def stop_interactive_mode(self) -> None:
         if not self.interactive_mode:
             return
-        # FIXME clean up 'exit' parser
-        self.command_parsers.required = not self.interactive_mode_enabled
         self.interactive_mode = False
 
     def parse(self, argv: List[str]) -> None:

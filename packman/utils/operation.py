@@ -72,6 +72,10 @@ class OperationState(BaseModel):
             return
 
 
+class StateFileExistsError(FileExistsError):
+    pass
+
+
 class Operation:
     _DEFAULT_KEY = "default"
 
@@ -79,19 +83,27 @@ class Operation:
         self,
         key: str = _DEFAULT_KEY,
         on_restore_progress: ProgressCallback = progress_noop,
+        state: Optional[OperationState] = None,
     ):
-        self.new_paths: Set[str] = set()
-        self.temp_paths: Set[str] = set()
-        self.last_path: Optional[str] = None
-        self.backups: Dict[str, str] = {}
+        if state is None:
+            self.new_paths: Set[str] = set()
+            self.temp_paths: Set[str] = set()
+            self.last_path: Optional[str] = None
+            self.backups: Dict[str, str] = {}
+        else:
+            self.new_paths = state.new_paths
+            self.temp_paths = state.temp_paths
+            self.last_path = state.last_path
+            self.backups = state.backups
+
         self.on_restore_progress = on_restore_progress
 
         os.makedirs(temp_dir(), exist_ok=True)
 
         self.state_path = None
         state_path = Operation._get_state_path(key=key)
-        if OperationState.exists(state_path):
-            raise FileExistsError(f"unable to create '{state_path}': file exists")
+        if state is None and OperationState.exists(state_path):
+            raise StateFileExistsError(f"unable to create '{state_path}': file exists")
         self.state_path = state_path
 
     @staticmethod
@@ -115,23 +127,12 @@ class Operation:
         state.save(self.state_path)
 
     @staticmethod
-    def _recover(
-        state: OperationState, on_restore_progress: ProgressCallback = progress_noop
-    ) -> "Operation":
-        op = Operation(on_restore_progress=on_restore_progress)
-        op.new_paths = state.new_paths
-        op.temp_paths = state.temp_paths
-        op.last_path = state.last_path
-        op.backups = state.backups
-        return op
-
-    @staticmethod
     def recover(
         key: str = _DEFAULT_KEY, on_restore_progress: ProgressCallback = progress_noop
     ) -> "Operation":
         path = Operation._get_state_path(key=key)
         state = OperationState.load(path)
-        return Operation._recover(state=state, on_restore_progress=on_restore_progress)
+        return Operation(key=key, on_restore_progress=on_restore_progress, state=state)
 
     def close(self) -> None:
         for path in self.temp_paths:

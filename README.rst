@@ -13,8 +13,8 @@ Packman aims to minimise the possibility that files end up in an invalid state:
 
 There is however still work to be done in this area:
 
-- Power outages or other forced terminations will lead to an invalid state that cannot be automatically recovered from
-- There is no command to deal with orphan files
+- Power outages or other forced terminations will lead to an invalid state that cannot be automatically recovered from.
+- There is no command to deal with orphan files.
 
 What isn't Packman?
 ===================

@@ -31,7 +31,7 @@ def generate_docs_index(readme_path: str, index_path: str) -> None:
     copyfile(index_path, readme_path)
     os.system("git reset")
     os.system(f"git add {readme_path}")
-    os.system("git commit -m 'README.md updated'")
+    os.system('git commit -m "README.md updated"')
 
 
 def main(schemas_dir: str, readme_path: str, index_path: str) -> None:

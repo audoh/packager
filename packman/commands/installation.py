@@ -49,14 +49,15 @@ class InstallCommand(Command):
         not_installed = 0
         for package in packages:
             at_idx = package.find("@")
-            if at_idx != -1:
-                name, version = package.split("@")
-            else:
+            if at_idx == -1:
                 name = package
                 version_info = self.packman.get_latest_version_info(name)
                 version = version_info.version
+            else:
+                name, version = package.split("@")
 
-            step_name = f"+ {name}@{version}"
+            version_name = version if version is not None else "unknown"
+            step_name = f"+ {name}@{version_name}"
 
             def on_progress(p: float) -> None:
                 output.write_step_progress(step_name, p)

@@ -9,11 +9,12 @@ from packman.utils.output import ConsoleOutput
 
 
 class Command(ABC):
-    output = ConsoleOutput()
-
-    def __init__(self, packman: Packman) -> None:
+    def __init__(
+        self, packman: Packman, output: ConsoleOutput = ConsoleOutput()
+    ) -> None:
         super().__init__()
         self.packman = packman
+        self.output = output
 
     @property
     @abstractmethod

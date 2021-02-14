@@ -1,5 +1,4 @@
 import os
-from os import makedirs
 from typing import Iterable, Type
 
 from packman import InstallStep, PackageSource, sources, steps
@@ -27,12 +26,21 @@ def generate_schemas(models: Iterable[Type[BaseModel]], dir: str) -> None:
         generate_schema(model=model, path=path)
 
 
-def main(docs_dir: str) -> None:
-    makedirs(docs_dir, exist_ok=True)
+def generate_docs_index(readme_path: str, index_path: str) -> None:
+    os.system(f"pandoc {readme_path} -f rst -t markdown -o {index_path}")
+
+
+def main(schemas_dir: str, readme_path: str, index_path: str) -> None:
+    os.makedirs(schemas_dir, exist_ok=True)
     sources.register_all(PackageSource)
     steps.register_all(InstallStep)
-    generate_schemas([Manifest, PackageDefinition], docs_dir)
+    generate_schemas(models=(Manifest, PackageDefinition), dir=schemas_dir)
+    generate_docs_index(readme_path=readme_path, index_path=index_path)
 
 
 if __name__ == "__main__":
-    main("./docs/schemas")
+    main(
+        schemas_dir="./docs/schemas",
+        readme_path="README.rst",
+        index_path="./docs/index.md",
+    )

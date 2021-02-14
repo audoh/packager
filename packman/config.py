@@ -1,4 +1,7 @@
 import os
+from sys import stderr
+
+from loguru import logger
 
 _DEFAULT_CFG_PATH = "configs/ksp"
 
@@ -18,3 +21,7 @@ DEFAULT_ROOT_DIR = os.environ.get("PACKMAN_ROOT_DIR", "")
 
 REQUEST_TIMEOUT = float(os.environ.get("PACKMAN_REQUEST_TIMEOUT", "30"))
 REQUEST_CHUNK_SIZE = int(os.environ.get("PACKMAN_REQUEST_CHUNKSZ", 500 * 1000))
+
+# Set up logger
+logger.remove()
+logger.add(stderr, level=os.environ.get("PACKMAN_LOGGING", "CRITICAL"))

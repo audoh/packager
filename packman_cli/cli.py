@@ -153,10 +153,6 @@ if __name__ == "__main__":
     sources.register_all(PackageSource)
     steps.register_all(InstallStep)
 
-    # Set up logger
-    logger.remove()
-    logger.add(sys.stderr, level=os.environ.get("PACKMAN_LOGGING", "CRITICAL"))
-
     # Set up parser
     cli = PackmanCLI(commands=DEFAULT_COMMANDS)
     cli.parse(argv=sys.argv[1:])

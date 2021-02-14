@@ -1,5 +1,5 @@
 {
-  "title": "Package definition",
+  "title": "Package Definition",
   "description": "Describes a package and how to fetch and install it.",
   "type": "object",
   "properties": {
@@ -28,7 +28,7 @@
             "type": "object",
             "properties": {
               "github": {
-                "title": "GitHub repository name",
+                "title": "GitHub Repository Name",
                 "description": "Full name of the GitHub repository to fetch from e.g. octocat/Hello-World",
                 "extra": {
                   "examples": [
@@ -54,7 +54,7 @@
             "type": "object",
             "properties": {
               "spacedock": {
-                "title": "SpaceDock mod ID",
+                "title": "SpaceDock Mod ID",
                 "description": "SpaceDock mod identifier e.g. 1234",
                 "extra": {
                   "examples": [
@@ -114,7 +114,7 @@
       "items": {
         "anyOf": [
           {
-            "title": "Copy folder",
+            "title": "Copy Folder",
             "description": "Copies folders matching a glob pattern into the root directory at a given relative path.\n\nNOTE: throws an error if more than one match is found.",
             "type": "object",
             "properties": {
@@ -129,12 +129,12 @@
                 }
               },
               "copy-folder": {
-                "title": "Folder glob pattern",
+                "title": "Folder Glob Pattern",
                 "description": "Glob pattern to match folder to copy.",
                 "type": "string"
               },
               "to": {
-                "title": "Destination path",
+                "title": "Destination Path",
                 "description": "Path to copy a matched folder to.",
                 "type": "string"
               },

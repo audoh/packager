@@ -102,7 +102,7 @@ class GitHubPackageSource(BasePackageSource):
     repository: str = Field(
         ...,
         alias="github",
-        title="GitHub repository name",
+        title="GitHub Repository Name",
         description="Full name of the GitHub repository to fetch from e.g. octocat/Hello-World",
         extra={"examples": ["octocat/Hello-World"]},
     )

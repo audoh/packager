@@ -20,13 +20,13 @@ class CopyFolderInstallStep(BaseInstallStep):
     glob: str = Field(
         ...,
         alias="copy-folder",
-        title="Folder glob pattern",
+        title="Folder Glob Pattern",
         description="Glob pattern to match folder to copy.",
     )
     dest: str = Field(
         ...,
         alias="to",
-        title="Destination path",
+        title="Destination Path",
         description="Path to copy a matched folder to.",
     )
     exclude: List[str] = Field(
@@ -111,4 +111,4 @@ class CopyFolderInstallStep(BaseInstallStep):
                 {"copy-folder": "**/project.json/..", "to": ""},
             ]
         }
-        title = "Copy folder"
+        title = "Copy Folder"

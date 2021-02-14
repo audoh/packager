@@ -40,7 +40,7 @@ class PackageDefinition(BaseModel):
 
     class Config:
         extra = Extra.forbid
-        title = "Package definition"
+        title = "Package Definition"
 
     @staticmethod
     def from_yaml(path: str) -> "PackageDefinition":

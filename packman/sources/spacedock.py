@@ -6,7 +6,8 @@ from urllib import parse as urlparse
 from packman.api.http import HTTPAPI
 from packman.models.package_source import BasePackageSource, PackageVersion
 from packman.utils.operation import Operation
-from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 from pydantic import BaseModel, Field
 
 _API_URL = "https://spacedock.info/api/"
@@ -74,7 +75,7 @@ class SpaceDockPackageSource(BasePackageSource):
     id: int = Field(
         ...,
         alias="spacedock",
-        title="SpaceDock mod ID",
+        title="SpaceDock Mod ID",
         description="SpaceDock mod identifier e.g. 1234",
         extra={"examples": [1234]},
     )

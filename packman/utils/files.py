@@ -9,12 +9,22 @@ from typing import Callable, Optional, Tuple, Type
 from uuid import uuid4
 
 import appdirs
-import win32api
-import win32con
 from loguru import logger
 
-FILE_ATTRIBUTE_HIDDEN = win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM
-FILE_ATTRIBUTE_UNWRITEABLE = FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_READONLY
+if os.name == "nt":
+    import win32api
+    import win32con
+
+    global FILE_ATTRIBUTE_HIDDEN
+    global FILE_ATTRIBUTE_UNWRITEABLE
+
+    FILE_ATTRIBUTE_HIDDEN = (
+        win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM
+    )
+    FILE_ATTRIBUTE_UNWRITEABLE = (
+        FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_READONLY
+    )
+
 REMOVE_FUNCS = (os.remove, os.rmdir, os.unlink)
 
 _TEMP_DIR: Optional[str] = None

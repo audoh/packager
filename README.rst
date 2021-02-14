@@ -4,18 +4,6 @@ Packman is a basic package manager which aims to provide a unified way to manage
 
 Depending on the configuration for each particular mod, it pulls packages from sources such as GitHub or SpaceDock and then runs a sequence of steps to install them.
 
-File safety
-===========
-Packman aims to minimise the possibility that files end up in an invalid state:
-
-- If an installation fails to complete, all changes will be rolled back.
-- If files are changed externally after installation, these files are considered 'orphans' and will not be deleted upon uninstallation.
-
-There is however still work to be done in this area:
-
-- Power outages or other forced terminations will lead to an invalid state that cannot be automatically recovered from.
-- There is no command to deal with orphan files.
-
 What isn't Packman?
 ===================
 Packman is not a dependency management system. Although it would be nice to automatically install dependencies and ensure cross-compatibility, as mods do not have standardised manifests à la package.json, this would require a parallel database of mod dependencies be created and continuously maintained.
@@ -37,6 +25,18 @@ Start Packman:
 Run a command:
   :code:`poetry run python -m packman_cli.cli --help`
 
+File safety
+===========
+Packman aims to minimise the possibility that files end up in an invalid state:
+
+- If an installation fails to complete, all changes will be rolled back.
+- If files are changed externally after installation, these files are considered 'orphans' and will not be deleted upon uninstallation.
+
+There is however still work to be done in this area:
+
+- Power outages or other forced terminations will lead to an invalid state that cannot be automatically recovered from.
+- There is no command to deal with orphan files.
+
 Settings
 ========
 Currently, Packman settings are configured using environment variables; see :code:`packman/config.py`.
@@ -48,6 +48,12 @@ Configuring new mods
 Currently, mod configurations exist in the form of YAML files in the configs folder.
 
 The schema for mod configurations can be found at :code:`docs/schemas/package_definition.json`.
+
+Planned features and changes
+============================
+Planned features and changes are maintained in the code itself.
+
+Search the code for TODO and FIXME, or install an extension for your IDE to manage this.
 
 Contributing
 ============

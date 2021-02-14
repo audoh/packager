@@ -11,8 +11,7 @@ import requests
 from loguru import logger
 from packman.config import REQUEST_CHUNK_SIZE, REQUEST_TIMEOUT
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
-from packman.utils.progress import (ProgressCallback, StepProgress,
-                                    progress_noop)
+from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from packman.utils.uninterruptible import uninterruptible
 from pydantic import BaseModel
 
@@ -101,6 +100,7 @@ class Operation:
 
     def _update_state(self) -> None:
         state = self._capture_state()
+        assert self.state_path is not None, "state_path must exist by now"
         state.save(self.state_path)
 
     @staticmethod

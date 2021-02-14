@@ -1,0 +1,137 @@
+{
+  "title": "PackageDefinition",
+  "description": "Describes a package and how to fetch and install it.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "title": "Name",
+      "description": "Human readable package name e.g. 'Ferram Aerospace Research'.",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "description": "A brief (100 character) summary of what this package does e.g. 'Provides realistic aerodynamics.'.",
+      "default": "",
+      "maxLength": 100,
+      "type": "string"
+    },
+    "sources": {
+      "title": "Sources",
+      "description": "Where this package can be downloaded from e.g. a GitHub repository.Sources will be tried in order when attempting to retrieve package.",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "title": "GitHubPackageSource",
+            "description": "Fetches packages and package information from github.com.",
+            "type": "object",
+            "properties": {
+              "github": {
+                "title": "Github",
+                "description": "Full name of the GitHub repository to fetch from e.g. octocat/Hello-World",
+                "type": "string"
+              }
+            },
+            "required": [
+              "github"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "title": "SpaceDockPackageSource",
+            "description": "Fetches packages and package information from spacedock.info.",
+            "type": "object",
+            "properties": {
+              "spacedock": {
+                "title": "Spacedock",
+                "description": "SpaceDock mod ID e.g. 1234",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "spacedock"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "title": "LinkPackageSource",
+            "description": "Downloads the current version from a link.\nDoes not support versioning.",
+            "type": "object",
+            "properties": {
+              "url": {
+                "title": "Url",
+                "description": "URL where this mod can be downloaded from",
+                "minLength": 1,
+                "maxLength": 65536,
+                "format": "uri",
+                "type": "string"
+              }
+            },
+            "required": [
+              "url"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "steps": {
+      "title": "Steps",
+      "description": "Steps required to install a version of this package.All steps must succeed for a successful package installation;if any one step fails, package installation will be aborted.",
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "title": "CopyFolderInstallStep",
+            "description": "Copies folders matching a glob pattern into the root directory at a given relative path.",
+            "type": "object",
+            "properties": {
+              "if": {
+                "title": "If",
+                "description": "Defines a list of conditions which must all be met in order for this install step to execute.",
+                "default": [],
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "anyOf": []
+                }
+              },
+              "copy-folder": {
+                "title": "Copy-Folder",
+                "description": "Glob pattern for a folder to copy.",
+                "type": "string"
+              },
+              "to": {
+                "title": "To",
+                "description": "Path to copy a matched folder to.",
+                "type": "string"
+              },
+              "without": {
+                "title": "Without",
+                "description": "A list of glob patterns matching files to exclude.",
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "copy-folder",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "name",
+    "sources",
+    "steps"
+  ],
+  "additionalProperties": false
+}

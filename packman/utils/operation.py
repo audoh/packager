@@ -30,9 +30,17 @@ class OperationState(BaseModel):
 
     def save(self, path: str) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)
+        try:
+            tmp_path = f"{path}.tmp"
+            shutil.copyfile(path, tmp_path)
+        except FileNotFoundError:
+            tmp_path = None
+            pass
         with open(path, "w") as fp:
             text = self.json()
             fp.write(text)
+        if tmp_path is not None:
+            remove_path(tmp_path)
 
 
 class Operation:
@@ -44,14 +52,17 @@ class Operation:
         self.on_restore_progress = on_restore_progress
 
         os.makedirs(temp_dir(), exist_ok=True)
-        self.state_path = temp_path(".json")
+        self.state_path = temp_path(sub_path="state", ext=".json")
 
     def _capture_state(self) -> OperationState:
         return OperationState(
-            new_paths=self.new_paths,
-            temp_paths=self.temp_paths,
-            last_path=self.last_path,
-            backups=self.backups,
+            new_paths={os.path.abspath(path) for path in self.new_paths},
+            temp_paths={os.path.abspath(path) for path in self.temp_paths},
+            last_path=os.path.abspath(self.last_path),
+            backups={
+                os.path.abspath(key): os.path.abspath(value)
+                for key, value in self.backups.items()
+            },
         )
 
     def _update_state(self) -> None:

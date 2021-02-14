@@ -38,8 +38,8 @@ def temp_dir() -> str:
     return _TEMP_DIR
 
 
-def temp_path(ext: str = "") -> str:
-    return os.path.join(temp_dir(), f"{uuid4()}{ext}")
+def temp_path(ext: str = "", sub_path: str = "") -> str:
+    return os.path.join(temp_dir(), sub_path, f"{uuid4()}{ext}")
 
 
 def backup_dir() -> str:

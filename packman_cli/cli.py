@@ -80,7 +80,6 @@ class PackmanCLI:
         command_parsers.required = True
         command_parsers.add_parser("exit", help="Quits this interactive session")
         command_parsers.add_parser("help", help="Shows this help message")
-        self.parser.format_help
         self.update_usage()
 
         self.print("Packman interactive session started.")

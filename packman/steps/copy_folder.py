@@ -1,13 +1,12 @@
 import os
-from glob import glob
+from glob import iglob
 from pathlib import Path, PurePath
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 from loguru import logger
 from packman.models.install_step import BaseInstallStep
 from packman.utils.operation import Operation
-from packman.utils.progress import (ProgressCallback, StepProgress,
-                                    progress_noop)
+from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from pydantic import Field
 
 
@@ -26,6 +25,11 @@ class CopyFolderInstallStep(BaseInstallStep):
         description="A list of glob patterns matching files to exclude.",
     )
 
+    def iter_src(self, package_path: str) -> Iterable[str]:
+        for path in iglob(os.path.join(package_path, self.glob), recursive=True):
+            if os.path.isdir(path):
+                yield path
+
     def do_execute(
         self,
         operation: Operation,
@@ -33,21 +37,15 @@ class CopyFolderInstallStep(BaseInstallStep):
         root_dir: str,
         on_progress: ProgressCallback = progress_noop,
     ) -> None:
-        src = [
-            path
-            for path in glob(os.path.join(package_path, self.glob), recursive=True)
-            if os.path.isdir(path)
-        ]
+        src = self.iter_src(package_path=package_path)
         dest = os.path.join(root_dir, self.dest)
-        if not src:
-            logger.warning(f"no folders found matching glob: {self.glob}")
-            return
-
-        if len(src) > 1:
-            raise FileExistsError(f"multiple folders found matching glob: {self.glob}")
 
         files_to_copy: Dict[str, str] = {}
         for folder in src:
+            if files_to_copy:
+                raise FileExistsError(
+                    f"multiple folders found matching glob: {self.glob}"
+                )
             for root, _, files in os.walk(folder):
                 root_relpath = os.path.relpath(root, folder)
                 dest_root = os.path.join(dest, root_relpath)

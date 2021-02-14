@@ -1,0 +1,65 @@
+name: Lint & Test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    if: always()
+    name: Lint
+    runs-on: ubuntu-20.04
+    steps:
+      - id: checkout
+        name: Clone repository
+        uses: actions/checkout@v2
+      - id: install.python
+        name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9.1
+          architecture: x64
+      - id: install.pip
+        name: Update Pip
+        run: pip install pip==21.0.1
+      - id: install.poetry
+        name: Install Poetry
+        run: pip install poetry==1.1.4
+      - id: install.app
+        name: Install Packman
+        run: poetry install
+
+      - id: lint
+        name: Run linter
+        run: echo WIP
+
+  test:
+    if: always()
+    name: Test
+    runs-on: ubuntu-20.04
+    steps:
+      - id: checkout
+        name: Clone repository
+        uses: actions/checkout@v2
+      - id: install.python
+        name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9.1
+          architecture: x64
+      - id: install.pip
+        name: Update Pip
+        run: pip install pip==21.0.1
+      - id: install.poetry
+        name: Install Poetry
+        run: pip install poetry==1.1.4
+      - id: install.app
+        name: Install Packman
+        run: poetry install
+
+      - id: test
+        name: Run tests
+        run: pytest

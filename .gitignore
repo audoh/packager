@@ -1,6 +1,7 @@
 __pycache__
 .*
 *.pyc
+!.github
 packman.json
 packman-export.json
 packman-export.zip

@@ -155,7 +155,7 @@ class ImportCommand(Command):
                         self.output.write_step_error(step_name, "cancelled")
 
         elif format == "zip":
-            with Operation() as op:
+            with self.packman.create_operation() as op:
                 zip_root = op.extract_archive(input_path)
                 zip_manifest = Manifest.from_json(
                     os.path.join(zip_root, "manifest.json"), update_root=False

@@ -88,6 +88,11 @@ class Packman:
         self.key = key_md5.hexdigest()
         logger.debug(f"using operation key: {self.key}")
 
+    def create_operation(
+        self, on_restore_progress: ProgressCallback = progress_noop
+    ) -> Operation:
+        return Operation(key=self.key, on_restore_progress=on_restore_progress)
+
     def get_version_info(self, name: str, version: Union[str, None]) -> PackageVersion:
         """
         Returns information about the specified version for the given package.
@@ -239,7 +244,7 @@ class Packman:
         if no_cache or version is None:
             cache_miss = True
         else:
-            op = Operation(key=self.key, on_restore_progress=on_restore_progress)
+            op = self.create_operation(on_restore_progress=on_restore_progress)
             try:
                 cache_source.fetch_version(
                     version=version,
@@ -275,7 +280,7 @@ class Packman:
         if cache_miss:
             logger.info(f"{context} - downloading...")
             for source in package.sources:
-                op = Operation(key=self.key, on_restore_progress=on_restore_progress)
+                op = self.create_operation(on_restore_progress=on_restore_progress)
                 try:
                     source.fetch_version(
                         version=version,

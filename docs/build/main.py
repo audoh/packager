@@ -28,7 +28,7 @@ def generate_schemas(models: Iterable[Type[BaseModel]], dir: str) -> None:
 
 
 def generate_docs_index(readme_path: str, index_path: str) -> None:
-    copyfile(readme_path, index_path)
+    copyfile(index_path, readme_path)
 
 
 def main(schemas_dir: str, readme_path: str, index_path: str) -> None:

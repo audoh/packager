@@ -57,11 +57,11 @@ state:
     back.
 -   If files are changed externally after installation, these files are
     considered \'orphans\' and will not be deleted upon uninstallation.
+-   State is stored on the file-system and can be recovered in case of
+    forcible termination.
 
 There is however still work to be done in this area:
 
--   Power outages or other forced terminations will lead to an invalid
-    state that cannot be automatically recovered from.
 -   There is no command to deal with orphan files.
 
 # Settings

@@ -16,19 +16,19 @@ jobs:
       - id: checkout
         name: Clone repository
         uses: actions/checkout@v2
-      - id: install.python
+      - id: install-python
         name: Install Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9.1
           architecture: x64
-      - id: install.pip
+      - id: install-pip
         name: Update Pip
         run: pip install pip==21.0.1
-      - id: install.poetry
+      - id: install-poetry
         name: Install Poetry
         run: pip install poetry==1.1.4
-      - id: install.app
+      - id: install-app
         name: Install Packman
         run: poetry install
 
@@ -44,19 +44,19 @@ jobs:
       - id: checkout
         name: Clone repository
         uses: actions/checkout@v2
-      - id: install.python
+      - id: install-python
         name: Install Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9.1
           architecture: x64
-      - id: install.pip
+      - id: install-pip
         name: Update Pip
         run: pip install pip==21.0.1
-      - id: install.poetry
+      - id: install-poetry
         name: Install Poetry
         run: pip install poetry==1.1.4
-      - id: install.app
+      - id: install-app
         name: Install Packman
         run: poetry install
 

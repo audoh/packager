@@ -5,7 +5,6 @@ from argparse import ArgumentError, ArgumentParser
 from typing import Dict, List, Optional
 
 from loguru import logger
-
 from packman import InstallStep, PackageSource, Packman, sources, steps
 from packman.commands import (
     CleanCommand,

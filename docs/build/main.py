@@ -42,6 +42,6 @@ def main(schemas_dir: str, readme_path: str, index_path: str) -> None:
 if __name__ == "__main__":
     main(
         schemas_dir="./docs/schemas",
-        readme_path="README.rst",
+        readme_path="README.md",
         index_path="./docs/index.md",
     )

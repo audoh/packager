@@ -226,7 +226,7 @@ class Packman:
 
         logger.info(f"{context} - checking cache")
         cache_source = Cache(name=name)
-        if no_cache:
+        if no_cache or version is None:
             cache_miss = True
         else:
             op = Operation(on_restore_progress=on_restore_progress)

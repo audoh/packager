@@ -41,7 +41,7 @@ class BasePackageSource(BaseModel, ABC):
     @abstractmethod
     def fetch_version(
         self,
-        version: str,
+        version: Union[str, None],
         option: str,
         operation: Operation,
         on_progress: ProgressCallback = progress_noop,

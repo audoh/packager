@@ -28,9 +28,12 @@ jobs:
       - id: install-poetry
         name: Install Poetry
         run: pip install poetry==1.1.4
+      - id: configure-poetry
+        name: Configure Poetry
+        run: poetry config virtualenvs.create false
       - id: install-app
         name: Install Packman
-        run: poetry install
+        run: poetry install --no-interaction --no-ansi
 
       - id: lint
         name: Run linter
@@ -56,9 +59,12 @@ jobs:
       - id: install-poetry
         name: Install Poetry
         run: pip install poetry==1.1.4
+      - id: configure-poetry
+        name: Configure Poetry
+        run: poetry config virtualenvs.create false
       - id: install-app
         name: Install Packman
-        run: poetry install
+        run: poetry install --no-interaction --no-ansi
 
       - id: test
         name: Run tests

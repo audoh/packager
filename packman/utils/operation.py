@@ -18,10 +18,10 @@ from pydantic import BaseModel
 
 
 class OperationState(BaseModel):
-    temp_paths: Set[str]
     new_paths: Set[str]
-    backups: Dict[str, str]
+    temp_paths: Set[str]
     last_path: Union[str, None]
+    backups: Dict[str, str]
 
     @staticmethod
     def from_json(path: str) -> "OperationState":
@@ -38,6 +38,20 @@ class Operation:
         self.backups: Dict[str, str] = {}
         self.on_restore_progress = on_restore_progress
         os.makedirs(temp_dir(), exist_ok=True)
+
+    def capture_state(self) -> OperationState:
+        return OperationState(
+            new_paths=self.new_paths,
+            temp_paths=self.temp_paths,
+            last_path=self.last_path,
+            backups=self.backups,
+        )
+
+    def save_state(self, path: str) -> None:
+        state = self.capture_state()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as fp:
+            fp.write(state.json())
 
     @staticmethod
     def recover(

@@ -212,7 +212,11 @@ class Packman:
         # region Early-out
 
         manifest = self.manifest
-        if name in manifest.packages and manifest.packages[name].version == version:
+        if (
+            version is not None
+            and name in manifest.packages
+            and manifest.packages[name].version == version
+        ):
             if force:
                 logger.info(f"{context} - reinstalling")
             else:

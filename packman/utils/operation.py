@@ -76,10 +76,11 @@ class Operation:
         self.on_restore_progress = on_restore_progress
 
         os.makedirs(temp_dir(), exist_ok=True)
-        self.state_path = Operation._get_state_path(key=key)
 
-        if OperationState.exists(self.state_path):
-            raise FileExistsError(f"unable to create '{self.state_path}': file exists")
+        state_path = Operation._get_state_path(key=key)
+        if OperationState.exists(state_path):
+            raise FileExistsError(f"unable to create '{state_path}': file exists")
+        self.state_path = state_path
 
     @staticmethod
     def _get_state_path(key: str) -> str:

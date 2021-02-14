@@ -16,7 +16,7 @@ def get_schema_path(model: Type[BaseModel], dir: str) -> str:
 
 def generate_schema(model: Type[BaseModel], path: str) -> None:
     with open(path, "w") as fp:
-        schema = model.schema_json(indent=2)
+        schema = model.schema_json(indent=2, by_alias=True)
         fp.write(schema)
 
 

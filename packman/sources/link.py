@@ -1,5 +1,4 @@
-from packman.models.package_source import (BaseUnversionedPackageSource,
-                                           PackageVersion)
+from packman.models.package_source import BaseUnversionedPackageSource, PackageVersion
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, progress_noop
 from pydantic import AnyHttpUrl, Field
@@ -12,7 +11,9 @@ class LinkPackageSource(BaseUnversionedPackageSource):
     """
 
     url: AnyHttpUrl = Field(
-        ..., description="URL where this mod can be downloaded from"
+        ...,
+        description="URL where this mod can be downloaded from",
+        extra={"examples": ["https://example.com/download-my-mod.php"]},
     )
 
     def get_latest_version(self) -> PackageVersion:
@@ -29,3 +30,9 @@ class LinkPackageSource(BaseUnversionedPackageSource):
         zip_path = operation.download_file(self.url, on_progress=on_progress)
         operation.extract_archive(zip_path)
         operation.remove_file(zip_path)
+
+    class Config:
+        schema_extra = {
+            "examples": [{"url": "https://example.com/download-my-mod.php"}]
+        }
+        title = "URL"

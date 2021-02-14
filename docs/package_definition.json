@@ -1,5 +1,5 @@
 {
-  "title": "PackageDefinition",
+  "title": "Package definition",
   "description": "Describes a package and how to fetch and install it.",
   "type": "object",
   "properties": {
@@ -17,51 +17,76 @@
     },
     "sources": {
       "title": "Sources",
-      "description": "Where this package can be downloaded from e.g. a GitHub repository.Sources will be tried in order when attempting to retrieve package.",
+      "description": "Where this package can be downloaded from e.g. a GitHub repository. Sources will be tried in order when attempting to retrieve package.",
       "minItems": 1,
       "type": "array",
       "items": {
         "anyOf": [
           {
-            "title": "GitHubPackageSource",
+            "title": "GitHub",
             "description": "Fetches packages and package information from github.com.",
             "type": "object",
             "properties": {
               "github": {
-                "title": "Github",
+                "title": "GitHub repository name",
                 "description": "Full name of the GitHub repository to fetch from e.g. octocat/Hello-World",
+                "extra": {
+                  "examples": [
+                    "octocat/Hello-World"
+                  ]
+                },
                 "type": "string"
               }
             },
             "required": [
               "github"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "examples": [
+              {
+                "github": "octocat/Hello-World"
+              }
+            ]
           },
           {
-            "title": "SpaceDockPackageSource",
+            "title": "SpaceDock",
             "description": "Fetches packages and package information from spacedock.info.",
             "type": "object",
             "properties": {
               "spacedock": {
-                "title": "Spacedock",
-                "description": "SpaceDock mod ID e.g. 1234",
+                "title": "SpaceDock mod ID",
+                "description": "SpaceDock mod identifier e.g. 1234",
+                "extra": {
+                  "examples": [
+                    1234
+                  ]
+                },
                 "type": "integer"
               }
             },
             "required": [
               "spacedock"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "examples": [
+              {
+                "spacedock": 1234
+              }
+            ]
           },
           {
-            "title": "LinkPackageSource",
+            "title": "URL",
             "description": "Downloads the current version from a link.\nDoes not support versioning.",
             "type": "object",
             "properties": {
               "url": {
                 "title": "Url",
                 "description": "URL where this mod can be downloaded from",
+                "extra": {
+                  "examples": [
+                    "https://example.com/download-my-mod.php"
+                  ]
+                },
                 "minLength": 1,
                 "maxLength": 65536,
                 "format": "uri",
@@ -71,25 +96,30 @@
             "required": [
               "url"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "examples": [
+              {
+                "url": "https://example.com/download-my-mod.php"
+              }
+            ]
           }
         ]
       }
     },
     "steps": {
       "title": "Steps",
-      "description": "Steps required to install a version of this package.All steps must succeed for a successful package installation;if any one step fails, package installation will be aborted.",
+      "description": "Steps required to install a version of this package. All steps must succeed for a successful package installation; if any one step fails, package installation will be aborted.",
       "minItems": 1,
       "type": "array",
       "items": {
         "anyOf": [
           {
-            "title": "CopyFolderInstallStep",
-            "description": "Copies folders matching a glob pattern into the root directory at a given relative path.",
+            "title": "Copy folder",
+            "description": "Copies folders matching a glob pattern into the root directory at a given relative path.\n\nNOTE: throws an error if more than one match is found.",
             "type": "object",
             "properties": {
               "if": {
-                "title": "If",
+                "title": "Conditions",
                 "description": "Defines a list of conditions which must all be met in order for this install step to execute.",
                 "default": [],
                 "minItems": 1,
@@ -99,17 +129,17 @@
                 }
               },
               "copy-folder": {
-                "title": "Copy-Folder",
-                "description": "Glob pattern for a folder to copy.",
+                "title": "Folder glob pattern",
+                "description": "Glob pattern to match folder to copy.",
                 "type": "string"
               },
               "to": {
-                "title": "To",
+                "title": "Destination path",
                 "description": "Path to copy a matched folder to.",
                 "type": "string"
               },
               "without": {
-                "title": "Without",
+                "title": "Exclusions",
                 "description": "A list of glob patterns matching files to exclude.",
                 "default": [],
                 "type": "array",
@@ -122,7 +152,17 @@
               "copy-folder",
               "to"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "examples": [
+              {
+                "copy-folder": "GameData",
+                "to": "GameData"
+              },
+              {
+                "copy-folder": "**/project.json/..",
+                "to": ""
+              }
+            ]
           }
         ]
       }

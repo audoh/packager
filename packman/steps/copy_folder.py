@@ -13,15 +13,26 @@ from pydantic import Field
 class CopyFolderInstallStep(BaseInstallStep):
     """
     Copies folders matching a glob pattern into the root directory at a given relative path.
+
+    NOTE: throws an error if more than one match is found.
     """
 
     glob: str = Field(
-        ..., alias="copy-folder", description="Glob pattern for a folder to copy."
+        ...,
+        alias="copy-folder",
+        title="Folder glob pattern",
+        description="Glob pattern to match folder to copy.",
     )
-    dest: str = Field(..., alias="to", description="Path to copy a matched folder to.")
+    dest: str = Field(
+        ...,
+        alias="to",
+        title="Destination path",
+        description="Path to copy a matched folder to.",
+    )
     exclude: List[str] = Field(
         [],
         alias="without",
+        title="Exclusions",
         description="A list of glob patterns matching files to exclude.",
     )
 
@@ -92,3 +103,12 @@ class CopyFolderInstallStep(BaseInstallStep):
         for file_src, file_dest in files_to_copy.items():
             operation.copy_file(file_src, file_dest)
             on_step_progress.advance()
+
+    class Config:
+        schema_extra = {
+            "examples": [
+                {"copy-folder": "GameData", "to": "GameData"},
+                {"copy-folder": "**/project.json/..", "to": ""},
+            ]
+        }
+        title = "Copy folder"

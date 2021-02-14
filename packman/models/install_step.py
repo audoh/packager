@@ -16,6 +16,7 @@ class BaseInstallStep(BaseModel, ABC):
     conditions: List[Condition] = Field(
         [],
         alias="if",
+        title="Conditions",
         min_items=1,
         description="Defines a list of conditions which must all be met in order for this install step to execute.",
     )

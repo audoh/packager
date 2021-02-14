@@ -102,7 +102,9 @@ class GitHubPackageSource(BasePackageSource):
     repository: str = Field(
         ...,
         alias="github",
+        title="GitHub repository name",
         description="Full name of the GitHub repository to fetch from e.g. octocat/Hello-World",
+        extra={"examples": ["octocat/Hello-World"]},
     )
 
     def get_api(self) -> RepositoryAPI:
@@ -152,6 +154,10 @@ class GitHubPackageSource(BasePackageSource):
     def get_versions(self) -> Iterable[str]:
         api = self.get_api()
         return (release["tag_name"] for release in api.list_releases())
+
+    class Config:
+        schema_extra = {"examples": [{"github": "octocat/Hello-World"}]}
+        title = "GitHub"
 
 
 if __name__ == "__main__":

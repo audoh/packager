@@ -71,7 +71,13 @@ class SpaceDockPackageSource(BasePackageSource):
     Fetches packages and package information from spacedock.info.
     """
 
-    id: int = Field(..., alias="spacedock", description="SpaceDock mod ID e.g. 1234")
+    id: int = Field(
+        ...,
+        alias="spacedock",
+        title="SpaceDock mod ID",
+        description="SpaceDock mod identifier e.g. 1234",
+        extra={"examples": [1234]},
+    )
 
     @cached_property
     def _api(self) -> SpaceDockAPI:
@@ -128,3 +134,7 @@ class SpaceDockPackageSource(BasePackageSource):
 
     def get_versions(self) -> Iterable[str]:
         return (mod_version.friendly_version for mod_version in self._api.mod.versions)
+
+    class Config:
+        schema_extra = {"examples": [{"spacedock": 1234}]}
+        title = "SpaceDock"

@@ -60,6 +60,17 @@ class OperationState(BaseModel):
             OperationState._get_tmp_path(path)
         )
 
+    @staticmethod
+    def remove(path: str) -> None:
+        try:
+            remove_path(path)
+        except FileNotFoundError:
+            return
+        try:
+            remove_path(OperationState._get_tmp_path(path))
+        except FileNotFoundError:
+            return
+
 
 class Operation:
     _DEFAULT_KEY = "default"
@@ -131,7 +142,7 @@ class Operation:
                 continue
         if self.state_path is not None:
             try:
-                remove_path(self.state_path)
+                OperationState.remove(self.state_path)
             except Exception as exc:
                 logger.warning(
                     f"failed to discard state recovery file {self.state_path}: {exc}"

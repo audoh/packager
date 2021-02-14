@@ -1,9 +1,10 @@
+import os
 import sys
 import tkinter as tk
 from enum import Enum
 from typing import Iterable, List, Optional, Tuple, Union
 
-from packman import Packman
+from packman import InstallStep, PackageSource, Packman, sources, steps
 from packman.models.package_definition import PackageDefinition
 
 
@@ -261,9 +262,15 @@ class Application(tk.Frame):
 
 
 if __name__ == "__main__":
+    icon_path = os.path.join(os.path.dirname(__file__), "icon.png")
+
+    # Set up yaml handlers
+    sources.register_all(PackageSource)
+    steps.register_all(InstallStep)
+
     root = tk.Tk()
     root.title("Packman GUI")
-    root.iconphoto(False, tk.PhotoImage(file="icon.png"))
+    root.iconphoto(False, tk.PhotoImage(file=icon_path))
     root.geometry("500x500")
 
     menu = Menu(root)

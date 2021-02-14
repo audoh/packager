@@ -116,7 +116,8 @@ class PackmanCLI:
             except Exception as exc:
                 self.print(f"error: {exc}")
             except SystemExit as exc:
-                if exc.code != 2:
+                # Ignore argparser's own attempts to exit
+                if exc.code not in (0, 2):
                     raise
 
     def stop_interactive_mode(self) -> None:

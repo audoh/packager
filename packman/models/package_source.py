@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, List
+from typing import Iterable, List, Union
 
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, progress_noop
@@ -13,7 +13,9 @@ class PackageVersion(BaseModel):
     """
 
     name: str = Field(..., description="Human readable version name.")
-    version: str = Field(..., description="Name of this version e.g. v1.3.37.")
+    version: Union[str, None] = Field(
+        ..., description="Name of this version e.g. v1.3.37."
+    )
     options: List[str] = Field(
         ...,
         description="Names of the different packages available for this version"
@@ -30,7 +32,7 @@ class BasePackageSource(BaseModel, ABC):
     """
 
     @abstractmethod
-    def get_version(self, version: str) -> PackageVersion:
+    def get_version(self, version: Union[str, None]) -> PackageVersion:
         """
         Returns information about the requested package version.
         """

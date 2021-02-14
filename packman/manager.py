@@ -2,7 +2,7 @@ import filecmp
 import os
 import shutil
 from functools import cached_property
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import Iterable, List, Optional, Set, Tuple, Union
 
 from git.repo.base import Repo
 from loguru import logger
@@ -39,7 +39,7 @@ class VersionNotFoundError(Exception):
     Raised when a specified version could not be resolved by any of the package's defined sources.
     """
 
-    def __init__(self, message: str, package: str, version: str) -> None:
+    def __init__(self, message: str, package: str, version: Union[str, None]) -> None:
         super().__init__(message)
         self.package = package
         self.version = version
@@ -82,7 +82,7 @@ class Packman:
         self.git_url = git_url
         self.root_dir = root_dir
 
-    def get_version_info(self, name: str, version: str) -> PackageVersion:
+    def get_version_info(self, name: str, version: Union[str, None]) -> PackageVersion:
         """
         Returns information about the specified version for the given package.
 
@@ -108,14 +108,23 @@ class Packman:
         :raises FileNotFoundError: If the package cannot be found.
         :raises VersionNotFoundError: If the latest version cannot be found from the sources defined for the package.
         """
+        unversioned_info: Optional[PackageVersion] = None
         package = self.package(name)
         for source in package.sources:
             try:
-                return source.get_latest_version()
+                ver = source.get_latest_version()
+                # Prefer versioned sources to unversioned
+                if ver.version is None:
+                    if unversioned_info is None:
+                        unversioned_info = ver
+                else:
+                    return ver
             except Exception as exc:
                 logger.error(f"failed to load from source: {source}")
                 logger.exception(exc)
                 continue
+        if unversioned_info is not None:
+            return unversioned_info
         raise VersionNotFoundError(
             f"no version info for {name}@latest", package=name, version="latest"
         )
@@ -166,7 +175,7 @@ class Packman:
     def install(
         self,
         name: str,
-        version: str,
+        version: Union[str, None],
         force: bool = False,
         no_cache: bool = False,
         on_progress: ProgressCallback = progress_noop,

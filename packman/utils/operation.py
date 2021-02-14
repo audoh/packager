@@ -131,6 +131,7 @@ class Operation:
         return dir
 
     def restore(self, on_progress: Optional[ProgressCallback] = None) -> bool:
+        # TODO handle power outage in the middle of installation or rollback
         if not on_progress:
             on_progress = self.on_restore_progress
 

@@ -11,7 +11,8 @@ import requests
 from loguru import logger
 from packman.config import REQUEST_CHUNK_SIZE, REQUEST_TIMEOUT
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
-from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
+from packman.utils.progress import (ProgressCallback, StepProgress,
+                                    progress_noop)
 from packman.utils.uninterruptible import uninterruptible
 from pydantic import BaseModel
 
@@ -77,6 +78,7 @@ class Operation:
 
         os.makedirs(temp_dir(), exist_ok=True)
 
+        self.state_path = None
         state_path = Operation._get_state_path(key=key)
         if OperationState.exists(state_path):
             raise FileExistsError(f"unable to create '{state_path}': file exists")
@@ -127,12 +129,13 @@ class Operation:
             except Exception as exc:
                 logger.warning(f"failed to discard temporary path {path}: {exc}")
                 continue
-        try:
-            remove_path(self.state_path)
-        except Exception as exc:
-            logger.warning(
-                f"failed to discard state recovery file {self.state_path}: {exc}"
-            )
+        if self.state_path is not None:
+            try:
+                remove_path(self.state_path)
+            except Exception as exc:
+                logger.warning(
+                    f"failed to discard state recovery file {self.state_path}: {exc}"
+                )
 
     def __del__(self) -> None:
         self.close()

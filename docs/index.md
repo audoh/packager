@@ -9,7 +9,7 @@ Depending on the configuration for each particular mod, it pulls
 packages from sources such as GitHub or SpaceDock and then runs a
 sequence of steps to install them.
 
-# What isn\'t Packman?
+# What isn't Packman?
 
 Packman is not a dependency management system. Although it would be nice
 to automatically install dependencies and ensure cross-compatibility, as

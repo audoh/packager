@@ -1,0 +1,6 @@
+name: Bieberfelde Mod
+sources:
+  - url: https://bieberfelde.emergency-forum.de/download.php
+steps:
+  - copy-folder: "**/project.json/.." # Match the folder containing project.json
+    to: ""

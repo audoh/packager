@@ -24,9 +24,17 @@ class OperationState(BaseModel):
 
     @staticmethod
     def load(path: str) -> "OperationState":
-        with open(path, "r") as fp:
-            state = json.load(fp)
-            return OperationState(**state)
+
+        try:
+            with open(path, "r") as fp:
+                state = json.load(fp)
+                return OperationState(**state)
+        except Exception as exc:
+            logger.exception(exc)
+            tmp_path = f"{path}.tmp"
+            with open(tmp_path, "r") as fp:
+                state = json.load(fp)
+                return OperationState(**state)
 
     def save(self, path: str) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)

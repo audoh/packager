@@ -20,6 +20,11 @@ tests:
 	docker-compose -f docker/docker-compose.test.yml run packman-test pytest
 
 # Starts an interactive session
-.PHONY: run
-run:
+.PHONY: cli
+cli:
 	poetry run python -m packman_cli.cli
+
+# Starts a GUI session
+.PHONY: gui
+gui:
+	poetry run python -m packman_gui.gui

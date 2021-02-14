@@ -4,6 +4,7 @@ import sys
 from argparse import ArgumentError, ArgumentParser
 from typing import Dict, List, Optional
 
+from _typeshed import SupportsWrite
 from loguru import logger
 
 from packman import InstallStep, PackageSource, Packman, sources, steps
@@ -41,6 +42,7 @@ class PackmanCLI:
         self,
         commands: Dict[str, Command] = DEFAULT_COMMANDS,
         no_interactive_mode: bool = False,
+        file: Optional[SupportsWrite[str]] = None,
     ) -> None:
         desc = "Rudimentary file package management intended for modifications for games such as KSP and RimWorld"
         parser = ArgumentParser(description=desc)
@@ -57,6 +59,7 @@ class PackmanCLI:
         self.interactive_mode_enabled = not no_interactive_mode
         self.command_parsers.required = not self.interactive_mode_enabled
         self.interactive_mode = False
+        self.file = file
 
         self.update_usage()
 
@@ -64,7 +67,7 @@ class PackmanCLI:
         self.parser.usage = self.parser.format_help()[7:]
 
     def print(self, value: str) -> None:
-        print(value)
+        print(value, file=self.file)
 
     def start_interactive_mode(self) -> None:
         if self.interactive_mode:

@@ -77,5 +77,46 @@ class BasePackageSource(BaseModel, ABC):
         extra = Extra.forbid
 
 
+class BaseUnversionedPackageSource(BasePackageSource):
+    """
+    An abstract class representing a means of retrieving a package so that it can be installed.
+
+    Does not support versioning.
+    """
+
+    def _version_error(self) -> ValueError:
+        return ValueError("This source does not support versioning")
+
+    def get_version(self, version: Union[str, None]) -> PackageVersion:
+        if version is not None:
+            raise self._version_error()
+        return self.get_latest_version()
+
+    def get_versions(self) -> Iterable[str]:
+        return []
+
+    def fetch_version(
+        self,
+        version: Union[str, None],
+        option: str,
+        operation: Operation,
+        on_progress: ProgressCallback = progress_noop,
+    ) -> None:
+        if version is not None:
+            raise self._version_error()
+        return self.fetch_latest_version(
+            option=option, operation=operation, on_progress=on_progress
+        )
+
+    @abstractmethod
+    def fetch_latest_version(
+        self,
+        option: str,
+        operation: Operation,
+        on_progress: ProgressCallback = progress_noop,
+    ) -> None:
+        ...
+
+
 PackageSource = create_union(BasePackageSource)
 package_source = PackageSource.decorator()

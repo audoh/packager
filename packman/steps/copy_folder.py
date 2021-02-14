@@ -28,7 +28,7 @@ class CopyFolderInstallStep(BaseInstallStep):
     def iter_src(self, package_path: str) -> Iterable[str]:
         for path in iglob(os.path.join(package_path, self.glob), recursive=True):
             if os.path.isdir(path):
-                yield path
+                yield os.path.normpath(path)
 
     def do_execute(
         self,

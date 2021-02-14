@@ -20,6 +20,8 @@ On Windows, install Make:
   http://gnuwin32.sourceforge.net/packages/make.htm
 Start Packman:
   :code:`make cli` or :code:`make gui`
+Run a command:
+  :code:`poetry run python -m packman_cli.cli --help`
 
 Settings
 ========

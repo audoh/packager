@@ -1,7 +1,5 @@
 from math import floor
-from typing import Dict, List, Optional, Tuple
-
-from _typeshed import SupportsWrite
+from typing import Dict, List, Optional, Protocol, Tuple
 
 
 class PercentString:
@@ -114,6 +112,11 @@ class StepString:
         return result
 
 
+class SupportsWrite(Protocol):
+    def write(self, __s: str) -> None:
+        ...
+
+
 class ConsoleOutput:
     @property
     def step_count(self) -> int:
@@ -126,7 +129,7 @@ class ConsoleOutput:
     def __init__(
         self,
         step_string: StepString = StepString(),
-        file: Optional[SupportsWrite[str]] = None,
+        file: Optional[SupportsWrite] = None,
     ) -> None:
         self._step_string = step_string
         self.file = file

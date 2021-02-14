@@ -4,7 +4,6 @@ import sys
 from argparse import ArgumentError, ArgumentParser
 from typing import Dict, List, Optional
 
-from _typeshed import SupportsWrite
 from loguru import logger
 
 from packman import InstallStep, PackageSource, Packman, sources, steps
@@ -21,6 +20,7 @@ from packman.commands import (
     ValidateCommand,
     VersionListCommand,
 )
+from packman.utils.output import SupportsWrite
 
 packman = Packman()
 DEFAULT_COMMANDS = {
@@ -42,7 +42,7 @@ class PackmanCLI:
         self,
         commands: Dict[str, Command] = DEFAULT_COMMANDS,
         no_interactive_mode: bool = False,
-        file: Optional[SupportsWrite[str]] = None,
+        file: Optional[SupportsWrite] = None,
     ) -> None:
         desc = "Rudimentary file package management intended for modifications for games such as KSP and RimWorld"
         parser = ArgumentParser(description=desc)

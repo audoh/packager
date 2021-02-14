@@ -83,9 +83,10 @@ class Packman:
         self.git_url = git_url
         self.root_dir = root_dir
 
-        key_bytes = bytes(os.path.abspath(self.root_dir), "utf-8")
+        key_bytes = bytes(os.path.realpath(self.root_dir), "utf-8")
         key_md5 = md5(key_bytes)
         self.key = key_md5.hexdigest()
+        logger.debug(f"using operation key: {self.key}")
 
     def get_version_info(self, name: str, version: Union[str, None]) -> PackageVersion:
         """

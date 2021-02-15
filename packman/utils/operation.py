@@ -114,7 +114,9 @@ class Operation:
         return OperationState(
             new_paths={os.path.abspath(path) for path in self.new_paths},
             temp_paths={os.path.abspath(path) for path in self.temp_paths},
-            last_path=os.path.abspath(self.last_path),
+            last_path=os.path.abspath(self.last_path)
+            if self.last_path is not None
+            else None,
             backups={
                 os.path.abspath(key): os.path.abspath(value)
                 for key, value in self.backups.items()

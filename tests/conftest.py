@@ -18,23 +18,20 @@ def packman(mock_files: str) -> Generator[Packman, None, None]:
 
 @pytest.fixture(scope="function", autouse=True)
 def mock_files() -> Generator[str, None, None]:
-    dirname = "/test"
+    mock_path = os.path.join("tests_tmp", str(uuid4()))
     root_path = os.path.join(os.path.dirname(__file__), "fixtures", "files")
-    try:
-        shutil.rmtree(dirname)
-    except FileNotFoundError:
-        pass
-    shutil.copytree(root_path, dirname)
-    yield dirname
+    shutil.copytree(root_path, mock_path)
+    yield mock_path
+    shutil.rmtree(mock_path)
 
 
 @pytest.fixture(scope="function", autouse=True)
 def reset_temp_files() -> Generator[None, None, None]:
+    yield
     try:
         shutil.rmtree("/tmp")
     except FileNotFoundError:
         pass
-    yield
 
 
 def file_path_generator(mock_files: str) -> Generator[str, None, None]:

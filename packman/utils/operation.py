@@ -137,6 +137,10 @@ class Operation:
         return Operation(key=key, on_restore_progress=on_restore_progress, state=state)
 
     def close(self) -> None:
+        """
+        Removes temporary files and cleans up any other temporary state.
+        """
+
         for path in self.temp_paths:
             try:
                 remove_path(path)
@@ -254,7 +258,9 @@ class Operation:
         return dir
 
     def restore(self, on_progress: Optional[ProgressCallback] = None) -> bool:
-        # TODO handle power outage in the middle of installation or rollback
+        """
+        Deletes all new files and restores all backups made since instantiation or the last restore.
+        """
         if not on_progress:
             on_progress = self.on_restore_progress
 

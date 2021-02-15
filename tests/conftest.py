@@ -18,8 +18,6 @@ def mock_path() -> Generator[str, None, None]:
     shutil.rmtree(mock_path)
 
 
-
-
 @pytest.fixture(scope="function", autouse=True)
 def temp_path() -> Generator[str, None, None]:
     """ Patch apparent system temp dir to a unique one to avoid cross-test interactions. """
@@ -30,7 +28,6 @@ def temp_path() -> Generator[str, None, None]:
         shutil.rmtree(mock_path)
     except FileNotFoundError:
         pass
-
 
 
 def _file_path_generator(mock_path: str) -> Generator[str, None, None]:

@@ -1,6 +1,7 @@
 import os
 import shutil
 from typing import Generator
+from uuid import uuid4
 
 import pytest
 from packman import Packman
@@ -34,3 +35,13 @@ def reset_temp_files() -> Generator[None, None, None]:
     except FileNotFoundError:
         pass
     yield
+
+
+def file_path_generator(mock_files: str) -> Generator[str, None, None]:
+    while True:
+        yield os.path.join(mock_files, str(uuid4()))
+
+
+@pytest.fixture(scope="function")
+def file_paths(mock_files: str) -> Generator[Generator[str, None, None], None, None]:
+    yield file_path_generator(mock_files)

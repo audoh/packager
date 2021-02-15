@@ -189,9 +189,8 @@ class Operation:
             # Don't back up our own files
             path not in self.temp_paths
             and path not in self.new_paths
-            and
             # Don't back up files already backed up
-            path not in self.backups
+            and path not in self.backups
             and os.path.exists(path)
         )
 

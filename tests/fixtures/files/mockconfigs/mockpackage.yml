@@ -1,0 +1,5 @@
+name: Mock Package
+sources:
+  - ~
+steps:
+  - ~

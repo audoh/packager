@@ -5,8 +5,23 @@ import pytest
 from packman.utils.operation import Operation
 
 
+class MockError(Exception):
+    pass
+
+
+def _raise_error_in_context(op: Operation) -> None:
+    try:
+        with op:
+            raise MockError("error!")
+    except MockError:
+        pass
+    else:
+        assert False, "error should be raised"
+
+
+@pytest.mark.parametrize("use_context", [True, False])
 @pytest.mark.parametrize("data", ["the data"])
-def test_copy_file(file_paths: Iterator[str], data: str) -> None:
+def test_copy_file(file_paths: Iterator[str], data: str, use_context: bool) -> None:
     src_path = next(file_paths)
     dest_path = next(file_paths)
     with open(src_path, "w") as fp:
@@ -21,13 +36,18 @@ def test_copy_file(file_paths: Iterator[str], data: str) -> None:
         assert fp.read() == data, "dest file should have src contents"
 
     # Test rollback
-    op.restore()
+    if use_context:
+        _raise_error_in_context(op)
+    else:
+        op.restore()
     assert not os.path.exists(dest_path), "dest file should be deleted after restore"
 
 
-@pytest.mark.parametrize("new_data,old_data", [("new data", "old data")])
+@pytest.mark.parametrize("old_data", ["old data"])
+@pytest.mark.parametrize("new_data", ["new data"])
+@pytest.mark.parametrize("use_context", [True, False])
 def test_copy_and_overwrite_file(
-    file_paths: Iterator[str], new_data: str, old_data: str
+    file_paths: Iterator[str], new_data: str, old_data: str, use_context: bool
 ) -> None:
     src_path = next(file_paths)
     dest_path = next(file_paths)
@@ -45,7 +65,10 @@ def test_copy_and_overwrite_file(
         assert fp.read() == new_data, "dest file should have src contents"
 
     # Test rollback
-    op.restore()
-    assert os.path.exists(dest_path), "dest file should still exist"
+    if use_context:
+        _raise_error_in_context(op)
+    else:
+        op.restore()
+    assert os.path.exists(dest_path), "dest file should still exist after restore"
     with open(dest_path, "r") as fp:
-        assert fp.read() == old_data
+        assert fp.read() == old_data, "dest file should contain original contents"

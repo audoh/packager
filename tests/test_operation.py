@@ -19,6 +19,13 @@ def _raise_error_in_context(op: Operation) -> None:
         assert False, "error should be raised"
 
 
+def _trigger_restore(op: Operation, use_context: bool) -> None:
+    if use_context:
+        _raise_error_in_context(op)
+    else:
+        op.restore()
+
+
 @pytest.mark.parametrize("use_context", [True, False])
 @pytest.mark.parametrize("data", ["the data"])
 def test_copy_file(file_paths: Iterator[str], data: str, use_context: bool) -> None:
@@ -36,10 +43,7 @@ def test_copy_file(file_paths: Iterator[str], data: str, use_context: bool) -> N
         assert fp.read() == data, "dest file should have src contents"
 
     # Test rollback
-    if use_context:
-        _raise_error_in_context(op)
-    else:
-        op.restore()
+    _trigger_restore(op, use_context)
     assert not os.path.exists(dest_path), "dest file should be deleted after restore"
 
 
@@ -65,10 +69,7 @@ def test_copy_and_overwrite_file(
         assert fp.read() == new_data, "dest file should have src contents"
 
     # Test rollback
-    if use_context:
-        _raise_error_in_context(op)
-    else:
-        op.restore()
+    _trigger_restore(op, use_context)
     assert os.path.exists(dest_path), "dest file should still exist after restore"
     with open(dest_path, "r") as fp:
         assert fp.read() == old_data, "dest file should contain original contents"

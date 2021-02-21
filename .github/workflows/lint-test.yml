@@ -16,28 +16,9 @@ jobs:
       - id: checkout
         name: Clone repository
         uses: actions/checkout@v2
-      - id: install-python
-        name: Install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9.1
-          architecture: x64
-      - id: install-pip
-        name: Update Pip
-        run: pip install pip==21.0.1
-      - id: install-poetry
-        name: Install Poetry
-        run: pip install poetry==1.1.4
-      - id: configure-poetry
-        name: Configure Poetry
-        run: poetry config virtualenvs.create false
-      - id: install-app
-        name: Install Packman
-        run: poetry install --no-interaction --no-ansi
-
       - id: lint
         name: Run linter
-        run: echo WIP
+        run: make lint-docker
 
   test:
     if: always()
@@ -47,25 +28,6 @@ jobs:
       - id: checkout
         name: Clone repository
         uses: actions/checkout@v2
-      - id: install-python
-        name: Install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9.1
-          architecture: x64
-      - id: install-pip
-        name: Update Pip
-        run: pip install pip==21.0.1
-      - id: install-poetry
-        name: Install Poetry
-        run: pip install poetry==1.1.4
-      - id: configure-poetry
-        name: Configure Poetry
-        run: poetry config virtualenvs.create false
-      - id: install-app
-        name: Install Packman
-        run: poetry install --no-interaction --no-ansi
-
       - id: test
         name: Run tests
-        run: pytest
+        run: make tests

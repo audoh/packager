@@ -1,13 +1,19 @@
 import os
 import shutil
 from itertools import count
+from sys import stderr
 from typing import Any, Dict, Generator, List
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
+from loguru import logger
 from packman import Packman
 from pytest import Item
+
+# Set up logger with all logs because pytest itself suppresses output
+logger.remove()
+logger.add(stderr, level="TRACE")
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -16,25 +22,31 @@ def mock_path() -> Generator[str, None, None]:
     mock_path = os.path.join("tests_tmp", str(uuid4()))
     root_path = os.path.join(os.path.dirname(__file__), "fixtures", "files")
     shutil.copytree(root_path, mock_path)
+    logger.debug(f"generated {mock_path=}")
     yield mock_path
+    logger.debug(f"cleaning up {mock_path=}")
     shutil.rmtree(mock_path)
 
 
 @pytest.fixture(scope="function", autouse=True)
 def temp_path() -> Generator[str, None, None]:
     """ Patch apparent system temp dir to a unique one to avoid cross-test interactions. """
-    mock_path = os.path.join("tmp", str(uuid4()))
-    with patch("tempfile.tempdir", mock_path):
-        yield mock_path
+    mock_temp_path = os.path.join("tmp", str(uuid4()))
+    logger.debug(f"patching {mock_temp_path=}")
+    with patch("tempfile.tempdir", mock_temp_path):
+        yield mock_temp_path
     try:
-        shutil.rmtree(mock_path)
+        logger.debug(f"cleaning up {mock_temp_path=}")
+        shutil.rmtree(mock_temp_path)
     except FileNotFoundError:
         pass
 
 
 def _file_path_generator(mock_path: str) -> Generator[str, None, None]:
     while True:
-        yield os.path.join(mock_path, str(uuid4()))
+        path = os.path.join(mock_path, str(uuid4()))
+        logger.debug(f"generated {path=}")
+        yield path
 
 
 @pytest.fixture(scope="function")
@@ -46,6 +58,7 @@ def file_paths(mock_path: str) -> Generator[Generator[str, None, None], None, No
 @pytest.fixture(scope="function")
 def packman(mock_path: str) -> Generator[Packman, None, None]:
     """Generates packman using the mock folder structure. """
+    logger.debug(f"generating packman instance at {mock_path}")
     yield Packman(
         root_dir=os.path.join(mock_path, "mockgame"),
         config_dir=os.path.join(mock_path, "mockconfigs"),

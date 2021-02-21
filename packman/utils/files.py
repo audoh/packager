@@ -5,7 +5,7 @@ import sys
 import tempfile
 from pathlib import Path
 from types import TracebackType
-from typing import Callable, Optional, Tuple, Type
+from typing import Callable, Tuple, Type
 from uuid import uuid4
 
 import appdirs
@@ -27,15 +27,9 @@ if os.name == "nt":
 
 REMOVE_FUNCS = (os.remove, os.rmdir, os.unlink)
 
-_TEMP_DIR: Optional[str] = None
-_BACKUP_DIR: Optional[str] = None
-
 
 def temp_dir() -> str:
-    global _TEMP_DIR
-    if _TEMP_DIR is None:
-        _TEMP_DIR = os.path.join(tempfile.gettempdir(), "packman")
-    return _TEMP_DIR
+    return os.path.join(tempfile.gettempdir(), "packman")
 
 
 def temp_path(ext: str = "", sub_path: str = "") -> str:
@@ -43,10 +37,7 @@ def temp_path(ext: str = "", sub_path: str = "") -> str:
 
 
 def backup_dir() -> str:
-    global _BACKUP_DIR
-    if _BACKUP_DIR is None:
-        _BACKUP_DIR = os.path.join(appdirs.user_state_dir(appname="packman"), "backups")
-    return _BACKUP_DIR
+    return os.path.join(appdirs.user_state_dir(appname="packman"), "backups")
 
 
 def backup_path(src: str) -> str:

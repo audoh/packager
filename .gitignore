@@ -2,6 +2,7 @@ __pycache__
 .*
 *.pyc
 !.github
+!.dockerignore
 packman.json
 packman-export.json
 packman-export.zip

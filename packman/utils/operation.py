@@ -16,6 +16,17 @@ from packman.utils.uninterruptible import uninterruptible
 from pydantic import BaseModel
 
 
+def _copy(src: str, dest: str) -> None:
+    dirname = os.path.normpath(os.path.dirname(dest))
+    if dirname != ".":
+        os.makedirs(dirname, exist_ok=True)
+    try:
+        shutil.copy2(src, dest)
+    except Exception:
+        # TODO clean up
+        ...
+
+
 class OperationState(BaseModel):
     new_paths: Set[str]
     temp_paths: Set[str]
@@ -184,7 +195,7 @@ class Operation:
     def backup_file(self, path: str) -> str:
         backup_path = self.get_temp_path()
         logger.debug(f"backing up {path} to {backup_path}")
-        shutil.copy2(path, backup_path)
+        _copy(path, backup_path)
         self.backups[path] = backup_path
         self._update_state()
         return backup_path
@@ -199,12 +210,25 @@ class Operation:
             and os.path.exists(path)
         )
 
+    def write_file(self, path: str, content: Union[bytes, str]) -> None:
+        if self.should_backup_file(path):
+            self.backup_file(path)
+
+        logger.debug(f"writing to {path}")
+        if isinstance(content, str):
+            with open(path, "w") as fp:
+                fp.write(content)
+        else:
+            with open(path, "wb") as fp:
+                fp.write(content)
+        self.new_paths.add(path)
+
     def copy_file(self, src: str, dest: str) -> None:
         if self.should_backup_file(dest):
             self.backup_file(dest)
 
         logger.debug(f"copying {src} to {dest}")
-        shutil.copy2(src, dest)
+        _copy(src, dest)
         self.new_paths.add(dest)
         self._update_state()
 
@@ -261,6 +285,8 @@ class Operation:
     def restore(self, on_progress: Optional[ProgressCallback] = None) -> bool:
         """
         Deletes all new files and restores all backups made since instantiation or the last restore.
+
+        Returns True if errors were encountered during restore.
         """
         if not on_progress:
             on_progress = self.on_restore_progress
@@ -285,10 +311,7 @@ class Operation:
         for dest, src in self.backups.items():
             logger.debug(f"restoring {src} to {dest}")
             try:
-                dest_dir = os.path.normpath(os.path.dirname(dest))
-                if dest_dir != ".":
-                    os.makedirs(dest_dir, exist_ok=True)
-                shutil.copy2(src, dest)
+                _copy(src, dest)
                 progress.advance()
             except Exception as exc:
                 logger.error(f"failed to restore file: {dest}")

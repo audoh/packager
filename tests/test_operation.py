@@ -31,7 +31,7 @@ def _trigger_restore(op: Operation, use_context: bool) -> None:
 def test_backup_file_cleanup(
     file_paths: Iterator[str], start_data: bytes, end_data: bytes
 ) -> None:
-    """ Test backup file is cleaned up on close() """
+    """ Backup file should be cleaned up on close """
 
     path = next(file_paths)
     with open(path, "wb") as fp:

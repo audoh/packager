@@ -7,7 +7,6 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
-from _pytest.fixtures import SubRequest
 from loguru import logger
 from packman import Packman
 from pytest import Item
@@ -17,30 +16,43 @@ logger.remove()
 logger.add(stderr, level="TRACE")
 
 
+def _copytree(src: str, dest: str) -> None:
+    logger.debug(f"copying {src=} to {dest=}")
+    try:
+        shutil.copytree(src, dest)
+    except FileNotFoundError:
+        pass
+
+
+def _rmtree(path: str) -> None:
+    logger.debug(f"cleaning up {path=}")
+    try:
+        shutil.rmtree(path)
+    except FileNotFoundError:
+        pass
+
+
 @pytest.fixture(scope="function", autouse=True)
 def mock_path() -> Generator[str, None, None]:
     """ Copies and returns mock folder structure from fixtures. """
     mock_path = os.path.join("tests_tmp", str(uuid4()))
-    root_path = os.path.join(os.path.dirname(__file__), "fixtures", "files")
-    shutil.copytree(root_path, mock_path)
+    fixture_path = os.path.join(os.path.dirname(__file__), "fixtures", "files")
+    _copytree(fixture_path, mock_path)
     logger.debug(f"generated {mock_path=}")
     yield mock_path
-    logger.debug(f"cleaning up {mock_path=}")
-    shutil.rmtree(mock_path)
+    _rmtree(mock_path)
 
 
 @pytest.fixture(scope="function", autouse=True)
 def temp_path() -> Generator[str, None, None]:
     """ Patch apparent system temp dir to a unique one to avoid cross-test interactions. """
     mock_temp_path = os.path.join("tmp", str(uuid4()))
+    fixture_path = os.path.join(os.path.dirname(__file__), "fixtures", "temp_files")
+    _copytree(fixture_path, mock_temp_path)
     logger.debug(f"patching {mock_temp_path=}")
     with patch("tempfile.tempdir", mock_temp_path):
         yield mock_temp_path
-    try:
-        logger.debug(f"cleaning up {mock_temp_path=}")
-        shutil.rmtree(mock_temp_path)
-    except FileNotFoundError:
-        pass
+    _rmtree(mock_temp_path)
 
 
 def _file_path_generator(root_path: str) -> Generator[str, None, None]:

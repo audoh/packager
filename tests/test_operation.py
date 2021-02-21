@@ -246,3 +246,34 @@ def test_write_to_existing_file(
     _trigger_restore(op, use_context=use_context)
     with open(path, "rb") as fp:
         assert fp.read() == old_data, "file should contain original contents"
+
+
+def _assert_trees_equal(a: str, b: str) -> None:
+    for (root_a, _, files_a), (root_b, _, files_b) in zip(os.walk(a), os.walk(b)):
+        sorted_files_a = sorted(files_a)
+        sorted_files_b = sorted(files_b)
+        assert (
+            sorted_files_a == sorted_files_b
+        ), f"{root_a} should contain the same file names"
+        assert sorted_files_a == sorted_files_b
+        for file_a, file_b in zip(sorted_files_a, sorted_files_b):
+            path_a = os.path.normpath(os.path.join(root_a, file_a))
+            path_b = os.path.normpath(os.path.join(root_b, file_b))
+            with open(path_a, "rb") as fp_a, open(path_b, "rb") as fp_b:
+                assert fp_a.read() == fp_b.read(), f"{file_a} should equal {file_b}"
+
+
+@pytest.mark.parametrize(
+    ("key", "root_path", "ends_like"),
+    [("key1", "key1/root_path", "key1/ends_like")],
+    ids=["empty state"],
+)
+@pytest.mark.parametrize("use_context", [True, False])
+def test_state_recovery(
+    key: str, mock_path: str, root_path: str, ends_like: str, use_context: bool
+) -> None:
+    op = Operation.recover(key=key)
+    _trigger_restore(op, use_context=use_context)
+    _assert_trees_equal(
+        os.path.join(mock_path, root_path), os.path.join(mock_path, ends_like)
+    )

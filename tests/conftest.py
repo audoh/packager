@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import tempfile
 from sys import stderr
 from typing import Any, Generator
 from unittest.mock import patch
@@ -51,6 +52,7 @@ def temp_path() -> Generator[str, None, None]:
     _copytree(fixture_path, mock_temp_path)
     logger.debug(f"patching {mock_temp_path=}")
     with patch("tempfile.tempdir", mock_temp_path):
+        assert tempfile.tempdir == mock_temp_path
         yield mock_temp_path
     _rmtree(mock_temp_path)
 

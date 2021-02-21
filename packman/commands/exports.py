@@ -6,7 +6,6 @@ from zipfile import ZipFile
 
 from loguru import logger
 from packman.models.manifest import Manifest
-from packman.utils.operation import Operation
 from packman.utils.progress import StepProgress
 
 from .command import Command

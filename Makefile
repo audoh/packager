@@ -7,8 +7,8 @@ define run_docker_command
 endef
 
 # To run commands without debug output:
-# make watch --quiet 2> /dev/null
-# make watch --quiet 2> $null
+# bash: make watch --quiet 2> /dev/null
+# powershell: make watch --quiet 2> $null
 
 # Default: installs the project and starts the watcher
 .PHONY: quickstart

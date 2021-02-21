@@ -59,4 +59,4 @@ checks:
 .PHONY: watch
 watch:
 	make docker
-	poetry run python watcher.py . 'docker-compose -f docker/docker-compose.test.yml run packman-test pytest --testdox ${PYTEST_ARGS}'
+	poetry run python watcher.py . 'docker-compose -f docker/docker-compose.test.yml up --build && docker-compose -f docker/docker-compose.test.yml run packman-test pytest --testdox ${PYTEST_ARGS}'

@@ -23,7 +23,7 @@ def _trigger_restore(op: Operation, use_context: bool) -> None:
     if use_context:
         _raise_error_in_context(op)
     else:
-        op.restore()
+        op.abort()
 
 
 @pytest.mark.parametrize("start_data", [b"start data"])

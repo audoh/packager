@@ -3,6 +3,11 @@
 install:
 	poetry install
 
+# Builds Docker
+.PHONY: docker
+docker:
+	docker-compose -f docker/docker-compose.test.yml up --build
+
 # Generates JSON schema and any other auto-generated docs
 .PHONY: docs
 docs:
@@ -14,11 +19,17 @@ docs:
 lint:
 	poetry run flake8 packman packman_cli packman_gui
 
+# Builds Docker and lints
+.PHONY: lint-docker
+lint-docker:
+	make docker
+	docker-compose -f docker/docker-compose.test.yml run packman-test make lint
+
 # Runs all tests
 .PHONY: tests
 tests:
-	docker-compose -f docker/docker-compose.test.yml up --build
-	docker-compose -f docker/docker-compose.test.yml run packman-test pytest
+	make docker
+	docker-compose -f docker/docker-compose.test.yml run packman-test pytest --testdox
 
 # Starts an interactive session
 .PHONY: cli

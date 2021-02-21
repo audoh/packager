@@ -26,12 +26,42 @@ def _trigger_restore(op: Operation, use_context: bool) -> None:
         op.restore()
 
 
+@pytest.mark.parametrize("start_data", [b"start data"])
+@pytest.mark.parametrize("end_data", [b"end data"])
 @pytest.mark.parametrize("use_context", [True, False])
-@pytest.mark.parametrize("data", ["the data"])
-def test_copy_file(file_paths: Iterator[str], data: str, use_context: bool) -> None:
+def test_backup_file(
+    file_paths: Iterator[str], start_data: bytes, end_data: bytes, use_context: bool
+) -> None:
+    path = next(file_paths)
+    with open(path, "wb") as fp:
+        fp.write(start_data)
+
+    op = Operation()
+    backup_path = op.backup_file(path)
+
+    assert os.path.exists(backup_path), "backup file should be created"
+    with open(backup_path, "rb") as fp:
+        assert (
+            fp.read() == start_data
+        ), "backup file should contain original file contents"
+
+    with open(path, "wb") as fp:
+        fp.write(end_data)
+
+    _trigger_restore(op=op, use_context=use_context)
+    with open(path, "rb") as fp:
+        assert fp.read() == start_data, "file contents should be restored"
+    assert not os.path.exists(
+        backup_path
+    ), "backup file should be deleted after restore"
+
+
+@pytest.mark.parametrize("data", [b"the data"])
+@pytest.mark.parametrize("use_context", [True, False])
+def test_copy_file(file_paths: Iterator[str], data: bytes, use_context: bool) -> None:
     src_path = next(file_paths)
     dest_path = next(file_paths)
-    with open(src_path, "w") as fp:
+    with open(src_path, "wb") as fp:
         fp.write(data)
 
     op = Operation()
@@ -39,7 +69,7 @@ def test_copy_file(file_paths: Iterator[str], data: str, use_context: bool) -> N
 
     # Test copy
     assert os.path.exists(dest_path), "dest file should be created"
-    with open(dest_path, "r") as fp:
+    with open(dest_path, "rb") as fp:
         assert fp.read() == data, "dest file should have src contents"
 
     # Test rollback
@@ -47,17 +77,17 @@ def test_copy_file(file_paths: Iterator[str], data: str, use_context: bool) -> N
     assert not os.path.exists(dest_path), "dest file should be deleted after restore"
 
 
-@pytest.mark.parametrize("old_data", ["old data"])
-@pytest.mark.parametrize("new_data", ["new data"])
+@pytest.mark.parametrize("old_data", [b"old data"])
+@pytest.mark.parametrize("new_data", [b"new data"])
 @pytest.mark.parametrize("use_context", [True, False])
 def test_copy_and_overwrite_file(
-    file_paths: Iterator[str], new_data: str, old_data: str, use_context: bool
+    file_paths: Iterator[str], new_data: bytes, old_data: bytes, use_context: bool
 ) -> None:
     src_path = next(file_paths)
     dest_path = next(file_paths)
-    with open(src_path, "w") as fp:
+    with open(src_path, "wb") as fp:
         fp.write(new_data)
-    with open(dest_path, "w") as fp:
+    with open(dest_path, "wb") as fp:
         fp.write(old_data)
 
     op = Operation()
@@ -65,11 +95,31 @@ def test_copy_and_overwrite_file(
 
     # Test copy
     assert os.path.exists(dest_path), "dest file should exist"
-    with open(dest_path, "r") as fp:
+    with open(dest_path, "rb") as fp:
         assert fp.read() == new_data, "dest file should have src contents"
 
     # Test rollback
     _trigger_restore(op, use_context)
     assert os.path.exists(dest_path), "dest file should still exist after restore"
-    with open(dest_path, "r") as fp:
+    with open(dest_path, "rb") as fp:
         assert fp.read() == old_data, "dest file should contain original contents"
+
+
+@pytest.mark.parametrize("data", [b"the data"])
+@pytest.mark.parametrize("use_context", [True, False])
+def test_remove_file(file_paths: Iterator[str], data: bytes, use_context: bool) -> None:
+    path = next(file_paths)
+    with open(path, "wb") as fp:
+        fp.write(data)
+
+    op = Operation()
+    op.remove_file(path)
+
+    # Test removal
+    assert not os.path.exists(path), "file should no longer exist"
+
+    # Test rollback
+    _trigger_restore(op, use_context=use_context)
+    assert os.path.exists(path), "file should exist again after restore"
+    with open(path, "rb") as fp:
+        assert fp.read() == data, "file should contain original contents"

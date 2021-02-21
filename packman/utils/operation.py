@@ -36,10 +36,10 @@ def _copy(src: str, dest: str) -> None:
 
 
 class OperationState(BaseModel):
-    new_paths: Set[str]
-    temp_paths: Set[str]
-    last_path: Union[str, None]
-    backups: Dict[str, str]
+    new_paths: Set[str] = set()
+    temp_paths: Set[str] = set()
+    last_path: Union[str, None] = None
+    backups: Dict[str, str] = {}
 
     @staticmethod
     def _get_tmp_path(path: str) -> str:

@@ -1,31 +1,43 @@
 import os
 import time
+from argparse import ArgumentParser
 from pathlib import PurePath
-from sys import argv, stderr
+from sys import argv
+from typing import Iterable
 
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 TEST_DIRS = ("./tests",)
-WATCH_FILES = "**/*.py"
+FILE_GLOB = "**/*.py"
 TEST_GLOB = "**/test_*.py"
+PYTEST_CMD = "pytest"
 
-_dirname = os.path.dirname(__file__)
-_test_dirs = [
-    os.path.abspath(os.path.join(_dirname, _test_dir)) for _test_dir in TEST_DIRS
-]
-_cmd = argv[2] if len(argv) >= 3 else os.environ.get("PYTEST_CMD", "pytest")
-_scheduled_cmd = None
-
-
-def _run_test_path(path: str) -> None:
-    global _scheduled_cmd
-    path = path.replace(os.sep, "/")
-    exec = f"{_cmd} {path}"
-    _scheduled_cmd = exec
+_context_name = os.path.basename(__file__)
 
 
 class Handler(FileSystemEventHandler):
+    def __init__(
+        self, test_dirs: Iterable[str], file_glob: str, test_glob: str, command: str
+    ) -> None:
+        self.test_dirs = test_dirs
+        self.file_glob = file_glob
+        self.test_glob = test_glob
+        self.command = command
+        self._scheduled_cmd = None
+
+    def _run_test_path(self, path: str) -> None:
+        # Scheduling the command avoids spam, esp. when an automatic lint on save etc. is set up
+        path = path.replace(os.sep, "/")
+        exec = f"{self.command} {path}"
+        self._scheduled_cmd = exec
+
+    def process_changes(self) -> None:
+        if self._scheduled_cmd is not None:
+            print(f"{_context_name}: {self._scheduled_cmd}")
+            os.system(self._scheduled_cmd)
+            self._scheduled_cmd = None
+
     def on_modified(self, event: FileModifiedEvent):
         super().on_modified(event)
 
@@ -35,42 +47,83 @@ class Handler(FileSystemEventHandler):
         src_path = os.path.abspath(event.src_path)
 
         pure_path = PurePath(src_path)
-        if not pure_path.match(WATCH_FILES):
+        if not pure_path.match(self.file_glob):
             return
 
         test_dir = next(
-            (dir_path for dir_path in _test_dirs if src_path.startswith(dir_path)), None
+            (dir_path for dir_path in self.test_dirs if src_path.startswith(dir_path)),
+            None,
         )
         if test_dir:
-            is_test_file = pure_path.match(TEST_GLOB)
+            is_test_file = pure_path.match(self.test_glob)
             src_relpath = os.path.relpath(src_path, ".")
             if is_test_file:
                 # run only file tests
-                _run_test_path(src_relpath)
+                self._run_test_path(src_relpath)
             else:
                 # run only directory tests
                 src_dir = os.path.dirname(src_relpath)
-                _run_test_path(src_dir)
+                self._run_test_path(src_dir)
         else:
             # run all tests
-            _run_test_path("")
+            self._run_test_path("")
 
 
 if __name__ == "__main__":
-    event_handler = Handler()
+    _dirname = os.path.dirname(__file__)
+
+    argparser = ArgumentParser(
+        description="Cross-platform source file watcher which runs an arbitrary command on changes"
+    )
+    argparser.add_argument(
+        "-p", "--path", dest="path", help="Where to watch files", default="."
+    )
+    argparser.add_argument(
+        "-d",
+        "--test-dirs",
+        dest="test_dirs",
+        help="Paths of test directories",
+        default=TEST_DIRS,
+    )
+    argparser.add_argument(
+        "-f",
+        "--files",
+        dest="file_glob",
+        help="Glob pattern matching files to watch",
+        default=FILE_GLOB,
+    )
+    argparser.add_argument(
+        "--test-pattern",
+        dest="test_glob",
+        help="Glob pattern matching test files",
+        default=TEST_GLOB,
+    )
+    argparser.add_argument(
+        "-c",
+        "--command",
+        dest="command",
+        help="Command to run on change",
+        default=PYTEST_CMD,
+    )
+    args = vars(argparser.parse_args(argv[1:]))
+    path = args.pop("path")
+
+    event_handler = Handler(
+        test_dirs=[
+            os.path.abspath(os.path.join(_dirname, test_dir))
+            for test_dir in args.pop("test_dirs")
+        ],
+        **args,
+    )
     observer = Observer()
-    path = argv[1] if len(argv) >= 2 else "."
-    name = os.path.basename(__file__)
-    print(f"{name}: watching {path}", file=stderr)
+
+    print(f"{_context_name}: now watching {path}")
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
     try:
         while True:
             time.sleep(1)
-            if _scheduled_cmd is not None:
-                print(f"{name}: {_scheduled_cmd}", file=stderr)
-                os.system(_scheduled_cmd)
-                _scheduled_cmd = None
+            event_handler.process_changes()
     finally:
         observer.stop()
         observer.join()

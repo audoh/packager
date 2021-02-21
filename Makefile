@@ -7,8 +7,8 @@ define run_docker_command
 endef
 
 # To run commands without debug output:
-# bash: make watch --quiet 2> /dev/null
-# powershell: make watch --quiet 2> $null
+# bash: PYTEST_ARGS=-q make watch --quiet 2> /dev/null
+# powershell: $PYTEST_ARGS="-q"; make watch --quiet 2> $null
 
 # Default: installs the project and starts the watcher
 .PHONY: quickstart
@@ -72,4 +72,4 @@ checks:
 .PHONY: watch
 watch:
 	make docker
-	poetry run python watcher.py . 'make docker && $(docker_cmd) $(pytest_cmd)'
+	poetry run python watcher.py -p . -c 'make docker && $(docker_cmd) $(pytest_cmd)'

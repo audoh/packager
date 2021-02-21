@@ -27,6 +27,7 @@ class Handler(FileSystemEventHandler):
         self._scheduled_cmd = None
 
     def _run_test_path(self, path: str) -> None:
+        print("...", end="\r")  # let it be known something is happening
         # Scheduling the command avoids spam, esp. when an automatic lint on save etc. is set up
         path = path.replace(os.sep, "/")
         exec = f"{self.command} {path}"

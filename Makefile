@@ -31,6 +31,11 @@ tests:
 	make docker
 	docker-compose -f docker/docker-compose.test.yml run packman-test pytest --testdox
 
+# Alias for make tests
+.PHONY: test
+test:
+	make tests
+
 # Starts an interactive session
 .PHONY: cli
 cli:

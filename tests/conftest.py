@@ -50,7 +50,7 @@ def _file_path_generator(root_path: str) -> Generator[str, None, None]:
         yield path
 
 
-@pytest.fixture(scope="function", params=[{"nested": False}])
+@pytest.fixture(scope="function")
 def file_paths(
     request: SubRequest, mock_path: str
 ) -> Generator[Generator[str, None, None], None, None]:

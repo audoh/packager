@@ -1,5 +1,5 @@
 import os
-from typing import Iterator
+from typing import Iterator, Union
 
 import pytest
 from packman.utils.operation import Operation
@@ -150,3 +150,53 @@ def test_remove_file(file_paths: Iterator[str], data: bytes, use_context: bool) 
     assert os.path.exists(path), "file should exist again after restore"
     with open(path, "rb") as fp:
         assert fp.read() == data, "file should contain original contents"
+
+
+@pytest.mark.parametrize("data", ["the data", b"the data"])
+@pytest.mark.parametrize("use_context", [True, False])
+def test_write_file(
+    file_paths: Iterator[str], data: Union[bytes, str], use_context: bool
+) -> None:
+    path = next(file_paths)
+    op = Operation()
+    op.write_file(path, data)
+
+    # Test write
+    data = bytes(data, encoding="utf-8") if isinstance(data, str) else data
+    assert os.path.exists(path), "file should exist"
+    with open(path, "rb") as fp:
+        assert fp.read() == data, "file should contain contents"
+
+    # Test rollback
+    _trigger_restore(op, use_context=use_context)
+    assert not os.path.exists(path), "file should no longer exist"
+
+
+@pytest.mark.parametrize("old_data", [b"the old data"])
+@pytest.mark.parametrize("new_data", ["the data", b"the data"])
+@pytest.mark.parametrize("use_context", [True, False])
+def test_write_to_existing_file(
+    file_paths: Iterator[str],
+    old_data: bytes,
+    new_data: Union[bytes, str],
+    use_context: bool,
+) -> None:
+    path = next(file_paths)
+    with open(path, "wb") as fp:
+        fp.write(old_data)
+
+    op = Operation()
+    op.write_file(path, new_data)
+
+    # Test write
+    new_data = (
+        bytes(new_data, encoding="utf-8") if isinstance(new_data, str) else new_data
+    )
+    assert os.path.exists(path), "file should exist"
+    with open(path, "rb") as fp:
+        assert fp.read() == new_data, "file should contain contents"
+
+    # Test rollback
+    _trigger_restore(op, use_context=use_context)
+    with open(path, "rb") as fp:
+        assert fp.read() == old_data, "file should contain original contents"

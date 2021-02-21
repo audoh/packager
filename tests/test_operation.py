@@ -38,12 +38,19 @@ def test_backup_file_should_be_cleaned_up_on_close(
     op = Operation()
     backup_path = op.backup_file(path)
 
+    # Test backup
     assert os.path.exists(backup_path), "backup file should be created"
     with open(backup_path, "rb") as fp:
         assert (
             fp.read() == start_data
         ), "backup file should contain original file contents"
 
+    # Test state file
+    assert op.state_path and os.path.exists(
+        op.state_path
+    ), "state file should be created"
+
+    # Change the file to test it is not restored later
     with open(path, "wb") as fp:
         fp.write(end_data)
 
@@ -51,6 +58,8 @@ def test_backup_file_should_be_cleaned_up_on_close(
     assert not os.path.exists(
         backup_path
     ), "backup file should be deleted after restore"
+    with open(path, "rb") as fp:
+        assert fp.read() == end_data, "file contents should be left changed"
 
 
 @pytest.mark.parametrize("start_data", [b"start data"])
@@ -66,6 +75,7 @@ def test_backup_file_should_be_restored_and_cleaned_up_on_error(
     op = Operation()
     backup_path = op.backup_file(path)
 
+    # Test backup
     assert os.path.exists(backup_path), "backup file should be created"
     with open(backup_path, "rb") as fp:
         assert (
@@ -75,6 +85,12 @@ def test_backup_file_should_be_restored_and_cleaned_up_on_error(
     with open(path, "wb") as fp:
         fp.write(end_data)
 
+    # Test state file
+    assert op.state_path and os.path.exists(
+        op.state_path
+    ), "state file should be created"
+
+    # Test rollback
     _trigger_restore(op=op, use_context=use_context)
     with open(path, "rb") as fp:
         assert fp.read() == start_data, "file contents should be restored"
@@ -102,6 +118,11 @@ def test_copy_file(
     with open(dest_path, "rb") as fp:
         assert fp.read() == data, "dest file should have src contents"
 
+    # Test state file
+    assert op.state_path and os.path.exists(
+        op.state_path
+    ), "state file should be created"
+
     # Test rollback
     _trigger_restore(op, use_context)
     assert not os.path.exists(dest_path), "dest file should be deleted after restore"
@@ -128,6 +149,11 @@ def test_copy_and_overwrite_file(
     with open(dest_path, "rb") as fp:
         assert fp.read() == new_data, "dest file should have src contents"
 
+    # Test state file
+    assert op.state_path and os.path.exists(
+        op.state_path
+    ), "state file should be created"
+
     # Test rollback
     _trigger_restore(op, use_context)
     assert os.path.exists(dest_path), "dest file should still exist after restore"
@@ -147,6 +173,11 @@ def test_remove_file(file_paths: Iterator[str], data: bytes, use_context: bool) 
 
     # Test removal
     assert not os.path.exists(path), "file should no longer exist"
+
+    # Test state file
+    assert op.state_path and os.path.exists(
+        op.state_path
+    ), "state file should be created"
 
     # Test rollback
     _trigger_restore(op, use_context=use_context)
@@ -171,6 +202,11 @@ def test_write_file(
     assert os.path.exists(path), "file should exist"
     with open(path, "rb") as fp:
         assert fp.read() == data, "file should contain contents"
+
+    # Test state file
+    assert op.state_path and os.path.exists(
+        op.state_path
+    ), "state file should be created"
 
     # Test rollback
     _trigger_restore(op, use_context=use_context)
@@ -200,6 +236,11 @@ def test_write_to_existing_file(
     assert os.path.exists(path), "file should exist"
     with open(path, "rb") as fp:
         assert fp.read() == new_data, "file should contain contents"
+
+    # Test state file
+    assert op.state_path and os.path.exists(
+        op.state_path
+    ), "state file should be created"
 
     # Test rollback
     _trigger_restore(op, use_context=use_context)

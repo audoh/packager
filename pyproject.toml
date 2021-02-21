@@ -25,6 +25,7 @@ flake8 = "^3.8.4"
 mkdocs = "^1.1.2"
 pytest = "^6.2.1"
 rstcheck = "^3.3.1"
+pytest-testdox = "^2.0.1"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

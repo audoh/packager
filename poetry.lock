@@ -421,6 +421,17 @@ toml = "*"
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
+name = "pytest-testdox"
+version = "2.0.1"
+description = "A testdox format reporter for pytest"
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+
+[package.dependencies]
+pytest = ">=3.7.0"
+
+[[package]]
 name = "pywin32"
 version = "300"
 description = "Python for Window Extensions"
@@ -560,7 +571,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "2e51e8a09a3051d72db598f34c0d21aa3f0a2e63aa4ea190f0256cb1b79e10d6"
+content-hash = "0654fd093fde130060c2ac7e85c0c93aed21e1faf950a58fb2120fbfcccc9309"
 
 [metadata.files]
 appdirs = [
@@ -782,6 +793,10 @@ pyparsing = [
 pytest = [
     {file = "pytest-6.2.2-py3-none-any.whl", hash = "sha256:b574b57423e818210672e07ca1fa90aaf194a4f63f3ab909a2c67ebb22913839"},
     {file = "pytest-6.2.2.tar.gz", hash = "sha256:9d1edf9e7d0b84d72ea3dbcdfd22b35fb543a5e8f2a60092dd578936bf63d7f9"},
+]
+pytest-testdox = [
+    {file = "pytest-testdox-2.0.1.tar.gz", hash = "sha256:5cd1d986cb9e33edca4271c57541c57d868781c8090e551374d7e6eeafac465a"},
+    {file = "pytest_testdox-2.0.1-py2.py3-none-any.whl", hash = "sha256:ce9d516c047f718e7707975582e52d6ac922330bdcf87837f8d3fd619057af6f"},
 ]
 pywin32 = [
     {file = "pywin32-300-cp35-cp35m-win32.whl", hash = "sha256:1c204a81daed2089e55d11eefa4826c05e604d27fe2be40b6bf8db7b6a39da63"},

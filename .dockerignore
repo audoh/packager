@@ -1,0 +1,24 @@
+# Ignore everything by default
+*
+
+# Allow dependency files
+!poetry.lock
+!pyproject.toml
+
+# Allow source files
+!packman
+!packman_cli
+!packman_gui
+
+# Allow test files
+!tests
+
+# Allow Python config files
+!setup.cfg
+!setup.py
+
+# Allow makefile
+!Makefile
+
+# Ignore Python cache files
+**/__pycache__

@@ -45,10 +45,10 @@ class Handler(FileSystemEventHandler):
             is_test_file = pure_path.match(TEST_GLOB)
             src_relpath = os.path.relpath(src_path, ".")
             if is_test_file:
-                # run all directory tests
+                # run only file tests
                 _run_test_path(src_relpath)
             else:
-                # run all directory tests
+                # run only directory tests
                 src_dir = os.path.dirname(src_relpath)
                 _run_test_path(src_dir)
         else:

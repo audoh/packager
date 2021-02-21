@@ -49,4 +49,4 @@ gui:
 # Runs lint and test
 .PHONY: checks
 checks:
-	make lint test
+	make lint tests

@@ -119,13 +119,14 @@ def resolve_case(pathlike: str) -> str:
         parent = path.parent
         child = path.name
         match: str = ""
-        for file in os.scandir(parent):
-            name = file.name
-            if name == child:
-                match = name
-                break
-            elif name.lower() == child.lower():
-                match = name
+        with os.scandir(parent) as dirscan:
+            for file in dirscan:
+                name = file.name
+                if name == child:
+                    match = name
+                    break
+                elif name.lower() == child.lower():
+                    match = name
         parts.append(match)
         path = parent
 

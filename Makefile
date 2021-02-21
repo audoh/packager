@@ -4,6 +4,11 @@ endef
 
 pytest_cmd = pytest --testdox ${PYTEST_ARGS}
 
+# Default: installs the project and starts the watcher
+.PHONY: quickstart
+quickstart:
+	make install watch
+
 # Installs the project
 .PHONY: install
 install:

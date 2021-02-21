@@ -16,10 +16,18 @@ from packman.utils.uninterruptible import uninterruptible
 from pydantic import BaseModel
 
 
-def _copy(src: str, dest: str) -> None:
-    dirname = os.path.normpath(os.path.dirname(dest))
+def _ensure_dir_exists(path: str) -> None:
+    dirname = os.path.normpath(path)
     if dirname != ".":
         os.makedirs(dirname, exist_ok=True)
+
+
+def _ensure_dir_exists_for_file(path: str) -> None:
+    _ensure_dir_exists(os.path.dirname(path))
+
+
+def _copy(src: str, dest: str) -> None:
+    _ensure_dir_exists_for_file(dest)
     try:
         shutil.copy2(src, dest)
     except Exception:
@@ -215,6 +223,7 @@ class Operation:
             self.backup_file(path)
 
         logger.debug(f"writing to {path}")
+        _ensure_dir_exists_for_file(path)
         if isinstance(content, str):
             with open(path, "w") as fp:
                 fp.write(content)

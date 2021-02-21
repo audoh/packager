@@ -51,14 +51,9 @@ def _file_path_generator(root_path: str) -> Generator[str, None, None]:
 
 
 @pytest.fixture(scope="function")
-def file_paths(
-    request: SubRequest, mock_path: str
-) -> Generator[Generator[str, None, None], None, None]:
+def file_paths(mock_path: str) -> Generator[Generator[str, None, None], None, None]:
     """ Returns a generator which can be used to get file paths for creating test files. """
-    root_path = (
-        os.path.join(mock_path, str(uuid4())) if request.param["nested"] else mock_path
-    )
-    yield _file_path_generator(root_path)
+    yield _file_path_generator(mock_path)
 
 
 @pytest.fixture(scope="function")

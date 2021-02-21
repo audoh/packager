@@ -85,9 +85,12 @@ def test_backup_file_should_be_restored_and_cleaned_up_on_error(
 
 @pytest.mark.parametrize("data", [b"the data"])
 @pytest.mark.parametrize("use_context", [True, False])
-def test_copy_file(file_paths: Iterator[str], data: bytes, use_context: bool) -> None:
+@pytest.mark.parametrize("nested", [False, True])
+def test_copy_file(
+    file_paths: Iterator[str], data: bytes, use_context: bool, nested: bool
+) -> None:
     src_path = next(file_paths)
-    dest_path = next(file_paths)
+    dest_path = os.path.join(next(file_paths), "dir") if nested else next(file_paths)
     with open(src_path, "wb") as fp:
         fp.write(data)
 
@@ -154,10 +157,12 @@ def test_remove_file(file_paths: Iterator[str], data: bytes, use_context: bool) 
 
 @pytest.mark.parametrize("data", ["the data", b"the data"])
 @pytest.mark.parametrize("use_context", [True, False])
+@pytest.mark.parametrize("nested", [False, True])
 def test_write_file(
-    file_paths: Iterator[str], data: Union[bytes, str], use_context: bool
+    file_paths: Iterator[str], data: Union[bytes, str], use_context: bool, nested: bool
 ) -> None:
-    path = next(file_paths)
+    path = os.path.join(next(file_paths), "dir") if nested else next(file_paths)
+
     op = Operation()
     op.write_file(path, data)
 

@@ -28,11 +28,9 @@ def _trigger_restore(op: Operation, use_context: bool) -> None:
 
 @pytest.mark.parametrize("start_data", [b"start data"])
 @pytest.mark.parametrize("end_data", [b"end data"])
-def test_backup_file_cleanup(
+def test_backup_file_should_be_cleaned_up_on_close(
     file_paths: Iterator[str], start_data: bytes, end_data: bytes
 ) -> None:
-    """ Backup file should be cleaned up on close """
-
     path = next(file_paths)
     with open(path, "wb") as fp:
         fp.write(start_data)
@@ -58,11 +56,9 @@ def test_backup_file_cleanup(
 @pytest.mark.parametrize("start_data", [b"start data"])
 @pytest.mark.parametrize("end_data", [b"end data"])
 @pytest.mark.parametrize("use_context", [True, False])
-def test_backup_file_restore(
+def test_backup_file_should_be_restored_and_cleaned_up_on_error(
     file_paths: Iterator[str], start_data: bytes, end_data: bytes, use_context: bool
 ) -> None:
-    """ Backup file should be restored and cleaned up on error """
-
     path = next(file_paths)
     with open(path, "wb") as fp:
         fp.write(start_data)

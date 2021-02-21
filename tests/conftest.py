@@ -3,7 +3,7 @@ import re
 import shutil
 import tempfile
 from sys import stderr
-from typing import Any, Generator
+from typing import Generator
 from unittest.mock import patch
 from uuid import uuid4
 

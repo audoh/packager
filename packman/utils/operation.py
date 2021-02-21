@@ -181,12 +181,13 @@ class Operation:
         self._update_state()
         return path
 
-    def backup_file(self, path: str) -> None:
-        backup = self.get_temp_path()
-        logger.debug(f"backing up {path} to {backup}")
-        shutil.copy2(path, backup)
-        self.backups[path] = backup
+    def backup_file(self, path: str) -> str:
+        backup_path = self.get_temp_path()
+        logger.debug(f"backing up {path} to {backup_path}")
+        shutil.copy2(path, backup_path)
+        self.backups[path] = backup_path
         self._update_state()
+        return backup_path
 
     def should_backup_file(self, path: str) -> bool:
         return (

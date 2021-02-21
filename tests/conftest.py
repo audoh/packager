@@ -1,9 +1,8 @@
 import os
 import re
 import shutil
-from itertools import count
 from sys import stderr
-from typing import Any, Dict, Generator, List
+from typing import Any, Generator
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -79,6 +78,11 @@ def _str(val: Any) -> str:
     return str(val)
 
 
+def pytest_make_parametrize_id(config, val, argname):
+    val_str = repr(val).replace("-", "--")
+    return f"{argname}: {val_str}"
+
+
 def pytest_itemcollected(item: Item) -> None:
     nodeid: str = item._nodeid
 
@@ -92,55 +96,5 @@ def pytest_itemcollected(item: Item) -> None:
     name = nodeid[:args_idx] + nodeid[args_idx_end + 1 :]
     args_str = nodeid[args_idx + 1 : args_idx_end]
 
-    logger.debug(f"processing {item._nodeid=}")
-
-    args_dict: Dict[str, str] = {}
-    markers = list(item.iter_markers("parametrize"))
-    for mark in reversed(markers):
-        names_raw = mark.args[0]
-        names = (
-            [name.strip() for name in reversed(names_raw.split(","))]
-            if isinstance(names_raw, str)
-            else list(reversed(names_raw))
-        )
-
-        param_sets = list(mark.args[1])
-        for param_name, param_index in zip(names, count(start=0)):
-            # Find node's value for this param
-            found_any = False
-            match_len: int = 0
-            longest_match: str = ""
-            value: str = ""
-            for param_set in param_sets:
-                # Get param string val
-                param = (
-                    param_set[param_index]
-                    if isinstance(param_set, (tuple, list))
-                    else param_set
-                )
-                param_str = _str(param)
-
-                # Find longest value that args_str ends with (possibly with an integer suffix)
-                escaped = re.escape(param_str)
-                regex = re.compile(escaped + r"[0-9]*$")
-                if len(longest_match) < len(param_str):
-                    match = regex.search(args_str)
-                    if match:
-                        found_any = True
-                        longest_match = param_str
-                        match_len = len(match.group(0))
-                        value = repr(param)
-
-            if not found_any:
-                raise ValueError(
-                    f"failed to resolve {param_name=} to param value from {param_sets=}, {args_str=}"
-                )
-
-            args_str = args_str[: -(match_len + 1)]
-            args_dict[param_name] = value
-
-    if args_str:
-        args_str = ", ".join(args_str.split("-")) + ", "
-
-    args_str += ", ".join((f"{key}: {value}" for key, value in args_dict.items()))
+    args_str = re.sub(r"([^-])-([^-])", r"\1, \2", args_str)
     item._nodeid = f"{name} ({args_str})"

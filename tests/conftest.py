@@ -81,12 +81,6 @@ def packman(mock_path: str) -> Generator[Packman, None, None]:
     )
 
 
-def _str(val: Any) -> str:
-    if isinstance(val, bytes):
-        return str(val, encoding="utf-8")
-    return str(val)
-
-
 def pytest_make_parametrize_id(config, val, argname):
     val_str = repr(val).replace("-", "--")
     return f"{argname}: {val_str}"

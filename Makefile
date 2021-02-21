@@ -45,3 +45,8 @@ cli:
 .PHONY: gui
 gui:
 	poetry run python -m packman_gui.gui
+
+# Runs lint and test
+.PHONY: checks
+checks:
+	make lint test

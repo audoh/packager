@@ -17,7 +17,7 @@ install:
 # Builds Docker
 .PHONY: docker
 docker:
-	docker-compose -f docker/docker-compose.test.yml up --build
+	docker-compose -f docker/docker-compose.test.yml up --build 1>&2
 
 # Generates JSON schema and any other auto-generated docs
 .PHONY: docs

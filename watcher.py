@@ -1,3 +1,4 @@
+import asyncio
 import os
 import time
 from argparse import ArgumentParser
@@ -26,6 +27,7 @@ class Handler(FileSystemEventHandler):
         self.test_glob = test_glob
         self.command = command
         self._scheduled_cmd = None
+        self._running = False
 
     def _run_test_path(self, path: str) -> None:
         print("...", end="\r")  # let it be known something is happening
@@ -34,12 +36,16 @@ class Handler(FileSystemEventHandler):
         exec = f"{self.command} {path}"
         self._scheduled_cmd = exec
 
-    def process_changes(self) -> bool:
-        if self._scheduled_cmd is not None:
+    async def process_changes(self) -> bool:
+        if self._scheduled_cmd is not None and not self._running:
+            self._running = True
             print(f"{_context_name}: {self._scheduled_cmd}", file=stderr)
             print("...", end="\r")
-            os.system(self._scheduled_cmd)
+            cmd = self._scheduled_cmd
             self._scheduled_cmd = None
+            process = await asyncio.create_subprocess_shell(cmd)
+            await process.wait()
+            self._running = False
             return True
         return False
 
@@ -77,7 +83,8 @@ class Handler(FileSystemEventHandler):
 def csv(val: str) -> List[str]:
     return [subval.strip() for subval in val.split(",")]
 
-if __name__ == "__main__":
+
+async def main() -> None:
     _dirname = os.path.dirname(__file__)
 
     argparser = ArgumentParser(
@@ -92,7 +99,7 @@ if __name__ == "__main__":
         dest="test_dirs",
         help="Paths of test directories",
         default=TEST_DIRS,
-        type=csv
+        type=csv,
     )
     argparser.add_argument(
         "-f",
@@ -138,8 +145,14 @@ if __name__ == "__main__":
     try:
         while True:
             time.sleep(poll_time)
-            if event_handler.process_changes():
+            if await event_handler.process_changes():
                 print("zzz", end="\r")
     finally:
         observer.stop()
         observer.join()
+
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+    loop.close()

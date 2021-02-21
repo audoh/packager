@@ -1,6 +1,5 @@
 import asyncio
 import os
-import time
 from argparse import ArgumentParser
 from pathlib import PurePath
 from sys import argv, stderr
@@ -144,7 +143,7 @@ async def main() -> None:
     observer.start()
     try:
         while True:
-            time.sleep(poll_time)
+            await asyncio.sleep(poll_time)
             if await event_handler.process_changes():
                 print("zzz", end="\r")
     finally:

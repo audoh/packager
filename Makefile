@@ -2,6 +2,8 @@ define run_docker_command
 	docker-compose -f docker/docker-compose.test.yml run packman-test $(1)
 endef
 
+pytest_cmd = pytest --testdox ${PYTEST_ARGS}
+
 # Installs the project
 .PHONY: install
 install:
@@ -33,7 +35,7 @@ lint-docker:
 .PHONY: tests
 tests:
 	make docker
-	$(call run_docker_command,pytest --testdox ${PYTEST_ARGS})
+	$(call run_docker_command,$(pytest_cmd))
 
 # Alias for make tests
 .PHONY: test
@@ -59,4 +61,4 @@ checks:
 .PHONY: watch
 watch:
 	make docker
-	poetry run python watcher.py . 'docker-compose -f docker/docker-compose.test.yml up --build && docker-compose -f docker/docker-compose.test.yml run packman-test pytest --testdox ${PYTEST_ARGS}'
+	poetry run python watcher.py . 'docker-compose -f docker/docker-compose.test.yml up --build && docker-compose -f docker/docker-compose.test.yml run packman-test $(pytest_cmd)'

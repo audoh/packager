@@ -1,12 +1,19 @@
 import os
 import time
+from pathlib import PurePath
 from sys import argv
 
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-_dirname = os.path.abspath(os.path.dirname(__file__))
-_test_dirs = (os.path.join(_dirname, "tests"),)
+TEST_DIRS = ("./tests",)
+WATCH_FILES = "**/*.py"
+TEST_GLOB = "**/test_*.py"
+
+_dirname = os.path.dirname(__file__)
+_test_dirs = [
+    os.path.abspath(os.path.join(_dirname, _test_dir)) for _test_dir in TEST_DIRS
+]
 _cmd = argv[2] if len(argv) >= 3 else os.environ.get("PYTEST_CMD", "pytest")
 _scheduled_cmd = None
 
@@ -27,19 +34,15 @@ class Handler(FileSystemEventHandler):
 
         src_path = os.path.abspath(event.src_path)
 
-        ext_idx = src_path.rfind(os.path.extsep)
-        if ext_idx < 0:
-            return
-
-        ext = src_path[ext_idx:]
-        if ext not in (".py",):
+        pure_path = PurePath(src_path)
+        if not pure_path.match(WATCH_FILES):
             return
 
         test_dir = next(
             (dir_path for dir_path in _test_dirs if src_path.startswith(dir_path)), None
         )
         if test_dir:
-            is_test_file = os.path.basename(src_path).startswith("test_")
+            is_test_file = pure_path.match(TEST_GLOB)
             src_relpath = os.path.relpath(src_path, ".")
             if is_test_file:
                 # run all directory tests

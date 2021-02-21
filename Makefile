@@ -1,8 +1,11 @@
+docker_cmd = docker-compose -f docker/docker-compose.test.yml run packman-test
+pytest_cmd = pytest --testdox ${PYTEST_ARGS}
+
+
 define run_docker_command
-	docker-compose -f docker/docker-compose.test.yml run packman-test $(1)
+	$(docker_cmd) $(1)
 endef
 
-pytest_cmd = pytest --testdox ${PYTEST_ARGS}
 
 # Default: installs the project and starts the watcher
 .PHONY: quickstart
@@ -66,7 +69,4 @@ checks:
 .PHONY: watch
 watch:
 	make docker
-	poetry run python watcher.py . ' \
-		docker-compose -f docker/docker-compose.test.yml up --build && \
-		docker-compose -f docker/docker-compose.test.yml run packman-test $(pytest_cmd) \
-	'
+	poetry run python watcher.py . 'make docker && $(docker_cmd) $(pytest_cmd)'

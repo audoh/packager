@@ -1,11 +1,13 @@
 import os
 import shutil
-from typing import Generator
+from itertools import count
+from typing import Any, Dict, Generator, List
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 from packman import Packman
+from pytest import Item
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -49,3 +51,66 @@ def packman(mock_path: str) -> Generator[Packman, None, None]:
         config_dir=os.path.join(mock_path, "mockconfigs"),
         manifest_path=os.path.join(mock_path, "mockgame", "manifest.json"),
     )
+
+
+def _str(val: Any) -> str:
+    if isinstance(val, bytes):
+        return str(val, encoding="utf-8")
+    return str(val)
+
+
+def pytest_itemcollected(item: Item) -> None:
+    nodeid: str = item._nodeid
+
+    # Check if item is parameterised
+    args_idx = nodeid.rfind("[")
+    if args_idx == -1:
+        return
+
+    # Split up "function[val1-val2]"" into "function" and "val1-val2"
+    args_idx_end = nodeid.find("]", args_idx)
+    name = nodeid[:args_idx] + nodeid[args_idx_end + 1 :]
+    args_str = nodeid[args_idx + 1 : args_idx_end]
+
+    args_dict: Dict[str, str] = {}
+    for mark in item.iter_markers("parametrize"):
+        names_raw = mark.args[0]
+        names: List[str] = (
+            [name.strip() for name in names_raw.split(",")]
+            if isinstance(names_raw, str)
+            else list(names_raw)
+        )
+
+        param_sets = list(mark.args[1])
+        for param_name, param_index in zip(names, count(start=0)):
+            # Find node's value for this param
+            found_any = False
+            longest_match: str = ""
+            value: str = ""
+            for param_set in param_sets:
+                # Get param string val
+                param = (
+                    param_set[param_index]
+                    if isinstance(param_set, (tuple, list))
+                    else param_set
+                )
+                param_str = _str(param)
+
+                # Find longest value that args_str starts with
+                if len(longest_match) < len(param_str) and args_str.startswith(
+                    param_str
+                ):
+                    found_any = True
+                    longest_match = param_str
+                    value = repr(param)
+
+            if not found_any:
+                raise ValueError(
+                    f"failed to resolve {param_name=} to param value from {param_sets=}"
+                )
+
+            args_str = args_str[len(longest_match) + 1 :]
+            args_dict[param_name] = value
+
+    args_str = ", ".join((f"{key}: {value}" for key, value in args_dict.items()))
+    item._nodeid = f"{name} ({args_str})"

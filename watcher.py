@@ -2,7 +2,7 @@ import os
 import time
 from argparse import ArgumentParser
 from pathlib import PurePath
-from sys import argv
+from sys import argv, stderr
 from typing import Iterable
 
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
@@ -32,11 +32,14 @@ class Handler(FileSystemEventHandler):
         exec = f"{self.command} {path}"
         self._scheduled_cmd = exec
 
-    def process_changes(self) -> None:
+    def process_changes(self) -> bool:
         if self._scheduled_cmd is not None:
-            print(f"{_context_name}: {self._scheduled_cmd}")
+            print(f"{_context_name}: {self._scheduled_cmd}", file=stderr)
+            print("...", end="\r")
             os.system(self._scheduled_cmd)
             self._scheduled_cmd = None
+            return True
+        return False
 
     def on_modified(self, event: FileModifiedEvent):
         super().on_modified(event)
@@ -117,13 +120,15 @@ if __name__ == "__main__":
     )
     observer = Observer()
 
-    print(f"{_context_name}: now watching {path}")
+    print(f"{_context_name}: now watching {path}", file=stderr)
+    print("zzz", end="\r")
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
     try:
         while True:
             time.sleep(1)
-            event_handler.process_changes()
+            if event_handler.process_changes():
+                print("zzz", end="\r")
     finally:
         observer.stop()
         observer.join()

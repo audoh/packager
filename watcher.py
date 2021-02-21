@@ -3,7 +3,7 @@ import time
 from argparse import ArgumentParser
 from pathlib import PurePath
 from sys import argv, stderr
-from typing import Iterable
+from typing import Iterable, List
 
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -12,6 +12,7 @@ TEST_DIRS = ("./tests",)
 FILE_GLOB = "**/*.py"
 TEST_GLOB = "**/test_*.py"
 PYTEST_CMD = "pytest"
+POLL_TIME = 1
 
 _context_name = os.path.basename(__file__)
 
@@ -73,6 +74,9 @@ class Handler(FileSystemEventHandler):
             self._run_test_path("")
 
 
+def csv(val: str) -> List[str]:
+    return [subval.strip() for subval in val.split(",")]
+
 if __name__ == "__main__":
     _dirname = os.path.dirname(__file__)
 
@@ -80,7 +84,7 @@ if __name__ == "__main__":
         description="Cross-platform source file watcher which runs an arbitrary command on changes"
     )
     argparser.add_argument(
-        "-p", "--path", dest="path", help="Where to watch files", default="."
+        "-p", "--path", dest="path", help="Where to watch files", default=".", type=str
     )
     argparser.add_argument(
         "-d",
@@ -88,6 +92,7 @@ if __name__ == "__main__":
         dest="test_dirs",
         help="Paths of test directories",
         default=TEST_DIRS,
+        type=csv
     )
     argparser.add_argument(
         "-f",
@@ -95,12 +100,14 @@ if __name__ == "__main__":
         dest="file_glob",
         help="Glob pattern matching files to watch",
         default=FILE_GLOB,
+        type=str,
     )
     argparser.add_argument(
         "--test-pattern",
         dest="test_glob",
         help="Glob pattern matching test files",
         default=TEST_GLOB,
+        type=str,
     )
     argparser.add_argument(
         "-c",
@@ -108,8 +115,11 @@ if __name__ == "__main__":
         dest="command",
         help="Command to run on change",
         default=PYTEST_CMD,
+        type=str,
     )
+    argparser.add_argument("--poll-time", dest="poll_time", default=POLL_TIME, type=int)
     args = vars(argparser.parse_args(argv[1:]))
+    poll_time = args.pop("poll_time")
     path = args.pop("path")
 
     event_handler = Handler(
@@ -127,7 +137,7 @@ if __name__ == "__main__":
     observer.start()
     try:
         while True:
-            time.sleep(1)
+            time.sleep(poll_time)
             if event_handler.process_changes():
                 print("zzz", end="\r")
     finally:

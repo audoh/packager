@@ -1,7 +1,7 @@
 import os
 import time
 from pathlib import PurePath
-from sys import argv
+from sys import argv, stderr
 
 from watchdog.events import FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -60,14 +60,15 @@ if __name__ == "__main__":
     event_handler = Handler()
     observer = Observer()
     path = argv[1] if len(argv) >= 2 else "."
-    print(f"watching {path}")
+    name = os.path.basename(__file__)
+    print(f"{name}: watching {path}", file=stderr)
     observer.schedule(event_handler, path, recursive=True)
     observer.start()
     try:
         while True:
             time.sleep(1)
             if _scheduled_cmd is not None:
-                print(_scheduled_cmd)
+                print(f"{name}: {_scheduled_cmd}", file=stderr)
                 os.system(_scheduled_cmd)
                 _scheduled_cmd = None
     finally:

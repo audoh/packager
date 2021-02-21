@@ -231,6 +231,7 @@ class Operation:
             with open(path, "wb") as fp:
                 fp.write(content)
         self.new_paths.add(path)
+        self._update_state()
 
     def copy_file(self, src: str, dest: str) -> None:
         if self.should_backup_file(dest):

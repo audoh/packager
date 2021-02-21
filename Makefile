@@ -71,5 +71,6 @@ checks:
 # Runs checks when anything changes
 .PHONY: watch
 watch:
+	poetry run python -c print\(\'...\',end=\'\\r\'\)
 	make docker
 	poetry run python watcher.py -p . -c 'make docker && $(docker_cmd) $(pytest_cmd)'

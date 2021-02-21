@@ -558,6 +558,17 @@ secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "cer
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
+name = "watchdog"
+version = "2.0.1"
+description = "Filesystem events monitoring"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+watchmedo = ["PyYAML (>=3.10)", "argh (>=0.24.1)"]
+
+[[package]]
 name = "win32-setctime"
 version = "1.0.3"
 description = "A small Python utility to set file creation time on Windows"
@@ -571,7 +582,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "0654fd093fde130060c2ac7e85c0c93aed21e1faf950a58fb2120fbfcccc9309"
+content-hash = "e167f5d347c0ca0f288da2547896514c8458f7a93d91db273cefde9540d834da"
 
 [metadata.files]
 appdirs = [
@@ -982,6 +993,25 @@ typing-extensions = [
 urllib3 = [
     {file = "urllib3-1.26.3-py2.py3-none-any.whl", hash = "sha256:1b465e494e3e0d8939b50680403e3aedaa2bc434b7d5af64dfd3c958d7f5ae80"},
     {file = "urllib3-1.26.3.tar.gz", hash = "sha256:de3eedaad74a2683334e282005cd8d7f22f4d55fa690a2a1020a416cb0a47e73"},
+]
+watchdog = [
+    {file = "watchdog-2.0.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:9fa5a0d741c308657c6d60de246943b5a02647fe2a697fff6e0f46ec926f1069"},
+    {file = "watchdog-2.0.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:eda07ba4c309dc7a04db6eb069626b94a047fedf5b4919c5739ac2f9535c851e"},
+    {file = "watchdog-2.0.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:3164d69f27daa43ecd2817346e7c4c97a8491138d53a1873cf37abb469ff7583"},
+    {file = "watchdog-2.0.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:916d8ccd2b9f0536efb0af18b1661cda02588a1cc5c6af9b972212aa1c883e68"},
+    {file = "watchdog-2.0.1-pp36-pypy36_pp73-macosx_10_9_x86_64.whl", hash = "sha256:f1b8a0224cf2b599302ed06d1633d343a199345cab773e3a4cd7a1b0296589dd"},
+    {file = "watchdog-2.0.1-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:bcab67402ac95f6e922f11078fc71d7bdcd631f0add8849033a50683b92c0e89"},
+    {file = "watchdog-2.0.1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:218c0d9be3b5b17080133332645f3323483d648ea518d1e241a3bf66247cb357"},
+    {file = "watchdog-2.0.1-py3-none-manylinux2014_armv7l.whl", hash = "sha256:38b257718c8b31ee5e4693f87691de550b4340b2890c46fda0ddf7ac21b74f50"},
+    {file = "watchdog-2.0.1-py3-none-manylinux2014_i686.whl", hash = "sha256:c89f388c06ef189e8656fd5a5b333da3c5a2984a959e29ef2e80f8b4422b9574"},
+    {file = "watchdog-2.0.1-py3-none-manylinux2014_ppc64.whl", hash = "sha256:9e167710ed335762eb39954dd22aa313fd625d1ec7372deb3782332d1d5522f3"},
+    {file = "watchdog-2.0.1-py3-none-manylinux2014_ppc64le.whl", hash = "sha256:075352d18f4dd071a2a6c4ca8791437f231746264b6f57eee02d6bd2c22714a3"},
+    {file = "watchdog-2.0.1-py3-none-manylinux2014_s390x.whl", hash = "sha256:e7a0cba4546683496fa2e4759b39a1a4b6e2c250e7be15b73035500c9f2bfa28"},
+    {file = "watchdog-2.0.1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:69099f4940e63d34b341979d077777b9b8c63c916a3c239f21916ef21f459400"},
+    {file = "watchdog-2.0.1-py3-none-win32.whl", hash = "sha256:2a786da9cba25029cc6c0190eb8c3c9bd8e67cfe23e339b2add4f1bb4a4a6bcd"},
+    {file = "watchdog-2.0.1-py3-none-win_amd64.whl", hash = "sha256:83249804d3f49f45de80a39494f21dd83c22e5cdccc6024edf557ae8461e25b7"},
+    {file = "watchdog-2.0.1-py3-none-win_ia64.whl", hash = "sha256:54c44620c1b377af4faa0fc594723905b21b0fc3b2bcee417084889c2187f2a1"},
+    {file = "watchdog-2.0.1.tar.gz", hash = "sha256:0d1c763652c255e2af00d76cf7d05c7b4867e960092b2696db031f69661c0785"},
 ]
 win32-setctime = [
     {file = "win32_setctime-1.0.3-py3-none-any.whl", hash = "sha256:dc925662de0a6eb987f0b01f599c01a8236cb8c62831c22d9cada09ad958243e"},

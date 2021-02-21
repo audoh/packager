@@ -1,3 +1,7 @@
+define run_docker_command
+	docker-compose -f docker/docker-compose.test.yml run packman-test $(1)
+endef
+
 # Installs the project
 .PHONY: install
 install:
@@ -23,13 +27,13 @@ lint:
 .PHONY: lint-docker
 lint-docker:
 	make docker
-	docker-compose -f docker/docker-compose.test.yml run packman-test make lint
+	$(call run_docker_command,make lint)
 
 # Runs all tests
 .PHONY: tests
 tests:
 	make docker
-	docker-compose -f docker/docker-compose.test.yml run packman-test pytest --testdox
+	$(call run_docker_command,pytest --testdox ${PYTEST_ARGS})
 
 # Alias for make tests
 .PHONY: test
@@ -50,3 +54,9 @@ gui:
 .PHONY: checks
 checks:
 	make lint tests
+
+# Runs checks when anything changes
+.PHONY: watch
+watch:
+	make docker
+	poetry run python watcher.py . 'docker-compose -f docker/docker-compose.test.yml run packman-test pytest --testdox ${PYTEST_ARGS}'

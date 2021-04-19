@@ -11,9 +11,8 @@ class HTTPAPI(ABC):
         self.headers = {}
         self.cache = cache or {}
 
-    @abstractmethod
     def uri(self, endpoint: str) -> str:
-        raise NotImplementedError
+        return urlparse.urljoin(self.url, endpoint)
 
     def get(self, endpoint: str, use_cache: bool = False, **kwargs: Any) -> Any:
         cache_key = f"get:{endpoint}?{urlparse.urlencode(kwargs)}"

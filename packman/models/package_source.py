@@ -14,12 +14,15 @@ class PackageVersion(BaseModel):
 
     name: str = Field(..., description="Human readable version name.")
     version: Union[str, None] = Field(
-        ..., description="Name of this version e.g. v1.3.37."
+        ...,
+        description="Unique identifier for this version e.g. v1.3.37."
+        "If None, represents info about an unversioned 'latest' package.",
     )
     options: List[str] = Field(
         ...,
         description="Names of the different packages available for this version"
         " e.g. software often has separate builds for amd64, arm, x86.",
+        min_items=1,
     )
     description: str = Field(
         "", description="A description of changes or notices for this version."

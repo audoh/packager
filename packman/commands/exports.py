@@ -1,7 +1,7 @@
 import json
 import os
 from argparse import ArgumentParser
-from typing import Optional
+from typing import Optional, Set
 from zipfile import ZipFile
 
 from loguru import logger
@@ -86,10 +86,13 @@ class ExportCommand(Command):
                         + 1,
                         on_progress=on_progress,
                     )
+                    files_seen: Set[str] = set()
                     for package in manifest.packages.values():
                         for file in package.files:
-                            relfile = os.path.relpath(file, root)
-                            zipfile.write(file, relfile)
+                            if file not in files_seen:
+                                relfile = os.path.relpath(file, root)
+                                zipfile.write(file, relfile)
+                                files_seen.add(file)
                             on_step_progress.advance()
                     zip_manifest = manifest.deepcopy()
                     zip_manifest.original_files = {}

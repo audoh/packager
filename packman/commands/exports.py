@@ -94,7 +94,7 @@ class ExportCommand(Command):
                     zip_manifest = manifest.deepcopy()
                     zip_manifest.original_files = {}
                     zip_manifest.orphaned_files = set()
-                    zip_manifest.update_path_root(root)
+                    zip_manifest.update_path_root(".")
                     zipfile.writestr("manifest.json", zip_manifest.json(indent=2))
                     on_step_progress.advance()
 

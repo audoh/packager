@@ -15,7 +15,7 @@ from packman.config import (
     DEFAULT_REPO_CONFIG_PATH,
     DEFAULT_ROOT_DIR,
 )
-from packman.models.manifest import Manifest, ManifestPackage
+from packman.models.manifest import Manifest
 from packman.models.package_definition import PackageDefinition
 from packman.models.package_source import PackageVersion
 from packman.utils.cache import Cache
@@ -101,15 +101,19 @@ class Packman:
         :raises VersionNotFoundError: If the version cannot be found from the sources defined for the package.
         """
         package = self.package(name)
+        last_exc: Optional[Exception] = None
         for source in package.sources:
             try:
                 return source.get_version(version)
             except Exception as exc:
                 logger.error(f"failed to load from source: {source}")
                 logger.exception(exc)
+                last_exc = exc
                 continue
         raise VersionNotFoundError(
-            f"no version info for {name}@{version}", package=name, version=version
+            f"no version info for {name}@{version} ({last_exc})",
+            package=name,
+            version=version,
         )
 
     def get_latest_version_info(self, name: str) -> PackageVersion:
@@ -121,6 +125,7 @@ class Packman:
         """
         unversioned_info: Optional[PackageVersion] = None
         package = self.package(name)
+        last_exc: Optional[Exception] = None
         for source in package.sources:
             try:
                 ver = source.get_latest_version()
@@ -133,11 +138,14 @@ class Packman:
             except Exception as exc:
                 logger.error(f"failed to load from source: {source}")
                 logger.exception(exc)
+                last_exc = exc
                 continue
         if unversioned_info is not None:
             return unversioned_info
         raise VersionNotFoundError(
-            f"no version info for {name}@latest", package=name, version="latest"
+            f"no version info for {name}@latest ({last_exc})",
+            package=name,
+            version="latest",
         )
 
     @cached_property
@@ -361,8 +369,11 @@ class Packman:
 
             self.commit_backups(op)
 
-            manifest.packages[name] = ManifestPackage(
-                version=version, options=[version_info.options[0]], files=op.new_paths
+            manifest.add_package(
+                name,
+                version=version,
+                options=[version_info.options[0]],
+                files=op.new_paths,
             )
 
             manifest.update_files(self.manifest_path, on_progress=on_step_progress)

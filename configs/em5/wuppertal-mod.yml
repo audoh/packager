@@ -1,0 +1,6 @@
+name: Wuppertal Mod
+sources:
+  - wuppertal: true
+steps:
+  - copy-folder: "**/project.json/.." # Match the folder containing project.json
+    to: ""

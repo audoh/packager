@@ -34,7 +34,7 @@ class Config(BaseModel):
         os.path.join(_root, _DEFAULT_DEFINITION_PATH)
     )
     git: GitConfig = GitConfig()
-    log_level: LogLevel = LogLevel.CRITICAL
+    log_level: LogLevel = LogLevel(os.environ.get("PACKMAN_LOGGING", "CRITICAL"))
 
     def configure_logger(self) -> None:
         # Set up logger
@@ -43,7 +43,7 @@ class Config(BaseModel):
 
 
 def get_config_path() -> str:
-    return os.environ.get("PACKMAN_CONFIG_FILE", "packman.yaml")
+    return os.environ.get("PACKMAN_CONFIG_FILE", "packman.yml")
 
 
 def read_config(path: str = get_config_path()) -> Config:

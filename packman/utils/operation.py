@@ -89,6 +89,9 @@ class OperationState(BaseModel):
         except FileNotFoundError:
             return
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class StateFileExistsError(FileExistsError):
     pass

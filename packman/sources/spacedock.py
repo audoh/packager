@@ -6,8 +6,7 @@ from urllib import parse as urlparse
 from packman.api.http import HTTPAPI
 from packman.models.package_source import BasePackageSource, PackageVersion
 from packman.utils.operation import Operation
-from packman.utils.progress import (ProgressCallback, StepProgress,
-                                    progress_noop)
+from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from pydantic import BaseModel, Field
 
 _API_URL = "https://spacedock.info/api/"
@@ -21,6 +20,9 @@ class Version(BaseModel):
     download_path: str
 
     changelog: str
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class Mod(BaseModel):
@@ -49,6 +51,9 @@ class Mod(BaseModel):
                 if version.id == id or version.friendly_version == friendly_version
             )
         )
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class SpaceDockAPI(HTTPAPI):

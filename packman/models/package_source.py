@@ -28,6 +28,9 @@ class PackageVersion(BaseModel):
         "", description="A description of changes or notices for this version."
     )
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class BasePackageSource(BaseModel, ABC):
     """
@@ -78,6 +81,7 @@ class BasePackageSource(BaseModel, ABC):
 
     class Config:
         extra = Extra.forbid
+        arbitrary_types_allowed = True
 
 
 class BaseUnversionedPackageSource(BasePackageSource):

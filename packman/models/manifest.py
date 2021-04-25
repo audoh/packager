@@ -35,6 +35,9 @@ class BaseModelWithPrivateAttributes(BaseModel):
                 exclude.add(key)
         return super().dict(*args, **kwargs, exclude=exclude)
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class ManifestPackage(BaseModelWithPrivateAttributes):
     """

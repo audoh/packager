@@ -1,0 +1,6 @@
+name: Kerbal Engineer Redux
+sources:
+  - github: jrbudda/KerbalEngineer
+steps:
+  - copy-folder: KerbalEngineer
+    to: GameData

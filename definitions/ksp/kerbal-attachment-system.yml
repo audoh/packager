@@ -1,0 +1,6 @@
+name: Kerbal Attachment System
+sources:
+  - github: ihsoft/KAS
+steps:
+  - copy-folder: GameData
+    to: GameData

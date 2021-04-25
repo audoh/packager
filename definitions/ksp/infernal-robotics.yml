@@ -1,0 +1,8 @@
+name: Infernal Robotics
+sources:
+  - github: meirumeiru/InfernalRobotics
+steps:
+  - copy-folder: GameData
+    to: GameData
+  - copy-folder: Ships
+    to: Ships

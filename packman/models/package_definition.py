@@ -41,7 +41,6 @@ class PackageDefinition(BaseModel):
     class Config:
         extra = Extra.forbid
         title = "Package Definition"
-        arbitrary_types_allowed = True
 
     @staticmethod
     def from_yaml(path: str) -> "PackageDefinition":

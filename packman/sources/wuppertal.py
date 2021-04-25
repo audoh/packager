@@ -3,7 +3,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from urllib import parse as urlparse
 
 from packman.api.http import HTTPAPI
-from packman.models.package_source import BaseUnversionedPackageSource, PackageVersion
+from packman.models.package_source import (BaseUnversionedPackageSource,
+                                           PackageVersion)
 from packman.utils.operation import Operation
 from packman.utils.progress import ProgressCallback, progress_noop
 from pydantic import BaseModel, Field
@@ -19,9 +20,6 @@ class Hash(BaseModel):
     relative_path: str = Field(..., alias="relativePath")
     checksum: str
 
-    class Config:
-        arbitrary_types_allowed = True
-
 
 class Version(BaseModel):
     id: str
@@ -32,12 +30,7 @@ class Version(BaseModel):
     deleted: Optional[Any] = None
 
     def to_version_info(self) -> PackageVersion:
-        return PackageVersion(
-            name=self.display_name, version=self.id, options=[self.id]
-        )
-
-    class Config:
-        arbitrary_types_allowed = True
+        return PackageVersion(name=self.display_name, version=self.id, options=[self.id])
 
 
 # `https://download.emergency-wuppertal.de/versions/${i.id}/Full.zip`

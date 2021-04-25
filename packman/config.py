@@ -26,9 +26,6 @@ class GitConfig(BaseModel):
     url: str = "https://github.com/audoh/packman.git"
     definition_path: str = _DEFAULT_DEFINITION_PATH
 
-    class Config:
-        arbitrary_types_allowed = True
-
 
 class Config(BaseModel):
     root_path: str = ""
@@ -43,9 +40,6 @@ class Config(BaseModel):
         # Set up logger
         logger.remove()
         logger.add(stderr, level=self.log_level)
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 def get_config_path() -> str:

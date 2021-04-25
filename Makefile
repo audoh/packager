@@ -16,9 +16,14 @@ quickstart:
 	make install watch
 
 # Installs the project
-.PHONY: install
-install:
-	poetry install
+.INTERMEDIATE: install
+install: .venv
+
+# Compiles the packaged binary
+build: .venv $(wildcard src/**/*.py)
+	poetry run python -m nuitka --follow-imports packman_cli/cli.py --output-dir=build
+	cp build/main.bin bin/packman.bin 2> /dev/null || true
+	cp build/main.exe bin/packman.exe 2> /dev/null || true
 
 # Builds Docker
 .PHONY: docker
@@ -74,3 +79,6 @@ watch:
 	poetry run python -c print\(\'...\',end=\'\\r\'\)
 	make docker
 	poetry run python watcher.py -p . -c 'make docker && $(docker_cmd) $(pytest_cmd)'
+
+.venv: poetry.lock
+	poetry install

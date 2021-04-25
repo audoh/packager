@@ -28,6 +28,7 @@ pytest = "^6.2.1"
 pytest-testdox = "^2.0.1"
 rstcheck = "^3.3.1"
 watchdog = "^2.0.1"
+Nuitka = "^0.6.14"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

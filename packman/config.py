@@ -10,7 +10,7 @@ _dir = os.path.dirname(__file__)
 _dir_to_root = ".."
 _root = os.path.abspath(os.path.join(_dir, _dir_to_root))
 
-_DEFAULT_CFG_PATH = "configs/ksp"
+_DEFAULT_DEFINITION_PATH = "definitions/ksp"
 
 
 class LogLevel(str, Enum):
@@ -24,13 +24,15 @@ class LogLevel(str, Enum):
 
 class GitConfig(BaseModel):
     url: str = "https://github.com/audoh/packman.git"
-    definition_path: str = _DEFAULT_CFG_PATH
+    definition_path: str = _DEFAULT_DEFINITION_PATH
 
 
 class Config(BaseModel):
     root_path: str = ""
     manifest_path: str = "packman.json"
-    definition_path: str = os.path.abspath(os.path.join(_root, _DEFAULT_CFG_PATH))
+    definition_path: str = os.path.abspath(
+        os.path.join(_root, _DEFAULT_DEFINITION_PATH)
+    )
     git: GitConfig = GitConfig()
     log_level: LogLevel = LogLevel.CRITICAL
 

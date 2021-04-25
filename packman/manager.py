@@ -3,18 +3,12 @@ import os
 import shutil
 from functools import cached_property
 from hashlib import md5
-from typing import Iterable, List, Optional, Set, Tuple, Union
+from typing import Iterable, List, Optional, Set, Tuple, Type, Union
 
 from git.repo.base import Repo
 from loguru import logger
 
-from packman.config import (
-    DEFAULT_CONFIG_PATH,
-    DEFAULT_GIT_URL,
-    DEFAULT_MANIFEST_PATH,
-    DEFAULT_REPO_CONFIG_PATH,
-    DEFAULT_ROOT_DIR,
-)
+from packman.config import Config, read_config
 from packman.models.manifest import Manifest
 from packman.models.package_definition import PackageDefinition
 from packman.models.package_source import PackageVersion
@@ -71,15 +65,15 @@ class NoFilesError(Exception):
 class Packman:
     def __init__(
         self,
-        config_dir: str = DEFAULT_CONFIG_PATH,
-        manifest_path: str = DEFAULT_MANIFEST_PATH,
-        git_config_dir: str = DEFAULT_REPO_CONFIG_PATH,
-        git_url: str = DEFAULT_GIT_URL,
-        root_dir: str = DEFAULT_ROOT_DIR,
+        config_dir: str,
+        manifest_path: str,
+        git_config_dir: str,
+        git_url: str,
+        root_dir: str,
     ) -> None:
-        self.config_dir = config_dir
+        self.definition_dir = config_dir
         self.manifest_path = manifest_path
-        self.git_config_dir = git_config_dir
+        self.git_definition_dir = git_config_dir
         self.git_url = git_url
         self.root_dir = root_dir
 
@@ -87,6 +81,24 @@ class Packman:
         key_md5 = md5(key_bytes)
         self.key = key_md5.hexdigest()
         logger.debug(f"using operation key: {self.key}")
+
+    @classmethod
+    def from_config(cls: Type["Packman"], cfg: Config) -> "Packman":
+        return cls(
+            config_dir=cfg.definition_path,
+            manifest_path=cfg.manifest_path,
+            git_config_dir=cfg.git.definition_path,
+            git_url=cfg.git.url,
+            root_dir=cfg.root_path,
+        )
+
+    @classmethod
+    def from_config_file(cls: Type["Packman"], path: Optional[str] = None) -> "Packman":
+        if path:
+            cfg = read_config(path)
+        else:
+            cfg = read_config()
+        return cls.from_config(cfg)
 
     def create_operation(
         self, on_restore_progress: ProgressCallback = progress_noop
@@ -100,7 +112,7 @@ class Packman:
         :raises FileNotFoundError: If the package cannot be found.
         :raises VersionNotFoundError: If the version cannot be found from the sources defined for the package.
         """
-        package = self.package(name)
+        package = self.package_definition(name)
         last_exc: Optional[Exception] = None
         for source in package.sources:
             try:
@@ -124,7 +136,7 @@ class Packman:
         :raises VersionNotFoundError: If the latest version cannot be found from the sources defined for the package.
         """
         unversioned_info: Optional[PackageVersion] = None
-        package = self.package(name)
+        package = self.package_definition(name)
         last_exc: Optional[Exception] = None
         for source in package.sources:
             try:
@@ -159,7 +171,7 @@ class Packman:
         """
         Returns the path to the definition file for the given package.
         """
-        return os.path.join(self.config_dir, f"{name}.yml")
+        return os.path.join(self.definition_dir, f"{name}.yml")
 
     def validate(self, name: str) -> Iterable[str]:
         """
@@ -191,7 +203,7 @@ class Packman:
                 shutil.copy2(temporary_path, permanent_path)
                 manifest.original_files[original_path] = permanent_path
 
-    def install(
+    def install_package(
         self,
         name: str,
         version: Union[str, None],
@@ -208,7 +220,7 @@ class Packman:
         :returns: A boolean indicating whether or not the installation resulted in any changes.
         """
         op: Optional[Operation] = None
-        package = self.package(name)
+        package = self.package_definition(name)
         package_path = None
         context = name
 
@@ -385,7 +397,7 @@ class Packman:
 
         return True
 
-    def uninstall(
+    def uninstall_package(
         self, name: str, on_progress: ProgressCallback = progress_noop
     ) -> bool:
         """
@@ -408,7 +420,7 @@ class Packman:
         logger.success(f"{name} - uninstalled")
         return True
 
-    def update(self, on_progress: ProgressCallback = progress_noop) -> bool:
+    def update_package(self, on_progress: ProgressCallback = progress_noop) -> bool:
         """
         Updates the local package definitions with the latest from the defined remote sources.
         """
@@ -419,15 +431,15 @@ class Packman:
         updated = False
         try:
             logger.debug(
-                f"retrieving config files from {self.git_url}/{self.git_config_dir}"
+                f"retrieving config files from {self.git_url}/{self.git_definition_dir}"
             )
             Repo.clone_from(url=self.git_url, to_path=dir, depth=1)
-            cfg_path = os.path.join(dir, self.git_config_dir)
+            cfg_path = os.path.join(dir, self.git_definition_dir)
             for root, _, files in os.walk(cfg_path):
                 for file in files:
                     src = os.path.join(root, file)
                     src_relpath = os.path.relpath(src, cfg_path)
-                    dest = os.path.join(self.config_dir, src_relpath)
+                    dest = os.path.join(self.definition_dir, src_relpath)
                     if not os.path.exists(dest) or not filecmp.cmp(src, dest):
                         logger.info(f"updating {dest}")
                         shutil.copy2(src, dest)
@@ -440,13 +452,13 @@ class Packman:
             logger.info("no changes")
         return updated
 
-    def versions(self, name: str) -> Iterable[str]:
+    def available_versions(self, name: str) -> Iterable[str]:
         """
         Returns an iterable of all versions available for the given package.
 
         :raises FileNotFoundError: If the package cannot be found.
         """
-        package = self.package(name)
+        package = self.package_definition(name)
         versions: Set[str] = set()
         for source in package.sources:
             for version in source.get_versions():
@@ -454,7 +466,7 @@ class Packman:
                     versions.add(version)
                     yield version
 
-    def package(self, name: str) -> PackageDefinition:
+    def package_definition(self, name: str) -> PackageDefinition:
         """
         Returns the definition for the given package.
 
@@ -464,22 +476,22 @@ class Packman:
 
         # Enforce case for consistency with uninstall() and across platforms
         path_cased = resolve_case(path)
-        relpath_cased = os.path.relpath(path_cased, self.config_dir)
+        relpath_cased = os.path.relpath(path_cased, self.definition_dir)
         pathname = relpath_cased[:-4].replace(os.path.sep, "/")
         if name != pathname:
             raise FileNotFoundError(f"{name=} does not match {pathname=}")
 
         return PackageDefinition.from_yaml(path)
 
-    def packages(self) -> Iterable[Tuple[str, PackageDefinition]]:
+    def package_definitions(self) -> Iterable[Tuple[str, PackageDefinition]]:
         """
         Returns an iterable of 2-tuples containing the name and definition of all available packages.
         """
-        for root, _, files in os.walk(self.config_dir):
+        for root, _, files in os.walk(self.definition_dir):
             for file in files:
                 try:
                     path = os.path.join(root, file)
-                    relpath = os.path.relpath(path, self.config_dir)
+                    relpath = os.path.relpath(path, self.definition_dir)
                     name = relpath[: relpath.rindex(os.extsep)]
                     yield name, PackageDefinition.from_yaml(path)
                 except Exception as exc:

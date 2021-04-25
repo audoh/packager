@@ -143,7 +143,7 @@ class ImportCommand(Command):
                     version_name = get_version_name(version)
                     step_name = f"+ {name}@{version_name}"
                     try:
-                        if not self.packman.install(
+                        if not self.packman.install_package(
                             name=name, version=version, on_progress=on_progress
                         ):
                             # not_installed += 1

@@ -16,7 +16,7 @@ class PackageListCommand(ListCommand):
     help = "Lists available packages"
 
     def get_iterable(self) -> Iterable[Tuple[str, PackageDefinition]]:
-        return self.packman.packages()
+        return self.packman.package_definitions()
 
     def write_iterable(self, iterable: Iterable[Tuple[str, PackageDefinition]]) -> None:
         self.output.write_table(
@@ -32,7 +32,7 @@ class VersionListCommand(ListCommand):
         parser.add_argument("package", help="The package to list versions for")
 
     def get_iterable(self, package: str) -> Iterable[str]:
-        return self.packman.versions(package)
+        return self.packman.available_versions(package)
 
     def write_iterable(self, iterable: Iterable[str], package: str) -> None:
         for version in iterable:
@@ -44,7 +44,7 @@ class InstalledPackageListCommand(ListCommand):
 
     def get_iterable(self) -> List[List[str]]:
         manifest = self.packman.manifest
-        packages = {key: value for key, value in self.packman.packages()}
+        packages = {key: value for key, value in self.packman.package_definitions()}
         return [
             [
                 name,
@@ -72,7 +72,7 @@ class UpdateCommand(Command):
             output.write_step_progress(step_name, p)
 
         try:
-            if self.packman.update(on_progress=on_progress):
+            if self.packman.update_package(on_progress=on_progress):
                 output.write_step_complete(step_name)
             else:
                 output.write_step_error(step_name, "nothing to update")

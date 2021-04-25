@@ -4,23 +4,17 @@ from argparse import ArgumentError, ArgumentParser
 from typing import Dict, List, Optional
 
 from packman import InstallStep, PackageSource, Packman, sources, steps
-from packman.commands import (
-    CleanCommand,
-    Command,
-    ExportCommand,
-    ImportCommand,
-    InstallCommand,
-    InstalledPackageListCommand,
-    PackageListCommand,
-    RecoverCommand,
-    UninstallCommand,
-    UpdateCommand,
-    ValidateCommand,
-    VersionListCommand,
-)
+from packman.commands import (CleanCommand, Command, ExportCommand,
+                              ImportCommand, InstallCommand,
+                              InstalledPackageListCommand, PackageListCommand,
+                              RecoverCommand, UninstallCommand, UpdateCommand,
+                              ValidateCommand, VersionListCommand)
+from packman.config import read_config
 from packman.utils.output import SupportsWrite
 
-packman = Packman()
+cfg = read_config()
+cfg.configure_logger()
+packman = Packman.from_config(cfg)
 DEFAULT_COMMANDS = {
     "install": InstallCommand(packman),
     "uninstall": UninstallCommand(packman),

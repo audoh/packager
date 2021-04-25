@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Iterable, List, Optional, Tuple, Union
 
 from packman import InstallStep, PackageSource, Packman, sources, steps
+from packman.config import read_config
 from packman.models.package_definition import PackageDefinition
 
 
@@ -96,7 +97,9 @@ class Application(tk.Frame):
 
         self.current_packages: List[Tuple[str, PackageDefinition]] = []
         self.package_sort = SortKey.DEFAULT
-        self.packman = Packman()
+        cfg = read_config()
+        cfg.configure_logger()
+        self.packman = Packman.from_config(cfg)
         self.refresh_packages()
 
     def create_widgets(self) -> None:
@@ -205,12 +208,12 @@ class Application(tk.Frame):
             yield self.current_packages[index]
 
     def refresh_all_packages(self) -> None:
-        self.set_packages(self.packman.packages())
+        self.set_packages(self.packman.package_definitions())
 
     def refresh_installed_packages(self) -> None:
         manifest = self.packman.manifest
         self.set_packages(
-            (name, self.packman.package(name)) for name in manifest.packages
+            (name, self.packman.package_definition(name)) for name in manifest.packages
         )
 
     def refresh_packages(self) -> None:
@@ -223,7 +226,7 @@ class Application(tk.Frame):
         succeeded: List[str] = []
         failed: List[str] = []
         for name, _ in self.curselection():
-            success = self.packman.install(name=name)
+            success = self.packman.install_package(name=name)
             if success:
                 succeeded.append(name)
                 self.show_success(f"installed {name}")
@@ -236,7 +239,7 @@ class Application(tk.Frame):
         succeeded: List[str] = []
         failed: List[str] = []
         for name, _ in self.curselection():
-            success = self.packman.uninstall(name=name)
+            success = self.packman.uninstall_package(name=name)
             if success:
                 succeeded.append(name)
                 self.show_success(f"uninstalled {name}")
@@ -255,7 +258,7 @@ class Application(tk.Frame):
             self.show_success("no invalid files")
 
     def update_packman(self) -> None:
-        if self.packman.update():
+        if self.packman.update_package():
             self.refresh_packages()
         else:
             self.show_info("no changes found")

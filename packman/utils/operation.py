@@ -9,7 +9,6 @@ from urllib import parse as urlparse
 import patoolib
 import requests
 from loguru import logger
-from packman.config import REQUEST_CHUNK_SIZE, REQUEST_TIMEOUT
 from packman.utils.files import remove_file, remove_path, temp_dir, temp_path
 from packman.utils.progress import ProgressCallback, StepProgress, progress_noop
 from packman.utils.uninterruptible import uninterruptible
@@ -103,7 +102,13 @@ class Operation:
         key: str = _DEFAULT_KEY,
         on_restore_progress: ProgressCallback = progress_noop,
         state: Optional[OperationState] = None,
+        *,
+        request_timeout: float = 30,
+        request_chunk_size: int = 500 * 1000,
     ):
+        self.request_timeout = request_timeout
+        self.request_chunk_size = request_chunk_size
+
         if state is None:
             self.new_paths: Set[str] = set()
             self.temp_paths: Set[str] = set()
@@ -267,7 +272,7 @@ class Operation:
                 ext = url_path[extsep_idx:]
             else:
                 ext = ""
-        res = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT)
+        res = requests.get(url, stream=True, timeout=self.request_timeout)
         res.raise_for_status()
         path = self.get_temp_path(ext=ext)
         logger.debug(f"downloading {url} to {path}")
@@ -276,7 +281,7 @@ class Operation:
             downloaded_size = 0
             time = datetime.now()
 
-            for chunk in res.iter_content(REQUEST_CHUNK_SIZE):
+            for chunk in res.iter_content(self.request_chunk_size):
                 file.write(chunk)
                 downloaded_size += len(chunk)
 

@@ -67,7 +67,7 @@ class InstallCommand(Command):
             on_progress(0.0)
 
             try:
-                if not self.packman.install(
+                if not self.packman.install_package(
                     name=name,
                     version=version,
                     force=force,
@@ -136,7 +136,7 @@ class UninstallCommand(Command):
 
             on_progress(0.0)
             try:
-                if not self.packman.uninstall(name=name, on_progress=on_progress):
+                if not self.packman.uninstall_package(name=name, on_progress=on_progress):
                     output.write_step_error(
                         step_name,
                         "not uninstalled; perhaps you didn't install it using this tool?",

@@ -102,6 +102,21 @@
                 "url": "https://example.com/download-my-mod.php"
               }
             ]
+          },
+          {
+            "title": "WuppertalPackageSource",
+            "description": "An abstract class representing a means of retrieving a package so that it can be installed.\n\nDoes not support versioning.",
+            "type": "object",
+            "properties": {
+              "wuppertal": {
+                "title": "Wuppertal",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "wuppertal"
+            ],
+            "additionalProperties": false
           }
         ]
       }

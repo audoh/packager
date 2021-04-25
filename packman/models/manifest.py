@@ -158,10 +158,11 @@ class Manifest(BaseModelWithPrivateAttributes):
     def _update_checksum_map(self) -> None:
         for package in self.packages.values():
             for file, chk in package.checksums.items():
-                if file in self._file_checksums:
-                    self._file_checksums[file].add(chk)
+                normpath = os.path.normpath(file)
+                if normpath in self._file_checksums:
+                    self._file_checksums[normpath].add(chk)
                 else:
-                    self._file_checksums[file] = set((chk,))
+                    self._file_checksums[normpath] = set((chk,))
 
     def deepcopy(self) -> "Manifest":
         return deepcopy(self)
@@ -203,7 +204,8 @@ class Manifest(BaseModelWithPrivateAttributes):
             if file not in new_file_map:
                 curr_chk = checksum(file)
                 if remove_orphans or any(
-                    chk == curr_chk for chk in self._file_checksums[file]
+                    chk == curr_chk
+                    for chk in self._file_checksums[os.path.normpath(file)]
                 ):
                     logger.debug(f"cleaning up {file}")
                     if file in self.original_files:

@@ -1,0 +1,72 @@
+{
+  "title": "Config",
+  "type": "object",
+  "properties": {
+    "root_path": {
+      "title": "Root Path",
+      "default": "",
+      "type": "string"
+    },
+    "manifest_path": {
+      "title": "Manifest Path",
+      "default": "packman.json",
+      "type": "string"
+    },
+    "definition_path": {
+      "title": "Definition Path",
+      "default": "/home/audoh/Workspace/packman/configs/ksp",
+      "type": "string"
+    },
+    "git": {
+      "title": "Git",
+      "default": {
+        "url": "https://github.com/audoh/packman.git",
+        "definition_path": "configs/ksp"
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/GitConfig"
+        }
+      ]
+    },
+    "log_level": {
+      "default": "CRITICAL",
+      "allOf": [
+        {
+          "$ref": "#/definitions/LogLevel"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "GitConfig": {
+      "title": "GitConfig",
+      "type": "object",
+      "properties": {
+        "url": {
+          "title": "Url",
+          "default": "https://github.com/audoh/packman.git",
+          "type": "string"
+        },
+        "definition_path": {
+          "title": "Definition Path",
+          "default": "configs/ksp",
+          "type": "string"
+        }
+      }
+    },
+    "LogLevel": {
+      "title": "LogLevel",
+      "description": "An enumeration.",
+      "enum": [
+        "TRACE",
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL"
+      ],
+      "type": "string"
+    }
+  }
+}

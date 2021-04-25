@@ -3,6 +3,7 @@ from shutil import copyfile
 from typing import Iterable, Type
 
 from packman import InstallStep, PackageSource, sources, steps
+from packman.config import Config
 from packman.models.manifest import Manifest
 from packman.models.package_definition import PackageDefinition
 from pydantic import BaseModel
@@ -29,16 +30,17 @@ def generate_schemas(models: Iterable[Type[BaseModel]], dir: str) -> None:
 
 def generate_docs_index(readme_path: str, index_path: str) -> None:
     copyfile(index_path, readme_path)
-    # os.system("git reset")
-    # os.system(f"git add {readme_path}")
-    # os.system('git commit -m "README.md updated"')
+    # TODO make this less naive
+    os.system("git reset")
+    os.system(f"git add {readme_path}")
+    os.system('git commit -m "README.md updated"')
 
 
 def main(schemas_dir: str, readme_path: str, index_path: str) -> None:
     os.makedirs(schemas_dir, exist_ok=True)
     sources.register_all(PackageSource)
     steps.register_all(InstallStep)
-    generate_schemas(models=(Manifest, PackageDefinition), dir=schemas_dir)
+    generate_schemas(models=(Manifest, PackageDefinition, Config), dir=schemas_dir)
     generate_docs_index(readme_path=readme_path, index_path=index_path)
 
 

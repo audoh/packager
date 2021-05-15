@@ -1,0 +1,6 @@
+name: TAC Self Destruct
+sources:
+  - github: linuxgurugamer/TacSelfDestruct
+steps:
+  - copy-folder: GameData
+    to: GameData
